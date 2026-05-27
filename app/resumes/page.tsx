@@ -31,6 +31,8 @@ export default function ResumesPage() {
   const [parsing, setParsing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [parseError, setParseError] = useState("");
+  const [saveError, setSaveError] = useState("");
+  const [toast, setToast] = useState("");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -79,6 +81,7 @@ export default function ResumesPage() {
     if (!textContent.trim()) return;
 
     setSaving(true);
+    setSaveError("");
     try {
       let fileUrl: string | null = null;
 
@@ -91,14 +94,31 @@ export default function ResumesPage() {
 
       const newId = await createResume(user.uid, label.trim(), textContent, fileUrl);
 
-      // Auto-set as active if it's the first resume
-      if (resumes.length === 0) {
+      const newResume: Resume = {
+        id: newId,
+        label: label.trim(),
+        content: textContent,
+        fileUrl,
+        createdAt: new Date(),
+      };
+
+      const isFirst = resumes.length === 0;
+      if (isFirst) {
         await setActiveResume(user.uid, newId);
         setActiveResumeId(newId);
       }
 
-      await loadData();
+      setResumes((prev) => [newResume, ...prev]);
       closeModal();
+      setToast("Resume added successfully");
+      setTimeout(() => setToast(""), 3000);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes("storage") || msg.includes("Storage") || msg.includes("bucket")) {
+        setSaveError("Firebase Storage is not enabled. Go to Firebase Console → Storage → Get started, then try again.");
+      } else {
+        setSaveError("Failed to save resume. Check your connection and try again.");
+      }
     } finally {
       setSaving(false);
     }
@@ -129,6 +149,7 @@ export default function ResumesPage() {
     setPdfFile(null);
     setPdfText("");
     setParseError("");
+    setSaveError("");
   }
 
   const canSave =
@@ -137,6 +158,14 @@ export default function ResumesPage() {
 
   return (
     <div className="p-6 max-w-3xl mx-auto">
+      {/* Toast */}
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-lg animate-fade-in">
+          <i className="ti ti-circle-check text-emerald-400 text-base" aria-hidden="true" />
+          {toast}
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -384,7 +413,10 @@ export default function ResumesPage() {
             </div>
 
             {/* Modal footer */}
-            <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-gray-100">
+            <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-gray-100 flex-wrap">
+              {saveError && (
+                <p className="text-xs text-red-500 w-full text-right">{saveError}</p>
+              )}
               <button
                 onClick={closeModal}
                 className="text-sm text-gray-500 hover:text-gray-700 px-4 py-2 rounded-lg transition-colors"
