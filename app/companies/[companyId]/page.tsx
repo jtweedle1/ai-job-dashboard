@@ -38,6 +38,8 @@ export default function CompanyProfilePage({
   const [notFound, setNotFound] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [filling, setFilling] = useState(false);
+  const [fillError, setFillError] = useState("");
   const [toast, setToast] = useState("");
 
   useEffect(() => {
@@ -65,6 +67,46 @@ export default function CompanyProfilePage({
   function showToast(msg: string) {
     setToast(msg);
     setTimeout(() => setToast(""), 2500);
+  }
+
+  async function handleAutoFill() {
+    if (!user) return;
+    setFilling(true);
+    setFillError("");
+    try {
+      const res = await fetch("/api/company-research", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ uid: user.uid, companyId }),
+      });
+      const data = await res.json();
+      if (res.status === 401 || data.error === "no_key") {
+        setFillError("Add your Anthropic API key in Settings to use AI auto-fill.");
+        return;
+      }
+      if (data.error) {
+        setFillError("Auto-fill failed. Try again.");
+        return;
+      }
+      setCompany((prev) =>
+        prev
+          ? {
+              ...prev,
+              whatTheyDo:      data.whatTheyDo      ?? prev.whatTheyDo,
+              productSummary:  data.productSummary  ?? prev.productSummary,
+              targetCustomers: data.targetCustomers ?? prev.targetCustomers,
+              recentNews:      data.recentNews      ?? prev.recentNews,
+              values:          data.values          ?? prev.values,
+              competitors:     data.competitors     ?? prev.competitors,
+            }
+          : prev
+      );
+      showToast("Fields filled — review and edit as needed");
+    } catch {
+      setFillError("Something went wrong. Try again.");
+    } finally {
+      setFilling(false);
+    }
   }
 
   async function handleDelete() {
@@ -128,15 +170,17 @@ export default function CompanyProfilePage({
           />
         </div>
         <div className="flex items-center gap-2 shrink-0 pt-1">
-          {/* AI auto-fill stub */}
           <button
-            disabled
-            title="Add your Anthropic API key in Settings to unlock this"
-            className="flex items-center gap-1.5 text-xs text-gray-400 border border-gray-200 px-3 py-1.5 rounded-lg cursor-not-allowed opacity-60"
+            onClick={handleAutoFill}
+            disabled={filling}
+            className="flex items-center gap-1.5 text-xs font-medium text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <i className="ti ti-wand text-xs" aria-hidden="true" />
-            Auto-fill with AI
-            <i className="ti ti-lock text-xs ml-0.5" aria-hidden="true" />
+            {filling ? (
+              <i className="ti ti-loader-2 animate-spin text-xs" aria-hidden="true" />
+            ) : (
+              <i className="ti ti-wand text-xs" aria-hidden="true" />
+            )}
+            {filling ? "Filling…" : "Auto-fill with AI"}
           </button>
 
           {deleteConfirm ? (
@@ -167,7 +211,11 @@ export default function CompanyProfilePage({
           )}
         </div>
       </div>
-      <p className="text-xs text-gray-400 mb-6 px-3">Updated {formatDate(company.updatedAt)}</p>
+      <p className="text-xs text-gray-400 mb-1 px-3">Updated {formatDate(company.updatedAt)}</p>
+      {fillError && (
+        <p className="text-xs text-amber-600 mb-5 px-3">{fillError}</p>
+      )}
+      {!fillError && <div className="mb-6" />}
 
       {/* Linked job */}
       <div className="bg-white border border-gray-100 rounded-xl mb-4">
