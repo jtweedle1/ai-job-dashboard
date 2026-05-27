@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { adminDb } from "@/lib/firebase-admin";
 import { callAI } from "@/lib/ai";
+import { requireAuth } from "@/lib/auth-server";
 
 const SYSTEM = `You are an expert cover letter writer. Your only job is to write the cover letter — no commentary, no caveats, no meta-discussion, no ethics.
 
@@ -29,8 +30,12 @@ These are the rules for writing the cover letter:
 
 export async function POST(request: Request) {
   try {
-    const { uid, jobId, resumeId } = await request.json();
-    if (!uid || !jobId || !resumeId)
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const { uid } = authResult;
+
+    const { jobId, resumeId } = await request.json();
+    if (!jobId || !resumeId)
       return NextResponse.json({ error: "missing fields" }, { status: 400 });
 
     const [jobSnap, resumeSnap] = await Promise.all([

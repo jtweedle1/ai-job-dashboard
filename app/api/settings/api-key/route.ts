@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { encrypt } from "@/lib/encryption";
+import { requireAuth } from "@/lib/auth-server";
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const uid = searchParams.get("uid");
-  if (!uid) return NextResponse.json({ error: "missing uid" }, { status: 400 });
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+  const { uid } = authResult;
 
   const snap = await adminDb.collection("users").doc(uid).get();
   const hasKey = !!snap.data()?.apiKey;
@@ -13,8 +14,12 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const { uid, apiKey } = await request.json();
-  if (!uid || !apiKey) return NextResponse.json({ error: "missing fields" }, { status: 400 });
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+  const { uid } = authResult;
+
+  const { apiKey } = await request.json();
+  if (!apiKey) return NextResponse.json({ error: "missing fields" }, { status: 400 });
 
   const encrypted = encrypt(apiKey);
   await adminDb.collection("users").doc(uid).set({ apiKey: encrypted }, { merge: true });
@@ -22,8 +27,9 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const { uid } = await request.json();
-  if (!uid) return NextResponse.json({ error: "missing uid" }, { status: 400 });
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+  const { uid } = authResult;
 
   await adminDb.collection("users").doc(uid).set({ apiKey: null }, { merge: true });
   return NextResponse.json({ ok: true });

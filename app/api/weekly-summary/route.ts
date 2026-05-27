@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { callAI } from "@/lib/ai";
 import { Timestamp } from "firebase-admin/firestore";
+import { requireAuth } from "@/lib/auth-server";
 
 const SYSTEM = `You are a job search coach helping someone reflect on their week.
 Given the week's stats and notes, write:
@@ -21,8 +22,12 @@ Be direct and practical. No filler phrases. Treat the person as a capable adult.
 
 export async function POST(req: NextRequest) {
   try {
-    const { uid, reviewId } = await req.json();
-    if (!uid || !reviewId) {
+    const authResult = await requireAuth(req);
+    if (authResult instanceof NextResponse) return authResult;
+    const { uid } = authResult;
+
+    const { reviewId } = await req.json();
+    if (!reviewId) {
       return NextResponse.json({ error: "missing_params" }, { status: 400 });
     }
 

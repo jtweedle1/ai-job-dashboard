@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { callAI } from "@/lib/ai";
+import { requireAuth } from "@/lib/auth-server";
 
 const SYSTEM = `You are a job posting parser. Extract structured fields from the job description text the user provides.
 Return ONLY valid JSON with these exact keys: title, company, location, salary.
@@ -11,8 +12,12 @@ If a field cannot be determined, use null. Do not include any explanation or mar
 
 export async function POST(request: Request) {
   try {
-  const { uid, text } = await request.json();
-  if (!uid || !text) return NextResponse.json({ error: "missing fields" }, { status: 400 });
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const { uid } = authResult;
+
+  const { text } = await request.json();
+  if (!text) return NextResponse.json({ error: "missing fields" }, { status: 400 });
 
   const result = await callAI(uid, [{ role: "user", content: text }], SYSTEM);
 

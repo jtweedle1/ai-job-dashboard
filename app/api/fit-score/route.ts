@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { adminDb } from "@/lib/firebase-admin";
 import { callAI } from "@/lib/ai";
+import { requireAuth } from "@/lib/auth-server";
 
 const SYSTEM = `You are a career advisor evaluating how well a candidate's resume matches a job description.
 Respond with only a valid JSON object — no markdown, no explanation, nothing else.
@@ -11,8 +12,12 @@ The JSON must have exactly two keys:
 
 export async function POST(request: Request) {
   try {
-    const { uid, jobId } = await request.json();
-    if (!uid || !jobId)
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const { uid } = authResult;
+
+    const { jobId } = await request.json();
+    if (!jobId)
       return NextResponse.json({ error: "missing fields" }, { status: 400 });
 
     // Fetch job and user doc in parallel
