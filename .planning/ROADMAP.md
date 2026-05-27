@@ -6,7 +6,7 @@ This milestone hardens a working brownfield app for portfolio visibility and a s
 
 ## Phases
 
-- [ ] **Phase 1: Security Hardening** - Close all exploitable API routes and infrastructure gaps before any external users access the app
+- [x] **Phase 1: Security Hardening** - Close all exploitable API routes and infrastructure gaps before any external users access the app (completed 2026-05-27)
 - [ ] **Phase 2: Smart Weekly Review** - Auto-populate pipeline stats and upgrade AI narrative to surface stalls, conversion patterns, and concrete next actions
 - [ ] **Phase 3: AI Quality Improvements** - Improve prompts and per-task token limits so cover letter, fit score, and interview prep produce complete, useful output
 
@@ -63,7 +63,7 @@ This milestone hardens a working brownfield app for portfolio visibility and a s
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Security Hardening | 3/4 | In Progress|  |
+| 1. Security Hardening | 4/4 | Complete   | 2026-05-27 |
 | 2. Smart Weekly Review | 0/TBD | Not started | - |
 | 3. AI Quality Improvements | 0/TBD | Not started | - |
 
