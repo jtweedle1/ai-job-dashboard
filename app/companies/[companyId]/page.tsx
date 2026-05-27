@@ -3,6 +3,7 @@
 import { use, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { authedFetch } from "@/lib/api-client";
 import { getCompany, updateCompany, deleteCompany } from "@/lib/companies";
 import { getJob } from "@/lib/jobs";
 import EditableField from "@/components/EditableField";
@@ -74,10 +75,9 @@ export default function CompanyProfilePage({
     setFilling(true);
     setFillError("");
     try {
-      const res = await fetch("/api/company-research", {
+      const res = await authedFetch("/api/company-research", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uid: user.uid, companyId }),
+        body: JSON.stringify({ companyId }),
       });
       const data = await res.json();
       if (res.status === 401 || data.error === "no_key") {

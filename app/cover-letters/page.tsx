@@ -3,6 +3,7 @@
 import { Suspense, useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { authedFetch } from "@/lib/api-client";
 import { getJobs } from "@/lib/jobs";
 import { getResumes } from "@/lib/resumes";
 import { getCoverLetters, deleteCoverLetter } from "@/lib/coverLetters";
@@ -64,10 +65,9 @@ function CoverLettersContent() {
     setGenerating(true);
     setGenerateError("");
     try {
-      const res = await fetch("/api/cover-letter", {
+      const res = await authedFetch("/api/cover-letter", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uid: user.uid, jobId: selectedJobId, resumeId: selectedResumeId }),
+        body: JSON.stringify({ jobId: selectedJobId, resumeId: selectedResumeId }),
       });
       const data = await res.json();
       if (res.status === 401 || data.error === "no_key") {

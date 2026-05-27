@@ -3,6 +3,7 @@
 import { Suspense, useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { authedFetch } from "@/lib/api-client";
 import { getJobs } from "@/lib/jobs";
 import { getInterviewPreps, deleteInterviewPrep } from "@/lib/interviewPreps";
 import { createAnswer } from "@/lib/answerBank";
@@ -54,11 +55,9 @@ function InterviewPrepContent() {
     setGenerating(true);
     setGenerateError("");
     try {
-      const res = await fetch("/api/interview-prep", {
+      const res = await authedFetch("/api/interview-prep", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          uid: user.uid,
           jobId: selectedJobId,
           interviewProcess: interviewProcess.trim(),
         }),

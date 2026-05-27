@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
+import { authedFetch } from "@/lib/api-client";
 import {
   createReview,
   getReviews,
@@ -147,10 +148,9 @@ export default function WeeklyReviewPage() {
     setSummaryError("");
     try {
       if (dirty) await handleSave();
-      const res = await fetch("/api/weekly-summary", {
+      const res = await authedFetch("/api/weekly-summary", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uid: user.uid, reviewId: activeId }),
+        body: JSON.stringify({ reviewId: activeId }),
       });
       const data = await res.json();
       if (res.status === 401 || data.error === "no_key") {

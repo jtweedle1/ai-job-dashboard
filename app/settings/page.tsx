@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
+import { authedFetch } from "@/lib/api-client";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
@@ -25,7 +26,7 @@ export default function SettingsPage() {
   useEffect(() => {
     if (!user) return;
 
-    fetch(`/api/settings/api-key?uid=${user.uid}`)
+    authedFetch("/api/settings/api-key")
       .then((r) => r.json())
       .then((d) => setKeyStatus(d.hasKey ? "saved" : "none"))
       .catch(() => setKeyStatus("none"));
@@ -53,10 +54,9 @@ export default function SettingsPage() {
     setSavingKey(true);
     setKeyError("");
     try {
-      const res = await fetch("/api/settings/api-key", {
+      const res = await authedFetch("/api/settings/api-key", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uid: user.uid, apiKey: keyInput.trim() }),
+        body: JSON.stringify({ apiKey: keyInput.trim() }),
       });
       if (!res.ok) throw new Error();
       setKeyStatus("saved");
@@ -73,10 +73,9 @@ export default function SettingsPage() {
     if (!user) return;
     setRemovingKey(true);
     try {
-      await fetch("/api/settings/api-key", {
+      await authedFetch("/api/settings/api-key", {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uid: user.uid }),
+        body: JSON.stringify({}),
       });
       setKeyStatus("none");
       showKeyToast("API key removed");

@@ -3,6 +3,7 @@
 import { use, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { authedFetch } from "@/lib/api-client";
 import { getJob, updateJob, deleteJob } from "@/lib/jobs";
 import { getCompanyByJobId, createCompany } from "@/lib/companies";
 import { getCoverLettersByJobId } from "@/lib/coverLetters";
@@ -109,10 +110,9 @@ export default function JobDetailPage({
     setScoring(true);
     setScoreError("");
     try {
-      const res = await fetch("/api/fit-score", {
+      const res = await authedFetch("/api/fit-score", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uid: user.uid, jobId }),
+        body: JSON.stringify({ jobId }),
       });
       const data = await res.json();
       if (res.status === 401 || data.error === "no_key") {

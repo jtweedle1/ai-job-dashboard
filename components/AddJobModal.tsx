@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
+import { authedFetch } from "@/lib/api-client";
 import { createJob } from "@/lib/jobs";
 import { getCompanyByName, createCompany } from "@/lib/companies";
 import {
@@ -80,10 +81,9 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
     setExtracting(true);
     setExtractError("");
     try {
-      const res = await fetch("/api/extract-job", {
+      const res = await authedFetch("/api/extract-job", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uid: user.uid, text: jdText.trim() }),
+        body: JSON.stringify({ text: jdText.trim() }),
       });
       const data = await res.json();
       if (res.status === 401 || data.error === "no_key") {
