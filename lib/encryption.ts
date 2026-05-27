@@ -2,6 +2,14 @@ import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
 
 const KEY = Buffer.from(process.env.ENCRYPTION_SECRET ?? "", "hex");
 
+if (KEY.length !== 32) {
+  throw new Error(
+    "ENCRYPTION_SECRET env var is missing or invalid. " +
+    "Expected a 64-character hex string (32 bytes). " +
+    "Generate one with: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\""
+  );
+}
+
 export function encrypt(text: string): string {
   const iv = randomBytes(12);
   const cipher = createCipheriv("aes-256-gcm", KEY, iv);
