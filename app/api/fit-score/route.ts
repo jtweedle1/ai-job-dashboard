@@ -3,6 +3,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { adminDb } from "@/lib/firebase-admin";
 import { callAI } from "@/lib/ai";
 import { requireAuth } from "@/lib/auth-server";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const SYSTEM = `You are a career advisor evaluating how well a candidate's resume matches a job description.
 Respond with only a valid JSON object — no markdown, no explanation, nothing else.
@@ -15,6 +16,9 @@ export async function POST(request: Request) {
     const authResult = await requireAuth(request);
     if (authResult instanceof NextResponse) return authResult;
     const { uid } = authResult;
+
+    const { limited } = await checkRateLimit(uid);
+    if (limited) return NextResponse.json({ error: "rate_limited" }, { status: 429 });
 
     const { jobId } = await request.json();
     if (!jobId)

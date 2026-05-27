@@ -3,6 +3,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { adminDb } from "@/lib/firebase-admin";
 import { callAI } from "@/lib/ai";
 import { requireAuth } from "@/lib/auth-server";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const SYSTEM = `You are a company research assistant. Given a company name and optional job context, fill in research fields using your knowledge of the company.
 Return ONLY valid JSON with exactly these keys — no markdown, no explanation outside the JSON:
@@ -19,6 +20,9 @@ export async function POST(request: Request) {
     const authResult = await requireAuth(request);
     if (authResult instanceof NextResponse) return authResult;
     const { uid } = authResult;
+
+    const { limited } = await checkRateLimit(uid);
+    if (limited) return NextResponse.json({ error: "rate_limited" }, { status: 429 });
 
     const { companyId } = await request.json();
     if (!companyId)

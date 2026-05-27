@@ -3,6 +3,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { adminDb } from "@/lib/firebase-admin";
 import { callAI } from "@/lib/ai";
 import { requireAuth } from "@/lib/auth-server";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const SYSTEM = `You are an expert cover letter writer. Your only job is to write the cover letter — no commentary, no caveats, no meta-discussion, no ethics.
 
@@ -33,6 +34,9 @@ export async function POST(request: Request) {
     const authResult = await requireAuth(request);
     if (authResult instanceof NextResponse) return authResult;
     const { uid } = authResult;
+
+    const { limited } = await checkRateLimit(uid);
+    if (limited) return NextResponse.json({ error: "rate_limited" }, { status: 429 });
 
     const { jobId, resumeId } = await request.json();
     if (!jobId || !resumeId)

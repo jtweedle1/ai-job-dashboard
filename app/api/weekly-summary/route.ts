@@ -3,6 +3,7 @@ import { adminDb } from "@/lib/firebase-admin";
 import { callAI } from "@/lib/ai";
 import { Timestamp } from "firebase-admin/firestore";
 import { requireAuth } from "@/lib/auth-server";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const SYSTEM = `You are a job search coach helping someone reflect on their week.
 Given the week's stats and notes, write:
@@ -25,6 +26,9 @@ export async function POST(req: NextRequest) {
     const authResult = await requireAuth(req);
     if (authResult instanceof NextResponse) return authResult;
     const { uid } = authResult;
+
+    const { limited } = await checkRateLimit(uid);
+    if (limited) return NextResponse.json({ error: "rate_limited" }, { status: 429 });
 
     const { reviewId } = await req.json();
     if (!reviewId) {

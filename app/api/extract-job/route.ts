@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { callAI } from "@/lib/ai";
 import { requireAuth } from "@/lib/auth-server";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const SYSTEM = `You are a job posting parser. Extract structured fields from the job description text the user provides.
 Return ONLY valid JSON with these exact keys: title, company, location, salary.
@@ -15,6 +16,9 @@ export async function POST(request: Request) {
     const authResult = await requireAuth(request);
     if (authResult instanceof NextResponse) return authResult;
     const { uid } = authResult;
+
+    const { limited } = await checkRateLimit(uid);
+    if (limited) return NextResponse.json({ error: "rate_limited" }, { status: 429 });
 
   const { text } = await request.json();
   if (!text) return NextResponse.json({ error: "missing fields" }, { status: 400 });
