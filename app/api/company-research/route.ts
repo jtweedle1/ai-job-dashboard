@@ -48,7 +48,7 @@ export async function POST(request: Request) {
 
     const userMessage = `Company: ${company.name}${jobContext}`;
 
-    const result = await callAI(uid, [{ role: "user", content: userMessage }], SYSTEM);
+    const result = await callAI(uid, [{ role: "user", content: userMessage }], SYSTEM, 2048);
 
     if ("error" in result)
       return NextResponse.json(

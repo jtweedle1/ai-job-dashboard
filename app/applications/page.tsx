@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
-import { getJobs } from "@/lib/jobs";
+import { getJobs, deleteJob } from "@/lib/jobs";
 import AddJobModal from "@/components/AddJobModal";
 import {
   STAGE_META,
@@ -51,6 +51,9 @@ export default function ApplicationsPage() {
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [stageFilter, setStageFilter] = useState<JobStage | "all">("all");
   const [sourceFilter, setSourceFilter] = useState<JobSource | "all">("all");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [deleting, setDeleting] = useState(false);
+  const selectAllRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (user) {
@@ -101,6 +104,52 @@ export default function ApplicationsPage() {
     return list;
   }, [jobs, stageFilter, sourceFilter, sortKey, sortDir]);
 
+  const allFilteredSelected = filtered.length > 0 && filtered.every((j) => selectedIds.has(j.id));
+  const someFilteredSelected = filtered.some((j) => selectedIds.has(j.id));
+
+  useEffect(() => {
+    if (selectAllRef.current) {
+      selectAllRef.current.indeterminate = someFilteredSelected && !allFilteredSelected;
+    }
+  }, [someFilteredSelected, allFilteredSelected]);
+
+  function handleToggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  function handleToggleAll() {
+    if (allFilteredSelected) {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        filtered.forEach((j) => next.delete(j.id));
+        return next;
+      });
+    } else {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        filtered.forEach((j) => next.add(j.id));
+        return next;
+      });
+    }
+  }
+
+  async function handleDeleteSelected() {
+    if (!user || selectedIds.size === 0) return;
+    const count = selectedIds.size;
+    if (!confirm(`Delete ${count} job${count !== 1 ? "s" : ""}? This cannot be undone.`)) return;
+    setDeleting(true);
+    await Promise.all([...selectedIds].map((id) => deleteJob(user.uid, id)));
+    setJobs((prev) => prev.filter((j) => !selectedIds.has(j.id)));
+    setSelectedIds(new Set());
+    setDeleting(false);
+    setToast(`${count} job${count !== 1 ? "s" : ""} deleted`);
+    setTimeout(() => setToast(""), 3000);
+  }
+
   const hasFilters = stageFilter !== "all" || sourceFilter !== "all";
 
   const thClass =
@@ -122,13 +171,25 @@ export default function ApplicationsPage() {
           <h1 className="text-lg font-semibold text-gray-900">Applications</h1>
           <p className="text-sm text-gray-500">{jobs.length} job{jobs.length !== 1 ? "s" : ""} tracked</p>
         </div>
-        <button
-          onClick={() => setModalOpen(true)}
-          className="flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
-        >
-          <i className="ti ti-plus text-sm" aria-hidden="true" />
-          Add job
-        </button>
+        <div className="flex items-center gap-2">
+          {selectedIds.size > 0 && (
+            <button
+              onClick={handleDeleteSelected}
+              disabled={deleting}
+              className="flex items-center gap-2 bg-red-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
+            >
+              <i className="ti ti-trash text-sm" aria-hidden="true" />
+              {deleting ? "Deleting…" : `Delete ${selectedIds.size}`}
+            </button>
+          )}
+          <button
+            onClick={() => setModalOpen(true)}
+            className="flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
+          >
+            <i className="ti ti-plus text-sm" aria-hidden="true" />
+            Add job
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -208,6 +269,16 @@ export default function ApplicationsPage() {
           <table className="w-full">
             <thead className="border-b border-gray-100">
               <tr>
+                <th className="px-4 py-2.5 w-8">
+                  <input
+                    ref={selectAllRef}
+                    type="checkbox"
+                    checked={allFilteredSelected}
+                    onChange={handleToggleAll}
+                    className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                    aria-label="Select all"
+                  />
+                </th>
                 <th className={thClass} onClick={() => handleSort("title")}>
                   Role <SortIcon active={sortKey === "title"} dir={sortDir} />
                 </th>
@@ -233,8 +304,17 @@ export default function ApplicationsPage() {
                 <tr
                   key={job.id}
                   onClick={() => router.push(`/applications/${job.id}`)}
-                  className="border-b border-gray-50 last:border-0 hover:bg-gray-50 cursor-pointer transition-colors"
+                  className={`border-b border-gray-50 last:border-0 hover:bg-gray-50 cursor-pointer transition-colors ${selectedIds.has(job.id) ? "bg-emerald-50 hover:bg-emerald-50" : ""}`}
                 >
+                  <td className="px-4 py-3 w-8" onClick={(e) => e.stopPropagation()}>
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(job.id)}
+                      onChange={() => handleToggleSelect(job.id)}
+                      className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                      aria-label={`Select ${job.title}`}
+                    />
+                  </td>
                   <td className="px-4 py-3">
                     <span className="text-sm font-medium text-gray-900">{job.title}</span>
                   </td>

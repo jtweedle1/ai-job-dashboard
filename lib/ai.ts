@@ -5,7 +5,8 @@ import { decrypt } from "./encryption";
 export async function callAI(
   uid: string,
   messages: Anthropic.MessageParam[],
-  system?: string
+  system?: string,
+  maxTokens = 1024
 ): Promise<{ content: string } | { error: string }> {
   let encryptedKey: string | null | undefined;
   try {
@@ -28,7 +29,7 @@ export async function callAI(
     const client = new Anthropic({ apiKey });
     const response = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 1024,
+      max_tokens: maxTokens,
       ...(system ? { system } : {}),
       messages,
     });

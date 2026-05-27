@@ -52,6 +52,10 @@ export default function ResumesPage() {
   }
 
   async function handlePdfSelect(file: File) {
+    if (file.size > 5 * 1024 * 1024) {
+      setParseError("File exceeds the 5 MB limit. Please use a smaller PDF.");
+      return;
+    }
     setPdfFile(file);
     setPdfText("");
     setParseError("");
