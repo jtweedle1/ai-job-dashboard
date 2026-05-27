@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { getJob, updateJob, deleteJob } from "@/lib/jobs";
 import { getCompanyByJobId, createCompany } from "@/lib/companies";
+import { getCoverLettersByJobId } from "@/lib/coverLetters";
 import EditableField from "@/components/EditableField";
 import {
   STAGE_META,
@@ -16,6 +17,7 @@ import {
   type JobSource,
 } from "@/types/job";
 import type { Company } from "@/types/company";
+import type { CoverLetter } from "@/types/coverLetter";
 
 function formatDate(d: Date) {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -41,6 +43,7 @@ export default function JobDetailPage({
 
   const [job, setJob] = useState<Job | null>(null);
   const [company, setCompany] = useState<Company | null>(null);
+  const [coverLetters, setCoverLetters] = useState<CoverLetter[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
@@ -53,10 +56,12 @@ export default function JobDetailPage({
     Promise.all([
       getJob(user.uid, jobId),
       getCompanyByJobId(user.uid, jobId),
-    ]).then(([j, c]) => {
+      getCoverLettersByJobId(user.uid, jobId),
+    ]).then(([j, c, cl]) => {
       if (!j) setNotFound(true);
       else setJob(j);
       setCompany(c);
+      setCoverLetters(cl);
       setLoading(false);
     });
   }, [user, jobId]);
@@ -352,12 +357,30 @@ export default function JobDetailPage({
         </div>
       </div>
 
-      {/* Linked resource stubs */}
+      {/* Linked resources */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {/* Cover letter — live */}
+        <button
+          onClick={() => router.push(`/cover-letters?jobId=${jobId}`)}
+          className="bg-white border border-gray-100 rounded-xl p-4 flex flex-col items-center text-center gap-2 hover:border-gray-200 hover:shadow-sm transition-all"
+        >
+          <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
+            <i className="ti ti-mail text-emerald-600 text-base" aria-hidden="true" />
+          </div>
+          <p className="text-xs font-medium text-gray-600">Cover letter</p>
+          {coverLetters.length > 0 ? (
+            <p className="text-xs text-emerald-600">
+              {coverLetters.length} letter{coverLetters.length !== 1 ? "s" : ""} →
+            </p>
+          ) : (
+            <p className="text-xs text-gray-400">Generate →</p>
+          )}
+        </button>
+
+        {/* Stubs */}
         {[
-          { icon: "ti-mail",           label: "Cover letter",  phase: 6 },
           { icon: "ti-microphone",     label: "Interview prep", phase: 8 },
-          { icon: "ti-clipboard-list", label: "Debriefs",      phase: 10 },
+          { icon: "ti-clipboard-list", label: "Debriefs",       phase: 10 },
         ].map((item) => (
           <div
             key={item.label}

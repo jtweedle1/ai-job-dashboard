@@ -7,8 +7,14 @@ export async function callAI(
   messages: Anthropic.MessageParam[],
   system?: string
 ): Promise<{ content: string } | { error: string }> {
-  const userSnap = await adminDb.collection("users").doc(uid).get();
-  const encryptedKey = userSnap.data()?.apiKey as string | null | undefined;
+  let encryptedKey: string | null | undefined;
+  try {
+    const userSnap = await adminDb.collection("users").doc(uid).get();
+    encryptedKey = userSnap.data()?.apiKey as string | null | undefined;
+  } catch (err) {
+    console.error("[callAI] Firestore read failed:", err);
+    return { error: "firestore_error" };
+  }
   if (!encryptedKey) return { error: "no_key" };
 
   let apiKey: string;
