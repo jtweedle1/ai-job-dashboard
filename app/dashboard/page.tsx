@@ -36,7 +36,7 @@ export default function DashboardPage() {
     }
   }, [user]);
 
-  const totalApplied = jobs.length;
+  const totalApplied = jobs.filter((j) => j.stage !== "saved").length;
   const interviews = jobs.filter((j) => j.stage === "interview").length;
   const offers = jobs.filter((j) => j.stage === "offer").length;
   const scored = jobs.filter((j) => j.fitScore != null);
@@ -51,7 +51,7 @@ export default function DashboardPage() {
     {
       label: "Total applied",
       value: loading ? "—" : String(totalApplied),
-      sub: totalApplied === 0 ? "No applications yet" : `${jobs.filter(j => j.stage !== "saved").length} submitted`,
+      sub: totalApplied === 0 ? "No applications yet" : "",
       icon: "ti-send",
       color: "text-blue-500",
     },
