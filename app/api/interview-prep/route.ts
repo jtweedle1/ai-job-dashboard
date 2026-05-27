@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { adminDb } from "@/lib/firebase-admin";
 import { callAI } from "@/lib/ai";
+import { requireAuth } from "@/lib/auth-server";
 
 const SYSTEM = `You are an expert interview coach. Given a job description and a description of the interview process, generate targeted prep material.
 Return ONLY valid JSON with exactly two keys — no markdown, no explanation outside the JSON:
@@ -11,8 +12,12 @@ Mix behavioral, situational, and role-specific technical questions as appropriat
 
 export async function POST(request: Request) {
   try {
-    const { uid, jobId, interviewProcess } = await request.json();
-    if (!uid || !jobId || !interviewProcess)
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const { uid } = authResult;
+
+    const { jobId, interviewProcess } = await request.json();
+    if (!jobId || !interviewProcess)
       return NextResponse.json({ error: "missing fields" }, { status: 400 });
 
     const jobSnap = await adminDb

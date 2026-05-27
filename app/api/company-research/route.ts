@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { adminDb } from "@/lib/firebase-admin";
 import { callAI } from "@/lib/ai";
+import { requireAuth } from "@/lib/auth-server";
 
 const SYSTEM = `You are a company research assistant. Given a company name and optional job context, fill in research fields using your knowledge of the company.
 Return ONLY valid JSON with exactly these keys — no markdown, no explanation outside the JSON:
@@ -15,8 +16,12 @@ For each field use simple language and avoid jargon. For any field you cannot co
 
 export async function POST(request: Request) {
   try {
-    const { uid, companyId } = await request.json();
-    if (!uid || !companyId)
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const { uid } = authResult;
+
+    const { companyId } = await request.json();
+    if (!companyId)
       return NextResponse.json({ error: "missing fields" }, { status: 400 });
 
     const companySnap = await adminDb
