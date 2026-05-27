@@ -38,10 +38,12 @@ function NavGroup({
   label,
   items,
   pathname,
+  onNavigate,
 }: {
   label: string;
   items: NavItem[];
   pathname: string;
+  onNavigate?: () => void;
 }) {
   return (
     <div className="px-2 mb-4">
@@ -54,6 +56,7 @@ function NavGroup({
           <Link
             key={item.href}
             href={item.href}
+            onClick={onNavigate}
             className={`flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-sm transition-colors mb-0.5 ${
               active
                 ? "bg-emerald-50 text-emerald-700 font-medium"
@@ -72,7 +75,12 @@ function NavGroup({
   );
 }
 
-export default function Sidebar() {
+interface SidebarProps {
+  mobileOpen?: boolean;
+  onClose?: () => void;
+}
+
+export default function Sidebar({ mobileOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { user } = useAuth();
 
@@ -85,7 +93,7 @@ export default function Sidebar() {
         .toUpperCase()
     : "?";
 
-  return (
+  const sidebar = (
     <aside className="w-52 min-w-[208px] h-screen flex flex-col bg-white border-r border-gray-100">
       {/* Logo */}
       <div className="flex items-center gap-2 px-4 py-4 border-b border-gray-100">
@@ -99,9 +107,9 @@ export default function Sidebar() {
 
       {/* Nav groups */}
       <nav className="flex-1 overflow-y-auto py-3">
-        <NavGroup label="Tracking" items={trackingNav} pathname={pathname} />
-        <NavGroup label="AI Tools" items={aiNav} pathname={pathname} />
-        <NavGroup label="Insights" items={insightsNav} pathname={pathname} />
+        <NavGroup label="Tracking" items={trackingNav} pathname={pathname} onNavigate={onClose} />
+        <NavGroup label="AI Tools" items={aiNav} pathname={pathname} onNavigate={onClose} />
+        <NavGroup label="Insights" items={insightsNav} pathname={pathname} onNavigate={onClose} />
       </nav>
 
       {/* Bottom links */}
@@ -112,6 +120,7 @@ export default function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={onClose}
               className={`flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-sm transition-colors mb-0.5 ${
                 active
                   ? "bg-emerald-50 text-emerald-700 font-medium"
@@ -142,5 +151,24 @@ export default function Sidebar() {
         </div>
       </div>
     </aside>
+  );
+
+  return (
+    <>
+      {/* Desktop sidebar */}
+      <div className="hidden md:block">{sidebar}</div>
+
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-40 flex md:hidden">
+          <div
+            className="fixed inset-0 bg-black/30 backdrop-blur-sm"
+            onClick={onClose}
+            aria-hidden="true"
+          />
+          <div className="relative z-50">{sidebar}</div>
+        </div>
+      )}
+    </>
   );
 }

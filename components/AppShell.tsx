@@ -1,11 +1,35 @@
 "use client";
+
+import { useState } from "react";
 import Sidebar from "./Sidebar";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
     <div className="flex h-screen bg-gray-50">
-      <Sidebar />
-      <main className="flex-1 overflow-y-auto">{children}</main>
+      <Sidebar mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+        {/* Mobile top bar */}
+        <header className="flex md:hidden items-center gap-3 px-4 py-3 bg-white border-b border-gray-100 shrink-0">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="text-gray-500 hover:text-gray-700 transition-colors"
+            aria-label="Open menu"
+          >
+            <i className="ti ti-menu-2 text-xl" aria-hidden="true" />
+          </button>
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-md bg-gray-900 flex items-center justify-center">
+              <i className="ti ti-briefcase text-emerald-400 text-xs" aria-hidden="true" />
+            </div>
+            <span className="text-sm font-semibold text-gray-900">HuntDesk</span>
+          </div>
+        </header>
+
+        <main className="flex-1 overflow-y-auto">{children}</main>
+      </div>
     </div>
   );
 }

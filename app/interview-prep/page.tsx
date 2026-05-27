@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { getJobs } from "@/lib/jobs";
 import { getInterviewPreps, deleteInterviewPrep } from "@/lib/interviewPreps";
+import { createAnswer } from "@/lib/answerBank";
 import type { Job } from "@/types/job";
 import type { InterviewPrep } from "@/types/interviewPrep";
 
@@ -27,6 +28,7 @@ function InterviewPrepContent() {
   const [generateError, setGenerateError] = useState("");
 
   const [viewingPrep, setViewingPrep] = useState<InterviewPrep | null>(null);
+  const [savingQuestionIndex, setSavingQuestionIndex] = useState<number | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [toast, setToast] = useState("");
 
@@ -96,6 +98,22 @@ function InterviewPrepContent() {
     if (viewingPrep?.id === id) setViewingPrep(null);
     setDeletingId(null);
     showToast("Deleted");
+  }
+
+  async function handleSaveQuestion(question: string, index: number) {
+    if (!user || !viewingPrep) return;
+    setSavingQuestionIndex(index);
+    try {
+      await createAnswer(user.uid, {
+        question,
+        answer: "",
+        tags: ["interview-prep"],
+        jobId: viewingPrep.jobId,
+      });
+      showToast("Question saved to answer bank");
+    } finally {
+      setSavingQuestionIndex(null);
+    }
   }
 
   function jobTitle(jobId: string) {
@@ -237,11 +255,24 @@ function InterviewPrepContent() {
             </p>
             <ol className="space-y-2">
               {viewingPrep.mockQuestions.map((q, i) => (
-                <li key={i} className="flex gap-3">
+                <li key={i} className="flex gap-3 group">
                   <span className="text-xs font-semibold text-gray-300 w-5 shrink-0 pt-0.5">
                     {i + 1}.
                   </span>
-                  <p className="text-sm text-gray-700">{q}</p>
+                  <p className="text-sm text-gray-700 flex-1">{q}</p>
+                  <button
+                    onClick={() => handleSaveQuestion(q, i)}
+                    disabled={savingQuestionIndex === i}
+                    className="text-gray-200 hover:text-emerald-500 transition-colors opacity-0 group-hover:opacity-100 shrink-0 mt-0.5 disabled:opacity-50"
+                    aria-label="Save to answer bank"
+                    title="Save to answer bank"
+                  >
+                    {savingQuestionIndex === i ? (
+                      <i className="ti ti-loader-2 animate-spin text-xs" aria-hidden="true" />
+                    ) : (
+                      <i className="ti ti-bookmarks text-xs" aria-hidden="true" />
+                    )}
+                  </button>
                 </li>
               ))}
             </ol>

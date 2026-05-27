@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { getJobs } from "@/lib/jobs";
 import AddJobModal from "@/components/AddJobModal";
-import { STAGE_META, type Job, type JobStage } from "@/types/job";
+import { STAGE_META, SOURCE_LABELS, type Job, type JobStage } from "@/types/job";
+import { getSourceStats } from "@/lib/analytics";
 
 function StageBadge({ stage }: { stage: JobStage }) {
   const meta = STAGE_META[stage];
@@ -18,6 +19,41 @@ function StageBadge({ stage }: { stage: JobStage }) {
 
 function formatDate(d: Date) {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+function SourceBreakdown({ jobs, totalApplied }: { jobs: Job[]; totalApplied: number }) {
+  const stats = getSourceStats(jobs);
+  if (stats.length === 0) return null;
+
+  return (
+    <div className="bg-white border border-gray-100 rounded-xl mb-4">
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
+        <h2 className="text-sm font-medium text-gray-900">By source</h2>
+        <a href="/analytics" className="text-xs text-emerald-600 hover:underline">
+          Full analytics
+        </a>
+      </div>
+      <div className="px-5 py-4 space-y-3">
+        {stats.map((s) => (
+          <div key={s.source}>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs text-gray-600">{s.source}</span>
+              <span className="text-xs text-gray-400">
+                {s.applications} app{s.applications !== 1 ? "s" : ""}
+                {s.interviews > 0 && ` · ${s.responseRate}% response`}
+              </span>
+            </div>
+            <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-emerald-500 rounded-full"
+                style={{ width: `${Math.round((s.applications / totalApplied) * 100)}%` }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export default function DashboardPage() {
@@ -177,6 +213,11 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+
+      {/* Source breakdown */}
+      {!loading && totalApplied > 0 && (
+        <SourceBreakdown jobs={jobs} totalApplied={totalApplied} />
+      )}
 
       {/* AI features panel */}
       <div className="bg-white border border-gray-100 rounded-xl p-5">

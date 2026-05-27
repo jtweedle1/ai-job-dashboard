@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth-context";
 import { getJobs } from "@/lib/jobs";
 import { getResumes } from "@/lib/resumes";
 import { getCoverLetters, deleteCoverLetter } from "@/lib/coverLetters";
+import { createAnswer } from "@/lib/answerBank";
 import type { Job } from "@/types/job";
 import type { Resume } from "@/types/resume";
 import type { CoverLetter } from "@/types/coverLetter";
@@ -31,6 +32,7 @@ function CoverLettersContent() {
 
   const [viewingLetter, setViewingLetter] = useState<CoverLetter | null>(null);
   const [copied, setCopied] = useState(false);
+  const [savingToBank, setSavingToBank] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [toast, setToast] = useState("");
 
@@ -98,6 +100,22 @@ function CoverLettersContent() {
     await navigator.clipboard.writeText(viewingLetter.content);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  }
+
+  async function handleSaveToBank() {
+    if (!user || !viewingLetter) return;
+    setSavingToBank(true);
+    try {
+      await createAnswer(user.uid, {
+        question: `Cover letter — ${jobTitle(viewingLetter.jobId)}`,
+        answer: viewingLetter.content,
+        tags: ["cover-letter"],
+        jobId: viewingLetter.jobId,
+      });
+      showToast("Saved to answer bank");
+    } finally {
+      setSavingToBank(false);
+    }
   }
 
   async function handleDelete(id: string) {
@@ -253,6 +271,18 @@ function CoverLettersContent() {
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={handleSaveToBank}
+                disabled={savingToBank}
+                className="flex items-center gap-1.5 text-xs font-medium text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+              >
+                {savingToBank ? (
+                  <i className="ti ti-loader-2 animate-spin text-xs" aria-hidden="true" />
+                ) : (
+                  <i className="ti ti-bookmarks text-xs" aria-hidden="true" />
+                )}
+                Save to bank
+              </button>
               <button
                 onClick={handleCopy}
                 className="flex items-center gap-1.5 text-xs font-medium text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors"
