@@ -35,11 +35,11 @@ export async function getCoverLetters(uid: string): Promise<CoverLetter[]> {
 export async function getCoverLettersByJobId(uid: string, jobId: string): Promise<CoverLetter[]> {
   const q = query(
     collection(db, "users", uid, "coverLetters"),
-    where("jobId", "==", jobId),
-    orderBy("createdAt", "desc")
+    where("jobId", "==", jobId)
   );
   const snap = await getDocs(q);
-  return snap.docs.map((d) => toCoverLetter(d.id, d.data() as Record<string, unknown>));
+  const letters = snap.docs.map((d) => toCoverLetter(d.id, d.data() as Record<string, unknown>));
+  return letters.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 }
 
 export async function deleteCoverLetter(uid: string, letterId: string): Promise<void> {
