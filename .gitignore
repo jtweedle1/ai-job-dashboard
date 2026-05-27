@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# implementation plan
+2026-05-26-job-dashboard-*.md
