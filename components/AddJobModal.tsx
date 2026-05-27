@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { createJob } from "@/lib/jobs";
+import { getCompanyByName, createCompany } from "@/lib/companies";
 import {
   STAGE_META,
   SOURCE_LABELS,
@@ -44,6 +45,9 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
   const [stage, setStage] = useState<JobStage>("saved");
   const [notes, setNotes] = useState("");
 
+  const [extracting, setExtracting] = useState(false);
+  const [extractError, setExtractError] = useState("");
+
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
 
@@ -71,6 +75,37 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
     }
   }
 
+  async function handleExtract() {
+    if (!user || !jdText.trim()) return;
+    setExtracting(true);
+    setExtractError("");
+    try {
+      const res = await fetch("/api/extract-job", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ uid: user.uid, text: jdText.trim() }),
+      });
+      const data = await res.json();
+      if (res.status === 401 || data.error === "no_key") {
+        setExtractError("Add your Anthropic API key in Settings to use AI extraction.");
+        return;
+      }
+      if (data.error) {
+        setExtractError("Extraction failed. Fill in the fields manually.");
+        return;
+      }
+      if (data.title && !title) setTitle(data.title);
+      if (data.company && !company) setCompany(data.company);
+      if (data.location && !location) setLocation(data.location);
+      if (data.salary && !salary) setSalary(data.salary);
+      if (data.description) setJdText(data.description);
+    } catch {
+      setExtractError("Something went wrong. Fill in the fields manually.");
+    } finally {
+      setExtracting(false);
+    }
+  }
+
   async function handleSave() {
     if (!user || !title.trim() || !company.trim()) return;
     setSaving(true);
@@ -89,6 +124,13 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
         appliedAt: stage === "applied" ? new Date() : null,
       };
       const jobId = await createJob(user.uid, jobData);
+
+      // Auto-create company profile if one doesn't exist yet
+      const existing = await getCompanyByName(user.uid, company.trim());
+      if (!existing) {
+        await createCompany(user.uid, { name: company.trim(), jobId });
+      }
+
       const newJob: Job = {
         id: jobId,
         ...jobData,
@@ -182,6 +224,29 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
               </div>
             )}
           </div>
+
+          {/* AI extraction */}
+          {jdText.trim().length > 50 && (
+            <div className="px-5 pb-3">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleExtract}
+                  disabled={extracting}
+                  className="flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {extracting ? (
+                    <i className="ti ti-loader-2 animate-spin text-xs" aria-hidden="true" />
+                  ) : (
+                    <i className="ti ti-wand text-xs" aria-hidden="true" />
+                  )}
+                  {extracting ? "Extracting…" : "Extract fields with AI"}
+                </button>
+                {extractError && (
+                  <p className="text-xs text-amber-600 flex-1">{extractError}</p>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Details */}
           <div className="px-5 pt-3 pb-5">

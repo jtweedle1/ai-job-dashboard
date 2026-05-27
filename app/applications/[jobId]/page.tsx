@@ -4,6 +4,8 @@ import { use, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { getJob, updateJob, deleteJob } from "@/lib/jobs";
+import { getCompanyByJobId, createCompany } from "@/lib/companies";
+import EditableField from "@/components/EditableField";
 import {
   STAGE_META,
   SOURCE_LABELS,
@@ -13,13 +15,10 @@ import {
   type JobStage,
   type JobSource,
 } from "@/types/job";
+import type { Company } from "@/types/company";
 
 function formatDate(d: Date) {
-  return d.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
 function StageBadge({ stage }: { stage: JobStage }) {
@@ -28,71 +27,6 @@ function StageBadge({ stage }: { stage: JobStage }) {
     <span className={`inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full ${meta.badge}`}>
       {meta.label}
     </span>
-  );
-}
-
-interface EditableFieldProps {
-  value: string | null;
-  onSave: (v: string) => void;
-  placeholder?: string;
-  multiline?: boolean;
-  className?: string;
-}
-
-function EditableField({ value, onSave, placeholder = "—", multiline = false, className = "" }: EditableFieldProps) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(value ?? "");
-
-  function commit() {
-    onSave(draft);
-    setEditing(false);
-  }
-
-  function cancel() {
-    setDraft(value ?? "");
-    setEditing(false);
-  }
-
-  if (editing) {
-    const base = "w-full border border-emerald-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white";
-    return multiline ? (
-      <textarea
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        onBlur={commit}
-        onKeyDown={(e) => e.key === "Escape" && cancel()}
-        rows={5}
-        autoFocus
-        className={`${base} resize-none ${className}`}
-      />
-    ) : (
-      <input
-        type="text"
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        onBlur={commit}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") commit();
-          if (e.key === "Escape") cancel();
-        }}
-        autoFocus
-        className={`${base} ${className}`}
-      />
-    );
-  }
-
-  return (
-    <button
-      onClick={() => { setDraft(value ?? ""); setEditing(true); }}
-      className={`w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-gray-50 transition-colors group ${className}`}
-    >
-      {value ? (
-        <span className="text-gray-900">{value}</span>
-      ) : (
-        <span className="text-gray-400">{placeholder}</span>
-      )}
-      <i className="ti ti-pencil text-gray-300 group-hover:text-gray-400 text-xs ml-2 opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
-    </button>
   );
 }
 
@@ -106,17 +40,23 @@ export default function JobDetailPage({
   const router = useRouter();
 
   const [job, setJob] = useState<Job | null>(null);
+  const [company, setCompany] = useState<Company | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [creatingCompany, setCreatingCompany] = useState(false);
   const [toast, setToast] = useState("");
 
   useEffect(() => {
     if (!user) return;
-    getJob(user.uid, jobId).then((j) => {
+    Promise.all([
+      getJob(user.uid, jobId),
+      getCompanyByJobId(user.uid, jobId),
+    ]).then(([j, c]) => {
       if (!j) setNotFound(true);
       else setJob(j);
+      setCompany(c);
       setLoading(false);
     });
   }, [user, jobId]);
@@ -124,7 +64,7 @@ export default function JobDetailPage({
   const save = useCallback(
     async (patch: Partial<Omit<Job, "id" | "createdAt">>) => {
       if (!user || !job) return;
-      setJob((prev) => prev ? { ...prev, ...patch } : prev);
+      setJob((prev) => (prev ? { ...prev, ...patch } : prev));
       await updateJob(user.uid, jobId, patch);
     },
     [user, job, jobId]
@@ -152,6 +92,32 @@ export default function JobDetailPage({
     setDeleting(true);
     await deleteJob(user.uid, jobId);
     router.push("/applications");
+  }
+
+  async function handleCreateCompany() {
+    if (!user || !job) return;
+    setCreatingCompany(true);
+    try {
+      const id = await createCompany(user.uid, { name: job.company, jobId: job.id });
+      const newCompany: Company = {
+        id,
+        name: job.company,
+        jobId: job.id,
+        whatTheyDo: null,
+        productSummary: null,
+        targetCustomers: null,
+        recentNews: null,
+        values: null,
+        competitors: null,
+        whyInterested: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      setCompany(newCompany);
+      router.push(`/companies/${id}`);
+    } finally {
+      setCreatingCompany(false);
+    }
   }
 
   if (loading) {
@@ -224,7 +190,8 @@ export default function JobDetailPage({
           ) : (
             <button
               onClick={() => setDeleteConfirm(true)}
-              className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-red-500 transition-colors"
+              className="text-gray-300 hover:text-red-400 transition-colors"
+              aria-label="Delete job"
             >
               <i className="ti ti-trash text-sm" aria-hidden="true" />
             </button>
@@ -232,7 +199,7 @@ export default function JobDetailPage({
         </div>
       </div>
 
-      {/* Stage + source selectors */}
+      {/* Stage + source */}
       <div className="flex items-center gap-3 mb-6 flex-wrap">
         <div className="flex items-center gap-2">
           <label className="text-xs text-gray-500">Stage</label>
@@ -261,7 +228,7 @@ export default function JobDetailPage({
         </div>
       </div>
 
-      {/* Fields */}
+      {/* Details */}
       <div className="bg-white border border-gray-100 rounded-xl mb-4">
         <div className="px-4 py-3 border-b border-gray-50">
           <p className="text-xs font-medium text-gray-400 uppercase tracking-widest">Details</p>
@@ -269,10 +236,10 @@ export default function JobDetailPage({
         <div className="divide-y divide-gray-50">
           {(
             [
-              { label: "Title", value: job.title, key: "title" },
-              { label: "Company", value: job.company, key: "company" },
+              { label: "Title",    value: job.title,    key: "title" },
+              { label: "Company",  value: job.company,  key: "company" },
               { label: "Location", value: job.location, key: "location", placeholder: "Add location" },
-              { label: "Salary", value: job.salary, key: "salary", placeholder: "Add salary range" },
+              { label: "Salary",   value: job.salary,   key: "salary",   placeholder: "Add salary range" },
             ] as { label: string; value: string | null; key: keyof Job; placeholder?: string }[]
           ).map(({ label, value, key, placeholder }) => (
             <div key={key} className="flex items-center gap-4 px-4">
@@ -321,6 +288,40 @@ export default function JobDetailPage({
         </div>
       </div>
 
+      {/* Company profile */}
+      <div className="bg-white border border-gray-100 rounded-xl mb-4">
+        <div className="px-4 py-3 border-b border-gray-50">
+          <p className="text-xs font-medium text-gray-400 uppercase tracking-widest">Company profile</p>
+        </div>
+        {company ? (
+          <div className="px-4 py-3 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-900">{company.name}</p>
+              {company.whatTheyDo && (
+                <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{company.whatTheyDo}</p>
+              )}
+            </div>
+            <button
+              onClick={() => router.push(`/companies/${company.id}`)}
+              className="text-xs text-emerald-600 hover:underline shrink-0 ml-4"
+            >
+              View profile
+            </button>
+          </div>
+        ) : (
+          <div className="px-4 py-3 flex items-center justify-between">
+            <p className="text-sm text-gray-400">No company profile yet.</p>
+            <button
+              onClick={handleCreateCompany}
+              disabled={creatingCompany}
+              className="text-xs text-emerald-600 hover:underline disabled:opacity-50"
+            >
+              {creatingCompany ? "Creating…" : "Create profile"}
+            </button>
+          </div>
+        )}
+      </div>
+
       {/* Notes */}
       <div className="bg-white border border-gray-100 rounded-xl mb-4">
         <div className="px-4 py-3 border-b border-gray-50">
@@ -354,9 +355,9 @@ export default function JobDetailPage({
       {/* Linked resource stubs */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {[
-          { icon: "ti-mail", label: "Cover letter", phase: 6 },
-          { icon: "ti-microphone", label: "Interview prep", phase: 8 },
-          { icon: "ti-clipboard-list", label: "Debriefs", phase: 10 },
+          { icon: "ti-mail",           label: "Cover letter",  phase: 6 },
+          { icon: "ti-microphone",     label: "Interview prep", phase: 8 },
+          { icon: "ti-clipboard-list", label: "Debriefs",      phase: 10 },
         ].map((item) => (
           <div
             key={item.label}
