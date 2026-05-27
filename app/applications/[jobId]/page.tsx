@@ -7,6 +7,7 @@ import { getJob, updateJob, deleteJob } from "@/lib/jobs";
 import { getCompanyByJobId, createCompany } from "@/lib/companies";
 import { getCoverLettersByJobId } from "@/lib/coverLetters";
 import { getInterviewPrepsByJobId } from "@/lib/interviewPreps";
+import { getDebriefsByJobId } from "@/lib/debriefs";
 import EditableField from "@/components/EditableField";
 import {
   STAGE_META,
@@ -20,6 +21,7 @@ import {
 import type { Company } from "@/types/company";
 import type { CoverLetter } from "@/types/coverLetter";
 import type { InterviewPrep } from "@/types/interviewPrep";
+import type { Debrief } from "@/types/debrief";
 
 function formatDate(d: Date) {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -47,6 +49,7 @@ export default function JobDetailPage({
   const [company, setCompany] = useState<Company | null>(null);
   const [coverLetters, setCoverLetters] = useState<CoverLetter[]>([]);
   const [interviewPreps, setInterviewPreps] = useState<InterviewPrep[]>([]);
+  const [debriefs, setDebriefs] = useState<Debrief[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
@@ -63,12 +66,14 @@ export default function JobDetailPage({
       getCompanyByJobId(user.uid, jobId),
       getCoverLettersByJobId(user.uid, jobId),
       getInterviewPrepsByJobId(user.uid, jobId),
-    ]).then(([j, c, cl, ip]) => {
+      getDebriefsByJobId(user.uid, jobId),
+    ]).then(([j, c, cl, ip, db]) => {
       if (!j) setNotFound(true);
       else setJob(j);
       setCompany(c);
       setCoverLetters(cl);
       setInterviewPreps(ip);
+      setDebriefs(db);
       setLoading(false);
     });
   }, [user, jobId]);
@@ -491,21 +496,23 @@ export default function JobDetailPage({
           )}
         </button>
 
-        {/* Debriefs stub */}
-        {[
-          { icon: "ti-clipboard-list", label: "Debriefs", phase: 10 },
-        ].map((item) => (
-          <div
-            key={item.label}
-            className="bg-white border border-gray-100 rounded-xl p-4 flex flex-col items-center text-center gap-2 opacity-60"
-          >
-            <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center">
-              <i className={`ti ${item.icon} text-gray-400 text-base`} aria-hidden="true" />
-            </div>
-            <p className="text-xs font-medium text-gray-600">{item.label}</p>
-            <p className="text-xs text-gray-400">Coming in phase {item.phase}</p>
+        {/* Debriefs — live */}
+        <button
+          onClick={() => router.push(`/debrief?jobId=${jobId}`)}
+          className="bg-white border border-gray-100 rounded-xl p-4 flex flex-col items-center text-center gap-2 hover:border-gray-200 hover:shadow-sm transition-all"
+        >
+          <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
+            <i className="ti ti-clipboard-list text-emerald-600 text-base" aria-hidden="true" />
           </div>
-        ))}
+          <p className="text-xs font-medium text-gray-600">Debriefs</p>
+          {debriefs.length > 0 ? (
+            <p className="text-xs text-emerald-600">
+              {debriefs.length} session{debriefs.length !== 1 ? "s" : ""} →
+            </p>
+          ) : (
+            <p className="text-xs text-gray-400">Log debrief →</p>
+          )}
+        </button>
       </div>
     </div>
   );
