@@ -9,8 +9,8 @@
 
 ### Security
 
-- [ ] **SEC-01**: User can trust that all API routes verify their Firebase ID token server-side — `uid` is never accepted from the request body
-- [ ] **SEC-02**: App fails fast at cold start with a clear error if `ENCRYPTION_SECRET` or Firebase env vars are missing or malformed
+- [x] **SEC-01**: User can trust that all API routes verify their Firebase ID token server-side — `uid` is never accepted from the request body
+- [x] **SEC-02**: App fails fast at cold start with a clear error if `ENCRYPTION_SECRET` or Firebase env vars are missing or malformed
 - [x] **SEC-03**: User's AI quota is protected — per-user rate limiting prevents a runaway loop from exhausting their Anthropic key
 - [x] **SEC-04**: `/api/scrape` only fetches public HTTPS URLs — internal/private IPs (RFC 1918, link-local) are blocked
 - [ ] **SEC-05**: Firebase Storage has deployed security rules restricting read/write access to the file owner's UID
@@ -53,11 +53,11 @@
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| SEC-01 | Phase 1 | Pending |
-| SEC-02 | Phase 1 | Pending |
+| SEC-01 | Phase 1 | Complete |
+| SEC-02 | Phase 1 | Complete |
 | SEC-03 | Phase 1 | Complete |
 | SEC-04 | Phase 1 | Complete |
-| SEC-05 | Phase 1 | Pending |
+| SEC-05 | Phase 1 | Pending (deploy) |
 | WR-01  | Phase 2 | Pending |
 | WR-02  | Phase 2 | Pending |
 | WR-03  | Phase 2 | Pending |
