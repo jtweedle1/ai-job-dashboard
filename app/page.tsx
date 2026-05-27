@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { signInWithGoogle } from "@/lib/auth";
@@ -41,6 +41,7 @@ const features = [
 export default function LandingPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const [signingIn, setSigningIn] = useState(false);
 
   useEffect(() => {
     if (!loading && user) {
@@ -49,11 +50,14 @@ export default function LandingPage() {
   }, [user, loading, router]);
 
   async function handleSignIn() {
+    if (signingIn) return;
+    setSigningIn(true);
     try {
       await signInWithGoogle();
       router.push("/dashboard");
     } catch (err) {
       console.error("Sign-in failed:", err);
+      setSigningIn(false);
     }
   }
 
@@ -71,7 +75,8 @@ export default function LandingPage() {
         </div>
         <button
           onClick={handleSignIn}
-          className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+          disabled={signingIn}
+          className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors disabled:opacity-50"
         >
           Sign in
           <i className="ti ti-arrow-right text-sm" aria-hidden="true" />
@@ -95,7 +100,8 @@ export default function LandingPage() {
         </p>
         <button
           onClick={handleSignIn}
-          className="inline-flex items-center gap-3 bg-gray-900 text-white text-sm font-medium px-6 py-3 rounded-xl hover:bg-gray-800 transition-colors"
+          disabled={signingIn}
+          className="inline-flex items-center gap-3 bg-gray-900 text-white text-sm font-medium px-6 py-3 rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
             <path
