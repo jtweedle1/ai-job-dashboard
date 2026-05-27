@@ -53,16 +53,16 @@
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| SEC-01 | — | Pending |
-| SEC-02 | — | Pending |
-| SEC-03 | — | Pending |
-| SEC-04 | — | Pending |
-| SEC-05 | — | Pending |
-| WR-01  | — | Pending |
-| WR-02  | — | Pending |
-| WR-03  | — | Pending |
-| WR-04  | — | Pending |
-| AI-01  | — | Pending |
-| AI-02  | — | Pending |
-| AI-03  | — | Pending |
-| AI-04  | — | Pending |
+| SEC-01 | Phase 1 | Pending |
+| SEC-02 | Phase 1 | Pending |
+| SEC-03 | Phase 1 | Pending |
+| SEC-04 | Phase 1 | Pending |
+| SEC-05 | Phase 1 | Pending |
+| WR-01  | Phase 2 | Pending |
+| WR-02  | Phase 2 | Pending |
+| WR-03  | Phase 2 | Pending |
+| WR-04  | Phase 2 | Pending |
+| AI-01  | Phase 3 | Pending |
+| AI-02  | Phase 3 | Pending |
+| AI-03  | Phase 3 | Pending |
+| AI-04  | Phase 3 | Pending |
