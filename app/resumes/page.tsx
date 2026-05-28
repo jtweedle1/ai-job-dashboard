@@ -22,7 +22,6 @@ export default function ResumesPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
-  // Modal state
   const [tab, setTab] = useState<Tab>("paste");
   const [label, setLabel] = useState("");
   const [content, setContent] = useState("");
@@ -160,9 +159,10 @@ export default function ResumesPage() {
     label.trim().length > 0 &&
     (tab === "paste" ? content.trim().length > 0 : pdfText.trim().length > 0);
 
+  const inputClass = "w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent dark:bg-gray-800";
+
   return (
     <div className="p-6 max-w-3xl mx-auto">
-      {/* Toast */}
       {toast && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-lg animate-fade-in">
           <i className="ti ti-circle-check text-emerald-400 text-base" aria-hidden="true" />
@@ -170,43 +170,41 @@ export default function ResumesPage() {
         </div>
       )}
 
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-lg font-semibold text-gray-900">Resumes</h1>
-          <p className="text-sm text-gray-500">Manage your resume versions</p>
+          <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-50">Resumes</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Manage your resume versions</p>
         </div>
         <button
           onClick={() => setModalOpen(true)}
-          className="flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
+          className="flex items-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
         >
           <i className="ti ti-plus text-sm" aria-hidden="true" />
           Add resume
         </button>
       </div>
 
-      {/* Content */}
       {loading ? (
         <div className="space-y-3">
           {[1, 2].map((n) => (
-            <div key={n} className="bg-white border border-gray-100 rounded-xl p-4 animate-pulse">
-              <div className="h-4 bg-gray-100 rounded w-48 mb-2" />
-              <div className="h-3 bg-gray-100 rounded w-24" />
+            <div key={n} className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-4 animate-pulse">
+              <div className="h-4 bg-gray-100 dark:bg-gray-800 rounded w-48 mb-2" />
+              <div className="h-3 bg-gray-100 dark:bg-gray-800 rounded w-24" />
             </div>
           ))}
         </div>
       ) : resumes.length === 0 ? (
-        <div className="bg-white border border-gray-100 rounded-xl p-12 text-center">
-          <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center mx-auto mb-4">
-            <i className="ti ti-file-cv text-gray-400 text-2xl" aria-hidden="true" />
+        <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-12 text-center">
+          <div className="w-12 h-12 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center mx-auto mb-4">
+            <i className="ti ti-file-cv text-gray-400 dark:text-gray-500 text-2xl" aria-hidden="true" />
           </div>
-          <h2 className="text-sm font-medium text-gray-900 mb-1">No resumes yet</h2>
-          <p className="text-sm text-gray-500 mb-5 max-w-xs mx-auto">
+          <h2 className="text-sm font-medium text-gray-900 dark:text-gray-50 mb-1">No resumes yet</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-5 max-w-xs mx-auto">
             Add a resume version to use with cover letters, fit scoring, and more.
           </p>
           <button
             onClick={() => setModalOpen(true)}
-            className="inline-flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
+            className="inline-flex items-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
           >
             <i className="ti ti-plus text-sm" aria-hidden="true" />
             Add resume
@@ -221,23 +219,23 @@ export default function ResumesPage() {
             return (
               <div
                 key={resume.id}
-                className={`bg-white border rounded-xl p-4 flex items-start justify-between gap-4 ${
-                  isActive ? "border-emerald-200" : "border-gray-100"
+                className={`bg-white dark:bg-gray-900 border rounded-xl p-4 flex items-start justify-between gap-4 ${
+                  isActive ? "border-emerald-200 dark:border-emerald-800" : "border-gray-100 dark:border-gray-800"
                 }`}
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-medium text-gray-900 truncate">
+                    <span className="text-sm font-medium text-gray-900 dark:text-gray-50 truncate">
                       {resume.label}
                     </span>
                     {isActive && (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded-full">
                         <i className="ti ti-check text-xs" aria-hidden="true" />
                         Active
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-gray-400">Added {formatDate(resume.createdAt)}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">Added {formatDate(resume.createdAt)}</p>
                   {resume.fileUrl && (
                     <a
                       href={resume.fileUrl}
@@ -255,7 +253,7 @@ export default function ResumesPage() {
                   {!isActive && (
                     <button
                       onClick={() => handleSetActive(resume.id)}
-                      className="text-xs text-gray-500 hover:text-gray-800 border border-gray-200 hover:border-gray-300 px-3 py-1.5 rounded-lg transition-colors"
+                      className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 px-3 py-1.5 rounded-lg transition-colors"
                     >
                       Set active
                     </button>
@@ -263,7 +261,7 @@ export default function ResumesPage() {
 
                   {confirmingDelete ? (
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs text-gray-500">Delete?</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">Delete?</span>
                       <button
                         onClick={() => handleDelete(resume.id)}
                         className="text-xs font-medium text-red-600 hover:text-red-700 transition-colors"
@@ -272,7 +270,7 @@ export default function ResumesPage() {
                       </button>
                       <button
                         onClick={() => setDeleteConfirm(null)}
-                        className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                        className="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                       >
                         No
                       </button>
@@ -280,7 +278,7 @@ export default function ResumesPage() {
                   ) : (
                     <button
                       onClick={() => setDeleteConfirm(resume.id)}
-                      className="text-gray-300 hover:text-red-400 transition-colors"
+                      className="text-gray-300 dark:text-gray-600 hover:text-red-400 transition-colors"
                       aria-label="Delete resume"
                     >
                       <i className="ti ti-trash text-sm" aria-hidden="true" />
@@ -293,59 +291,42 @@ export default function ResumesPage() {
         </div>
       )}
 
-      {/* Modal */}
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/40"
-            onClick={closeModal}
-            aria-hidden="true"
-          />
-          <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-lg flex flex-col max-h-[90vh]">
-            {/* Modal header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-              <h2 className="text-sm font-semibold text-gray-900">Add resume</h2>
-              <button
-                onClick={closeModal}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-                aria-label="Close"
-              >
+          <div className="absolute inset-0 bg-black/40" onClick={closeModal} aria-hidden="true" />
+          <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-lg flex flex-col max-h-[90vh]">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800">
+              <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-50">Add resume</h2>
+              <button onClick={closeModal} className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" aria-label="Close">
                 <i className="ti ti-x text-base" aria-hidden="true" />
               </button>
             </div>
 
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
-              {/* Label */}
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1.5">
-                  Label
-                </label>
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1.5">Label</label>
                 <input
                   type="text"
                   value={label}
                   onChange={(e) => setLabel(e.target.value)}
                   placeholder="e.g. Software Engineer – May 2026"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  className={inputClass}
                 />
               </div>
 
-              {/* Tabs */}
               <div>
-                <div className="flex gap-1 bg-gray-100 rounded-lg p-1 mb-4">
+                <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1 mb-4">
                   {(["paste", "pdf"] as Tab[]).map((t) => (
                     <button
                       key={t}
                       onClick={() => setTab(t)}
                       className={`flex-1 flex items-center justify-center gap-1.5 text-xs font-medium py-1.5 rounded-md transition-colors ${
                         tab === t
-                          ? "bg-white text-gray-900 shadow-sm"
-                          : "text-gray-500 hover:text-gray-700"
+                          ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm"
+                          : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                       }`}
                     >
-                      <i
-                        className={`ti ${t === "paste" ? "ti-align-left" : "ti-file-type-pdf"} text-sm`}
-                        aria-hidden="true"
-                      />
+                      <i className={`ti ${t === "paste" ? "ti-align-left" : "ti-file-type-pdf"} text-sm`} aria-hidden="true" />
                       {t === "paste" ? "Paste text" : "Upload PDF"}
                     </button>
                   ))}
@@ -357,14 +338,13 @@ export default function ResumesPage() {
                     onChange={(e) => setContent(e.target.value)}
                     placeholder="Paste your resume text here…"
                     rows={12}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none font-mono"
+                    className={`${inputClass} resize-none font-mono`}
                   />
                 ) : (
                   <div className="space-y-3">
-                    {/* Drop zone */}
                     <div
                       onClick={() => fileInputRef.current?.click()}
-                      className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center cursor-pointer hover:border-emerald-300 hover:bg-emerald-50/30 transition-colors"
+                      className="border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-6 text-center cursor-pointer hover:border-emerald-300 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/30 transition-colors"
                     >
                       <input
                         ref={fileInputRef}
@@ -376,38 +356,35 @@ export default function ResumesPage() {
                           if (file) handlePdfSelect(file);
                         }}
                       />
-                      <i className="ti ti-upload text-2xl text-gray-300 mb-2 block" aria-hidden="true" />
+                      <i className="ti ti-upload text-2xl text-gray-300 dark:text-gray-600 mb-2 block" aria-hidden="true" />
                       {pdfFile ? (
-                        <p className="text-sm text-gray-700 font-medium">{pdfFile.name}</p>
+                        <p className="text-sm text-gray-700 dark:text-gray-200 font-medium">{pdfFile.name}</p>
                       ) : (
                         <>
-                          <p className="text-sm text-gray-500">Click to select a PDF</p>
-                          <p className="text-xs text-gray-400 mt-1">PDF files only</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Click to select a PDF</p>
+                          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">PDF files only</p>
                         </>
                       )}
                     </div>
 
                     {parsing && (
-                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                         <i className="ti ti-loader-2 animate-spin text-base" aria-hidden="true" />
                         Extracting text…
                       </div>
                     )}
-
-                    {parseError && (
-                      <p className="text-xs text-red-500">{parseError}</p>
-                    )}
+                    {parseError && <p className="text-xs text-red-500">{parseError}</p>}
 
                     {pdfText && !parsing && (
                       <div>
-                        <p className="text-xs font-medium text-gray-500 mb-1.5">
+                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
                           Extracted text — review and edit if needed
                         </p>
                         <textarea
                           value={pdfText}
                           onChange={(e) => setPdfText(e.target.value)}
                           rows={10}
-                          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none font-mono"
+                          className={`${inputClass} resize-none font-mono`}
                         />
                       </div>
                     )}
@@ -416,21 +393,15 @@ export default function ResumesPage() {
               </div>
             </div>
 
-            {/* Modal footer */}
-            <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-gray-100 flex-wrap">
-              {saveError && (
-                <p className="text-xs text-red-500 w-full text-right">{saveError}</p>
-              )}
-              <button
-                onClick={closeModal}
-                className="text-sm text-gray-500 hover:text-gray-700 px-4 py-2 rounded-lg transition-colors"
-              >
+            <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-gray-100 dark:border-gray-800 flex-wrap">
+              {saveError && <p className="text-xs text-red-500 w-full text-right">{saveError}</p>}
+              <button onClick={closeModal} className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 px-4 py-2 rounded-lg transition-colors">
                 Cancel
               </button>
               <button
                 onClick={handleSave}
                 disabled={!canSave || saving}
-                className="flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {saving ? (
                   <>

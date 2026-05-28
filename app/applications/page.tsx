@@ -32,10 +32,10 @@ function formatDate(d: Date) {
 }
 
 function SortIcon({ active, dir }: { active: boolean; dir: SortDir }) {
-  if (!active) return <i className="ti ti-selector text-gray-300 text-xs ml-1" aria-hidden="true" />;
+  if (!active) return <i className="ti ti-selector text-gray-300 dark:text-gray-600 text-xs ml-1" aria-hidden="true" />;
   return dir === "asc"
-    ? <i className="ti ti-sort-ascending text-gray-600 text-xs ml-1" aria-hidden="true" />
-    : <i className="ti ti-sort-descending text-gray-600 text-xs ml-1" aria-hidden="true" />;
+    ? <i className="ti ti-sort-ascending text-gray-600 dark:text-gray-300 text-xs ml-1" aria-hidden="true" />
+    : <i className="ti ti-sort-descending text-gray-600 dark:text-gray-300 text-xs ml-1" aria-hidden="true" />;
 }
 
 export default function ApplicationsPage() {
@@ -153,11 +153,10 @@ export default function ApplicationsPage() {
   const hasFilters = stageFilter !== "all" || sourceFilter !== "all";
 
   const thClass =
-    "px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap select-none cursor-pointer hover:text-gray-800 transition-colors";
+    "px-4 py-2.5 text-left text-xs font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap select-none cursor-pointer hover:text-gray-800 dark:hover:text-gray-200 transition-colors";
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      {/* Toast */}
       {toast && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-lg">
           <i className="ti ti-circle-check text-emerald-400 text-base" aria-hidden="true" />
@@ -168,8 +167,8 @@ export default function ApplicationsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="text-lg font-semibold text-gray-900">Applications</h1>
-          <p className="text-sm text-gray-500">{jobs.length} job{jobs.length !== 1 ? "s" : ""} tracked</p>
+          <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-50">Applications</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{jobs.length} job{jobs.length !== 1 ? "s" : ""} tracked</p>
         </div>
         <div className="flex items-center gap-2">
           {selectedIds.size > 0 && (
@@ -184,7 +183,7 @@ export default function ApplicationsPage() {
           )}
           <button
             onClick={() => setModalOpen(true)}
-            className="flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
+            className="flex items-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
           >
             <i className="ti ti-plus text-sm" aria-hidden="true" />
             Add job
@@ -198,7 +197,7 @@ export default function ApplicationsPage() {
           <select
             value={stageFilter}
             onChange={(e) => setStageFilter(e.target.value as JobStage | "all")}
-            className="border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-600 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 text-xs text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
           >
             <option value="all">All stages</option>
             {ALL_STAGES.map((s) => (
@@ -208,7 +207,7 @@ export default function ApplicationsPage() {
           <select
             value={sourceFilter}
             onChange={(e) => setSourceFilter(e.target.value as JobSource | "all")}
-            className="border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-600 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 text-xs text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
           >
             <option value="all">All sources</option>
             {ALL_SOURCES.map((s) => (
@@ -218,7 +217,7 @@ export default function ApplicationsPage() {
           {hasFilters && (
             <button
               onClick={() => { setStageFilter("all"); setSourceFilter("all"); }}
-              className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
             >
               Clear filters
             </button>
@@ -228,35 +227,35 @@ export default function ApplicationsPage() {
 
       {/* Content */}
       {loading ? (
-        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+        <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl overflow-hidden">
           {[1, 2, 3].map((n) => (
-            <div key={n} className="flex items-center gap-4 px-4 py-3 border-b border-gray-50 animate-pulse">
-              <div className="h-4 bg-gray-100 rounded w-40" />
-              <div className="h-4 bg-gray-100 rounded w-28" />
-              <div className="h-4 bg-gray-100 rounded w-20 ml-auto" />
+            <div key={n} className="flex items-center gap-4 px-4 py-3 border-b border-gray-50 dark:border-gray-800 animate-pulse">
+              <div className="h-4 bg-gray-100 dark:bg-gray-800 rounded w-40" />
+              <div className="h-4 bg-gray-100 dark:bg-gray-800 rounded w-28" />
+              <div className="h-4 bg-gray-100 dark:bg-gray-800 rounded w-20 ml-auto" />
             </div>
           ))}
         </div>
       ) : jobs.length === 0 ? (
-        <div className="bg-white border border-gray-100 rounded-xl p-12 text-center">
-          <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center mx-auto mb-4">
-            <i className="ti ti-file-text text-gray-400 text-2xl" aria-hidden="true" />
+        <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-12 text-center">
+          <div className="w-12 h-12 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center mx-auto mb-4">
+            <i className="ti ti-file-text text-gray-400 dark:text-gray-500 text-2xl" aria-hidden="true" />
           </div>
-          <h2 className="text-sm font-medium text-gray-900 mb-1">No applications yet</h2>
-          <p className="text-sm text-gray-500 mb-5 max-w-xs mx-auto">
+          <h2 className="text-sm font-medium text-gray-900 dark:text-gray-50 mb-1">No applications yet</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-5 max-w-xs mx-auto">
             Add your first job to start tracking your search.
           </p>
           <button
             onClick={() => setModalOpen(true)}
-            className="inline-flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
+            className="inline-flex items-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
           >
             <i className="ti ti-plus text-sm" aria-hidden="true" />
             Add job
           </button>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="bg-white border border-gray-100 rounded-xl p-10 text-center">
-          <p className="text-sm text-gray-500 mb-2">No jobs match your filters.</p>
+        <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-10 text-center">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">No jobs match your filters.</p>
           <button
             onClick={() => { setStageFilter("all"); setSourceFilter("all"); }}
             className="text-sm text-emerald-600 hover:underline"
@@ -265,9 +264,9 @@ export default function ApplicationsPage() {
           </button>
         </div>
       ) : (
-        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+        <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl overflow-hidden">
           <table className="w-full">
-            <thead className="border-b border-gray-100">
+            <thead className="border-b border-gray-100 dark:border-gray-800">
               <tr>
                 <th className="px-4 py-2.5 w-8">
                   <input
@@ -275,7 +274,7 @@ export default function ApplicationsPage() {
                     type="checkbox"
                     checked={allFilteredSelected}
                     onChange={handleToggleAll}
-                    className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                    className="rounded border-gray-300 dark:border-gray-600 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
                     aria-label="Select all"
                   />
                 </th>
@@ -304,34 +303,34 @@ export default function ApplicationsPage() {
                 <tr
                   key={job.id}
                   onClick={() => router.push(`/applications/${job.id}`)}
-                  className={`border-b border-gray-50 last:border-0 hover:bg-gray-50 cursor-pointer transition-colors ${selectedIds.has(job.id) ? "bg-emerald-50 hover:bg-emerald-50" : ""}`}
+                  className={`border-b border-gray-50 dark:border-gray-800 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors ${selectedIds.has(job.id) ? "bg-emerald-50 dark:bg-emerald-950 hover:bg-emerald-50 dark:hover:bg-emerald-950" : ""}`}
                 >
                   <td className="px-4 py-3 w-8" onClick={(e) => e.stopPropagation()}>
                     <input
                       type="checkbox"
                       checked={selectedIds.has(job.id)}
                       onChange={() => handleToggleSelect(job.id)}
-                      className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                      className="rounded border-gray-300 dark:border-gray-600 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
                       aria-label={`Select ${job.title}`}
                     />
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-sm font-medium text-gray-900">{job.title}</span>
+                    <span className="text-sm font-medium text-gray-900 dark:text-gray-50">{job.title}</span>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-sm text-gray-600">{job.company}</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-300">{job.company}</span>
                   </td>
                   <td className="px-4 py-3 hidden sm:table-cell">
-                    <span className="text-sm text-gray-500">{SOURCE_LABELS[job.source]}</span>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">{SOURCE_LABELS[job.source]}</span>
                   </td>
                   <td className="px-4 py-3">
                     <StageBadge stage={job.stage} />
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell">
-                    <span className="text-sm text-gray-400">{formatDate(job.createdAt)}</span>
+                    <span className="text-sm text-gray-400 dark:text-gray-500">{formatDate(job.createdAt)}</span>
                   </td>
                   <td className="px-4 py-3 hidden lg:table-cell">
-                    <span className="text-sm text-gray-400">
+                    <span className="text-sm text-gray-400 dark:text-gray-500">
                       {job.fitScore != null ? `${job.fitScore}` : "—"}
                     </span>
                   </td>

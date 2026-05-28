@@ -126,9 +126,9 @@ function InterviewPrepContent() {
   if (loading) {
     return (
       <div className="p-6 max-w-3xl mx-auto animate-pulse space-y-4">
-        <div className="h-7 bg-gray-100 rounded w-48" />
-        <div className="h-40 bg-gray-100 rounded-xl" />
-        <div className="h-64 bg-gray-100 rounded-xl" />
+        <div className="h-7 bg-gray-100 dark:bg-gray-800 rounded w-48" />
+        <div className="h-40 bg-gray-100 dark:bg-gray-800 rounded-xl" />
+        <div className="h-64 bg-gray-100 dark:bg-gray-800 rounded-xl" />
       </div>
     );
   }
@@ -144,20 +144,20 @@ function InterviewPrepContent() {
 
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-lg font-semibold text-gray-900">Interview prep</h1>
-        <p className="text-sm text-gray-500">
+        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-50">Interview prep</h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
           {preps.length} session{preps.length !== 1 ? "s" : ""}
         </p>
       </div>
 
       {/* Generator */}
-      <div className="bg-white border border-gray-100 rounded-xl mb-4">
-        <div className="px-4 py-3 border-b border-gray-50">
-          <p className="text-xs font-medium text-gray-400 uppercase tracking-widest">Generate</p>
+      <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl mb-4">
+        <div className="px-4 py-3 border-b border-gray-50 dark:border-gray-800">
+          <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest">Generate</p>
         </div>
         <div className="px-4 py-4">
           {jobs.length === 0 ? (
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-gray-400 dark:text-gray-500">
               No jobs yet.{" "}
               <button
                 onClick={() => router.push("/applications")}
@@ -170,11 +170,11 @@ function InterviewPrepContent() {
           ) : (
             <div className="space-y-3">
               <div>
-                <label className="block text-xs text-gray-500 mb-1.5">Job</label>
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Job</label>
                 <select
                   value={selectedJobId}
                   onChange={(e) => setSelectedJobId(e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                 >
                   {jobs.map((j) => (
                     <option key={j.id} value={j.id}>
@@ -184,7 +184,7 @@ function InterviewPrepContent() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1.5">
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">
                   Describe the interview process
                 </label>
                 <textarea
@@ -192,14 +192,14 @@ function InterviewPrepContent() {
                   onChange={(e) => setInterviewProcess(e.target.value)}
                   placeholder="e.g. 2 rounds: first a 30-min recruiter screen, then a 60-min panel with the hiring manager and two engineers — mostly behavioral with some system design questions"
                   rows={3}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
+                  className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none dark:bg-gray-800"
                 />
               </div>
               <div className="flex items-center gap-3 flex-wrap">
                 <button
                   onClick={handleGenerate}
                   disabled={generating || !selectedJobId || !interviewProcess.trim()}
-                  className="flex items-center gap-1.5 bg-gray-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-1.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {generating ? (
                     <i className="ti ti-loader-2 animate-spin text-sm" aria-hidden="true" />
@@ -219,20 +219,20 @@ function InterviewPrepContent() {
 
       {/* Viewing prep */}
       {viewingPrep && (
-        <div className="bg-white border border-gray-100 rounded-xl mb-4">
-          <div className="px-4 py-3 border-b border-gray-50 flex items-start justify-between gap-4">
+        <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl mb-4">
+          <div className="px-4 py-3 border-b border-gray-50 dark:border-gray-800 flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-50 truncate">
                 {jobTitle(viewingPrep.jobId)}
               </p>
-              <p className="text-xs text-gray-400 mt-0.5">
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
                 {jobCompany(viewingPrep.jobId)} · {formatDate(viewingPrep.createdAt)}
               </p>
             </div>
             <button
               onClick={() => handleDelete(viewingPrep.id)}
               disabled={deletingId === viewingPrep.id}
-              className="text-gray-300 hover:text-red-400 transition-colors disabled:opacity-50 shrink-0"
+              className="text-gray-300 dark:text-gray-600 hover:text-red-400 transition-colors disabled:opacity-50 shrink-0"
               aria-label="Delete prep"
             >
               <i className="ti ti-trash text-sm" aria-hidden="true" />
@@ -241,28 +241,28 @@ function InterviewPrepContent() {
 
           {/* Process description */}
           <div className="px-4 pt-3 pb-1">
-            <p className="text-xs font-medium text-gray-400 uppercase tracking-widest mb-1">
+            <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">
               Process
             </p>
-            <p className="text-sm text-gray-600 italic">{viewingPrep.interviewProcess}</p>
+            <p className="text-sm text-gray-600 dark:text-gray-300 italic">{viewingPrep.interviewProcess}</p>
           </div>
 
           {/* Questions */}
           <div className="px-4 pt-3 pb-1">
-            <p className="text-xs font-medium text-gray-400 uppercase tracking-widest mb-2">
+            <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2">
               Mock questions
             </p>
             <ol className="space-y-2">
               {viewingPrep.mockQuestions.map((q, i) => (
                 <li key={i} className="flex gap-3 group">
-                  <span className="text-xs font-semibold text-gray-300 w-5 shrink-0 pt-0.5">
+                  <span className="text-xs font-semibold text-gray-300 dark:text-gray-600 w-5 shrink-0 pt-0.5">
                     {i + 1}.
                   </span>
-                  <p className="text-sm text-gray-700 flex-1">{q}</p>
+                  <p className="text-sm text-gray-700 dark:text-gray-200 flex-1">{q}</p>
                   <button
                     onClick={() => handleSaveQuestion(q, i)}
                     disabled={savingQuestionIndex === i}
-                    className="text-gray-200 hover:text-emerald-500 transition-colors opacity-0 group-hover:opacity-100 shrink-0 mt-0.5 disabled:opacity-50"
+                    className="text-gray-200 dark:text-gray-700 hover:text-emerald-500 transition-colors opacity-0 group-hover:opacity-100 shrink-0 mt-0.5 disabled:opacity-50"
                     aria-label="Save to answer bank"
                     title="Save to answer bank"
                   >
@@ -280,14 +280,14 @@ function InterviewPrepContent() {
           {/* Study tips */}
           {viewingPrep.studyTips && (
             <div className="px-4 pt-3 pb-4">
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-widest mb-2">
+              <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2">
                 Study tips
               </p>
               <div className="space-y-1.5">
                 {viewingPrep.studyTips.split("\n").filter(Boolean).map((tip, i) => (
                   <div key={i} className="flex gap-2">
                     <i className="ti ti-circle-check text-emerald-500 text-sm shrink-0 mt-0.5" aria-hidden="true" />
-                    <p className="text-sm text-gray-600">{tip}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">{tip}</p>
                   </div>
                 ))}
               </div>
@@ -298,20 +298,20 @@ function InterviewPrepContent() {
 
       {/* Past sessions list */}
       {preps.length > 0 && (
-        <div className="bg-white border border-gray-100 rounded-xl">
-          <div className="px-4 py-3 border-b border-gray-50">
-            <p className="text-xs font-medium text-gray-400 uppercase tracking-widest">
+        <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl">
+          <div className="px-4 py-3 border-b border-gray-50 dark:border-gray-800">
+            <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest">
               All sessions
             </p>
           </div>
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y divide-gray-50 dark:divide-gray-800">
             {preps.map((prep) => (
               <div key={prep.id} className="px-4 py-3 flex items-center justify-between gap-4">
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-gray-900 truncate">
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-50 truncate">
                     {jobTitle(prep.jobId)}
                   </p>
-                  <p className="text-xs text-gray-400 truncate">
+                  <p className="text-xs text-gray-400 dark:text-gray-500 truncate">
                     {prep.mockQuestions.length} questions · {formatDate(prep.createdAt)}
                   </p>
                 </div>
@@ -329,7 +329,7 @@ function InterviewPrepContent() {
                   <button
                     onClick={() => handleDelete(prep.id)}
                     disabled={deletingId === prep.id}
-                    className="text-gray-200 hover:text-red-400 transition-colors disabled:opacity-50"
+                    className="text-gray-200 dark:text-gray-700 hover:text-red-400 transition-colors disabled:opacity-50"
                     aria-label="Delete"
                   >
                     <i className="ti ti-trash text-xs" aria-hidden="true" />
@@ -343,11 +343,11 @@ function InterviewPrepContent() {
 
       {/* Empty state */}
       {preps.length === 0 && !loading && jobs.length > 0 && (
-        <div className="bg-white border border-gray-100 rounded-xl p-10 text-center">
-          <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center mx-auto mb-3">
-            <i className="ti ti-microphone text-gray-400 text-xl" aria-hidden="true" />
+        <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-10 text-center">
+          <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center mx-auto mb-3">
+            <i className="ti ti-microphone text-gray-400 dark:text-gray-500 text-xl" aria-hidden="true" />
           </div>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             No prep sessions yet. Describe the process above and generate your first one.
           </p>
         </div>

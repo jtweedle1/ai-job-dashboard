@@ -13,6 +13,8 @@ export type JobSource =
   | "referral"
   | "recruiter"
   | "wellfound"
+  | "otta"
+  | "hiring_cafe"
   | "niche"
   | "other";
 
@@ -50,8 +52,10 @@ export const SOURCE_LABELS: Record<JobSource, string> = {
   direct:    "Company site",
   referral:  "Referral",
   recruiter: "Recruiter",
-  wellfound: "Wellfound",
-  niche:     "Niche board",
+  wellfound:    "Wellfound",
+  otta:         "Otta",
+  hiring_cafe:  "Hiring Cafe",
+  niche:        "Niche board",
   other:     "Other",
 };
 

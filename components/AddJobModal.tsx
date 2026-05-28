@@ -125,7 +125,6 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
       };
       const jobId = await createJob(user.uid, jobData);
 
-      // Auto-create company profile if one doesn't exist yet
       const existing = await getCompanyByName(user.uid, company.trim());
       if (!existing) {
         await createCompany(user.uid, { name: company.trim(), jobId });
@@ -149,16 +148,19 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
 
   const canSave = title.trim().length > 0 && company.trim().length > 0;
 
+  const inputClass =
+    "w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent dark:bg-gray-800";
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} aria-hidden="true" />
-      <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-2xl flex flex-col max-h-[90vh]">
+      <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-2xl flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
-          <h2 className="text-sm font-semibold text-gray-900">Add job</h2>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800 shrink-0">
+          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-50">Add job</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
             aria-label="Close"
           >
             <i className="ti ti-x text-base" aria-hidden="true" />
@@ -168,16 +170,16 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
         <div className="flex-1 overflow-y-auto">
           {/* JD section */}
           <div className="px-5 pt-4 pb-2">
-            <p className="text-xs font-medium text-gray-500 mb-2">Job description</p>
-            <div className="flex gap-1 bg-gray-100 rounded-lg p-1 mb-3 w-fit">
+            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Job description</p>
+            <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1 mb-3 w-fit">
               {(["paste", "url"] as JdTab[]).map((t) => (
                 <button
                   key={t}
                   onClick={() => setJdTab(t)}
                   className={`text-xs font-medium px-3 py-1.5 rounded-md transition-colors ${
                     jdTab === t
-                      ? "bg-white text-gray-900 shadow-sm"
-                      : "text-gray-500 hover:text-gray-700"
+                      ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm"
+                      : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                   }`}
                 >
                   {t === "paste" ? "Paste JD" : "From URL"}
@@ -191,7 +193,7 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
                 onChange={(e) => setJdText(e.target.value)}
                 placeholder="Paste the job description here…"
                 rows={6}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
+                className={`${inputClass} resize-none`}
               />
             ) : (
               <div className="space-y-2">
@@ -202,12 +204,12 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
                     onChange={(e) => setUrlInput(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleFetch()}
                     placeholder="https://..."
-                    className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className={inputClass}
                   />
                   <button
                     onClick={handleFetch}
                     disabled={fetching || !urlInput.trim()}
-                    className="flex items-center gap-1.5 bg-gray-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                    className="flex items-center gap-1.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
                   >
                     {fetching ? (
                       <i className="ti ti-loader-2 animate-spin text-sm" aria-hidden="true" />
@@ -218,7 +220,7 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
                   </button>
                 </div>
                 {fetchError && <p className="text-xs text-red-500">{fetchError}</p>}
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-gray-400 dark:text-gray-500">
                   Some sites block scraping — if it fails, paste the JD text directly.
                 </p>
               </div>
@@ -232,7 +234,7 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
                 <button
                   onClick={handleExtract}
                   disabled={extracting}
-                  className="flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 hover:bg-emerald-100 dark:hover:bg-emerald-900 border border-emerald-200 dark:border-emerald-800 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {extracting ? (
                     <i className="ti ti-loader-2 animate-spin text-xs" aria-hidden="true" />
@@ -250,11 +252,11 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
 
           {/* Details */}
           <div className="px-5 pt-3 pb-5">
-            <div className="border-t border-gray-100 pt-4">
-              <p className="text-xs font-medium text-gray-500 mb-3">Details</p>
+            <div className="border-t border-gray-100 dark:border-gray-800 pt-4">
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-3">Details</p>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1.5">
+                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">
                     Role title <span className="text-red-400">*</span>
                   </label>
                   <input
@@ -262,11 +264,11 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="e.g. Senior Product Designer"
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className={inputClass}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1.5">
+                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">
                     Company <span className="text-red-400">*</span>
                   </label>
                   <input
@@ -274,35 +276,35 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
                     value={company}
                     onChange={(e) => setCompany(e.target.value)}
                     placeholder="e.g. Acme Inc."
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className={inputClass}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1.5">Location</label>
+                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Location</label>
                   <input
                     type="text"
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
                     placeholder="e.g. Remote, NYC"
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className={inputClass}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1.5">Salary</label>
+                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Salary</label>
                   <input
                     type="text"
                     value={salary}
                     onChange={(e) => setSalary(e.target.value)}
                     placeholder="e.g. $120k–$150k"
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className={inputClass}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1.5">Stage</label>
+                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Stage</label>
                   <select
                     value={stage}
                     onChange={(e) => setStage(e.target.value as JobStage)}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white"
+                    className={inputClass}
                   >
                     {ALL_STAGES.map((s) => (
                       <option key={s} value={s}>{STAGE_META[s].label}</option>
@@ -310,11 +312,11 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1.5">Source</label>
+                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Source</label>
                   <select
                     value={source}
                     onChange={(e) => setSource(e.target.value as JobSource)}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white"
+                    className={inputClass}
                   >
                     {ALL_SOURCES.map((s) => (
                       <option key={s} value={s}>{SOURCE_LABELS[s]}</option>
@@ -322,13 +324,23 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
                   </select>
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-xs text-gray-500 mb-1.5">Notes</label>
+                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Job URL</label>
+                  <input
+                    type="url"
+                    value={urlInput}
+                    onChange={(e) => setUrlInput(e.target.value)}
+                    placeholder="https://..."
+                    className={inputClass}
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Notes</label>
                   <textarea
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="Any notes about this role…"
                     rows={3}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
+                    className={`${inputClass} resize-none`}
                   />
                 </div>
               </div>
@@ -337,19 +349,19 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center gap-2 px-5 py-4 border-t border-gray-100 shrink-0">
+        <div className="flex items-center gap-2 px-5 py-4 border-t border-gray-100 dark:border-gray-800 shrink-0">
           {saveError && <p className="text-xs text-red-500 mr-auto">{saveError}</p>}
           <div className="flex items-center gap-2 ml-auto">
             <button
               onClick={onClose}
-              className="text-sm text-gray-500 hover:text-gray-700 px-4 py-2 rounded-lg transition-colors"
+              className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 px-4 py-2 rounded-lg transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
               disabled={!canSave || saving}
-              className="flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving ? (
                 <>

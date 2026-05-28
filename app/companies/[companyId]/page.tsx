@@ -119,9 +119,9 @@ export default function CompanyProfilePage({
   if (loading) {
     return (
       <div className="p-6 max-w-3xl mx-auto animate-pulse space-y-4">
-        <div className="h-7 bg-gray-100 rounded w-48" />
-        <div className="h-32 bg-gray-100 rounded-xl" />
-        <div className="h-32 bg-gray-100 rounded-xl" />
+        <div className="h-7 bg-gray-100 dark:bg-gray-800 rounded w-48" />
+        <div className="h-32 bg-gray-100 dark:bg-gray-800 rounded-xl" />
+        <div className="h-32 bg-gray-100 dark:bg-gray-800 rounded-xl" />
       </div>
     );
   }
@@ -153,7 +153,7 @@ export default function CompanyProfilePage({
       {/* Back */}
       <button
         onClick={() => router.push("/companies")}
-        className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 transition-colors mb-5"
+        className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors mb-5"
       >
         <i className="ti ti-arrow-left text-sm" aria-hidden="true" />
         Companies
@@ -173,7 +173,7 @@ export default function CompanyProfilePage({
           <button
             onClick={handleAutoFill}
             disabled={filling}
-            className="flex items-center gap-1.5 text-xs font-medium text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {filling ? (
               <i className="ti ti-loader-2 animate-spin text-xs" aria-hidden="true" />
@@ -185,7 +185,7 @@ export default function CompanyProfilePage({
 
           {deleteConfirm ? (
             <>
-              <span className="text-xs text-gray-500">Delete?</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">Delete?</span>
               <button
                 onClick={handleDelete}
                 disabled={deleting}
@@ -211,22 +211,22 @@ export default function CompanyProfilePage({
           )}
         </div>
       </div>
-      <p className="text-xs text-gray-400 mb-1 px-3">Updated {formatDate(company.updatedAt)}</p>
+      <p className="text-xs text-gray-400 dark:text-gray-500 mb-1 px-3">Updated {formatDate(company.updatedAt)}</p>
       {fillError && (
         <p className="text-xs text-amber-600 mb-5 px-3">{fillError}</p>
       )}
       {!fillError && <div className="mb-6" />}
 
       {/* Linked job */}
-      <div className="bg-white border border-gray-100 rounded-xl mb-4">
-        <div className="px-4 py-3 border-b border-gray-50">
-          <p className="text-xs font-medium text-gray-400 uppercase tracking-widest">Linked role</p>
+      <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl mb-4">
+        <div className="px-4 py-3 border-b border-gray-50 dark:border-gray-800">
+          <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest">Linked role</p>
         </div>
         {linkedJob ? (
           <div className="px-4 py-3 flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-900">{linkedJob.title}</p>
-              <p className="text-xs text-gray-400">{linkedJob.company}</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-50">{linkedJob.title}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">{linkedJob.company}</p>
             </div>
             <button
               onClick={() => router.push(`/applications/${linkedJob.id}`)}
@@ -237,20 +237,20 @@ export default function CompanyProfilePage({
           </div>
         ) : (
           <div className="px-4 py-3">
-            <p className="text-sm text-gray-400">No role linked to this company.</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500">No role linked to this company.</p>
           </div>
         )}
       </div>
 
       {/* Profile fields */}
-      <div className="bg-white border border-gray-100 rounded-xl mb-4">
-        <div className="px-4 py-3 border-b border-gray-50">
-          <p className="text-xs font-medium text-gray-400 uppercase tracking-widest">Research notes</p>
+      <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl mb-4">
+        <div className="px-4 py-3 border-b border-gray-50 dark:border-gray-800">
+          <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest">Research notes</p>
         </div>
-        <div className="divide-y divide-gray-50">
+        <div className="divide-y divide-gray-50 dark:divide-gray-800">
           {PROFILE_FIELDS.map(({ key, label, placeholder }) => (
             <div key={key} className="px-4 py-3">
-              <p className="text-xs font-medium text-gray-500 mb-1">{label}</p>
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{label}</p>
               <EditableField
                 value={company[key] as string | null}
                 placeholder={placeholder}

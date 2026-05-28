@@ -147,9 +147,9 @@ function CoverLettersContent() {
   if (loading) {
     return (
       <div className="p-6 max-w-3xl mx-auto animate-pulse space-y-4">
-        <div className="h-7 bg-gray-100 rounded w-48" />
-        <div className="h-32 bg-gray-100 rounded-xl" />
-        <div className="h-48 bg-gray-100 rounded-xl" />
+        <div className="h-7 bg-gray-100 dark:bg-gray-800 rounded w-48" />
+        <div className="h-32 bg-gray-100 dark:bg-gray-800 rounded-xl" />
+        <div className="h-48 bg-gray-100 dark:bg-gray-800 rounded-xl" />
       </div>
     );
   }
@@ -165,20 +165,20 @@ function CoverLettersContent() {
 
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-lg font-semibold text-gray-900">Cover letters</h1>
-        <p className="text-sm text-gray-500">
+        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-50">Cover letters</h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
           {letters.length} letter{letters.length !== 1 ? "s" : ""}
         </p>
       </div>
 
       {/* Generator */}
-      <div className="bg-white border border-gray-100 rounded-xl mb-4">
-        <div className="px-4 py-3 border-b border-gray-50">
-          <p className="text-xs font-medium text-gray-400 uppercase tracking-widest">Generate</p>
+      <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl mb-4">
+        <div className="px-4 py-3 border-b border-gray-50 dark:border-gray-800">
+          <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest">Generate</p>
         </div>
         <div className="px-4 py-4">
           {jobs.length === 0 ? (
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-gray-400 dark:text-gray-500">
               No jobs yet.{" "}
               <button
                 onClick={() => router.push("/applications")}
@@ -189,7 +189,7 @@ function CoverLettersContent() {
               first.
             </p>
           ) : resumes.length === 0 ? (
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-gray-400 dark:text-gray-500">
               No resumes yet.{" "}
               <button
                 onClick={() => router.push("/resumes")}
@@ -203,11 +203,11 @@ function CoverLettersContent() {
             <div className="space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1.5">Job</label>
+                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Job</label>
                   <select
                     value={selectedJobId}
                     onChange={(e) => setSelectedJobId(e.target.value)}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   >
                     {jobs.map((j) => (
                       <option key={j.id} value={j.id}>
@@ -217,11 +217,11 @@ function CoverLettersContent() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1.5">Resume</label>
+                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Resume</label>
                   <select
                     value={selectedResumeId}
                     onChange={(e) => setSelectedResumeId(e.target.value)}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   >
                     {resumes.map((r) => (
                       <option key={r.id} value={r.id}>
@@ -235,7 +235,7 @@ function CoverLettersContent() {
                 <button
                   onClick={handleGenerate}
                   disabled={generating || !selectedJobId || !selectedResumeId}
-                  className="flex items-center gap-1.5 bg-gray-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-1.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {generating ? (
                     <i className="ti ti-loader-2 animate-spin text-sm" aria-hidden="true" />
@@ -259,13 +259,13 @@ function CoverLettersContent() {
 
       {/* Viewing letter */}
       {viewingLetter && (
-        <div className="bg-white border border-gray-100 rounded-xl mb-4">
-          <div className="px-4 py-3 border-b border-gray-50 flex items-start justify-between gap-4">
+        <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl mb-4">
+          <div className="px-4 py-3 border-b border-gray-50 dark:border-gray-800 flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-50 truncate">
                 {jobTitle(viewingLetter.jobId)}
               </p>
-              <p className="text-xs text-gray-400 mt-0.5">
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
                 {jobCompany(viewingLetter.jobId)} · {resumeLabel(viewingLetter.resumeId)} ·{" "}
                 {formatDate(viewingLetter.createdAt)}
               </p>
@@ -274,7 +274,7 @@ function CoverLettersContent() {
               <button
                 onClick={handleSaveToBank}
                 disabled={savingToBank}
-                className="flex items-center gap-1.5 text-xs font-medium text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                className="flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
               >
                 {savingToBank ? (
                   <i className="ti ti-loader-2 animate-spin text-xs" aria-hidden="true" />
@@ -285,7 +285,7 @@ function CoverLettersContent() {
               </button>
               <button
                 onClick={handleCopy}
-                className="flex items-center gap-1.5 text-xs font-medium text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
               >
                 <i
                   className={`ti ${copied ? "ti-check text-emerald-600" : "ti-copy"} text-xs`}
@@ -296,7 +296,7 @@ function CoverLettersContent() {
               <button
                 onClick={() => handleDelete(viewingLetter.id)}
                 disabled={deletingId === viewingLetter.id}
-                className="text-gray-300 hover:text-red-400 transition-colors disabled:opacity-50"
+                className="text-gray-300 dark:text-gray-600 hover:text-red-400 transition-colors disabled:opacity-50"
                 aria-label="Delete cover letter"
               >
                 <i className="ti ti-trash text-sm" aria-hidden="true" />
@@ -304,7 +304,7 @@ function CoverLettersContent() {
             </div>
           </div>
           <div className="px-4 py-4">
-            <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+            <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
               {viewingLetter.content}
             </p>
           </div>
@@ -313,23 +313,23 @@ function CoverLettersContent() {
 
       {/* Past letters list */}
       {letters.length > 0 && (
-        <div className="bg-white border border-gray-100 rounded-xl">
-          <div className="px-4 py-3 border-b border-gray-50">
-            <p className="text-xs font-medium text-gray-400 uppercase tracking-widest">
+        <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl">
+          <div className="px-4 py-3 border-b border-gray-50 dark:border-gray-800">
+            <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest">
               All letters
             </p>
           </div>
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y divide-gray-50 dark:divide-gray-800">
             {letters.map((letter) => (
               <div
                 key={letter.id}
                 className="px-4 py-3 flex items-center justify-between gap-4"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-gray-900 truncate">
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-50 truncate">
                     {jobTitle(letter.jobId)}
                   </p>
-                  <p className="text-xs text-gray-400 truncate">
+                  <p className="text-xs text-gray-400 dark:text-gray-500 truncate">
                     {resumeLabel(letter.resumeId)} · {formatDate(letter.createdAt)}
                   </p>
                 </div>
@@ -347,7 +347,7 @@ function CoverLettersContent() {
                   <button
                     onClick={() => handleDelete(letter.id)}
                     disabled={deletingId === letter.id}
-                    className="text-gray-200 hover:text-red-400 transition-colors disabled:opacity-50"
+                    className="text-gray-200 dark:text-gray-700 hover:text-red-400 transition-colors disabled:opacity-50"
                     aria-label="Delete"
                   >
                     <i className="ti ti-trash text-xs" aria-hidden="true" />
@@ -361,11 +361,11 @@ function CoverLettersContent() {
 
       {/* Empty state */}
       {letters.length === 0 && !loading && jobs.length > 0 && resumes.length > 0 && (
-        <div className="bg-white border border-gray-100 rounded-xl p-10 text-center">
-          <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center mx-auto mb-3">
-            <i className="ti ti-mail text-gray-400 text-xl" aria-hidden="true" />
+        <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-10 text-center">
+          <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center mx-auto mb-3">
+            <i className="ti ti-mail text-gray-400 dark:text-gray-500 text-xl" aria-hidden="true" />
           </div>
-          <p className="text-sm text-gray-500">No cover letters yet. Generate your first one above.</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">No cover letters yet. Generate your first one above.</p>
         </div>
       )}
     </div>
