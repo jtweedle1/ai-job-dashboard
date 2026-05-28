@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth-context";
 import { authedFetch } from "@/lib/api-client";
 import { getJob, updateJob, deleteJob } from "@/lib/jobs";
 import { getCompanyByJobId, createCompany } from "@/lib/companies";
+import { getResumes } from "@/lib/resumes";
 import { getCoverLettersByJobId } from "@/lib/coverLetters";
 import { getInterviewPrepsByJobId } from "@/lib/interviewPreps";
 import { getDebriefsByJobId } from "@/lib/debriefs";
@@ -15,6 +16,7 @@ import {
   type Job, type JobStage, type JobSource,
 } from "@/types/job";
 import type { Company } from "@/types/company";
+import type { Resume } from "@/types/resume";
 import type { CoverLetter } from "@/types/coverLetter";
 import type { InterviewPrep } from "@/types/interviewPrep";
 import type { Debrief } from "@/types/debrief";
@@ -39,6 +41,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ jobId: str
 
   const [job, setJob] = useState<Job | null>(null);
   const [company, setCompany] = useState<Company | null>(null);
+  const [resumes, setResumes] = useState<Resume[]>([]);
   const [coverLetters, setCoverLetters] = useState<CoverLetter[]>([]);
   const [interviewPreps, setInterviewPreps] = useState<InterviewPrep[]>([]);
   const [debriefs, setDebriefs] = useState<Debrief[]>([]);
@@ -56,13 +59,15 @@ export default function JobDetailPage({ params }: { params: Promise<{ jobId: str
     Promise.all([
       getJob(user.uid, jobId),
       getCompanyByJobId(user.uid, jobId),
+      getResumes(user.uid),
       getCoverLettersByJobId(user.uid, jobId),
       getInterviewPrepsByJobId(user.uid, jobId),
       getDebriefsByJobId(user.uid, jobId),
-    ]).then(([j, c, cl, ip, db]) => {
+    ]).then(([j, c, r, cl, ip, db]) => {
       if (!j) setNotFound(true);
       else setJob(j);
       setCompany(c);
+      setResumes(r);
       setCoverLetters(cl);
       setInterviewPreps(ip);
       setDebriefs(db);
@@ -209,6 +214,42 @@ export default function JobDetailPage({ params }: { params: Promise<{ jobId: str
             {ALL_SOURCES.map((s) => <option key={s} value={s}>{SOURCE_LABELS[s]}</option>)}
           </select>
         </div>
+        {resumes.length > 0 && (
+          <div className="flex items-center gap-2 ml-2">
+            <label className="text-xs text-gray-500 dark:text-gray-400">Resume used</label>
+            <select
+              value={job.resumeIdUsed ?? ""}
+              onChange={(e) => { save({ resumeIdUsed: e.target.value || null }); showToast("Resume updated"); }}
+              className={`${selectClass} font-normal`}
+            >
+              <option value="">Not set</option>
+              {resumes.map((r) => <option key={r.id} value={r.id}>{r.label}</option>)}
+            </select>
+            {job.resumeIdUsed && (() => {
+              const resume = resumes.find((r) => r.id === job.resumeIdUsed);
+              if (!resume) return null;
+              return resume.fileUrl ? (
+                <a
+                  href={resume.fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-xs font-medium text-emerald-600 hover:text-emerald-700 transition-colors"
+                >
+                  <i className="ti ti-eye text-xs" aria-hidden="true" />
+                  View
+                </a>
+              ) : (
+                <button
+                  onClick={() => router.push("/resumes")}
+                  className="flex items-center gap-1 text-xs font-medium text-emerald-600 hover:text-emerald-700 transition-colors"
+                >
+                  <i className="ti ti-eye text-xs" aria-hidden="true" />
+                  View
+                </button>
+              );
+            })()}
+          </div>
+        )}
       </div>
 
       {/* Details */}
