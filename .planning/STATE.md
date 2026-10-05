@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-05-27)
 Phase: 01 (security-hardening) — EXECUTING
 Plan: 2 of 4
 Status: Ready to execute
-Last activity: 2026-05-27
+Last activity: 2026-10-05 - Completed quick task 261005-ju6: Fix storage.rules resume path and size cap
 
 Progress: [██████████] 100%
 
@@ -69,6 +69,12 @@ None yet.
 
 - SEC-01 is the most critical: all 7 API routes currently trust a client-supplied uid — fix first before exposing to any external users
 - AI-04 (per-task max_tokens) must land before AI-01/AI-02/AI-03 improvements are meaningful — token truncation masks prompt quality
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 261005-ju6 | Fix storage.rules: match resumes/{uid}/ upload path and make 5MB resume cap effective | 2026-10-05 | 81b4d06 | [261005-ju6-fix-storage-rules-match-resumes-uid-uplo](./quick/261005-ju6-fix-storage-rules-match-resumes-uid-uplo/) |
 
 ## Session Continuity
 
