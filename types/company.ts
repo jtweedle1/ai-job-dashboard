@@ -2,6 +2,7 @@ export interface Company {
   id: string;
   name: string;
   jobId: string | null;
+  logoUrl: string | null;
   whatTheyDo: string | null;
   productSummary: string | null;
   targetCustomers: string | null;

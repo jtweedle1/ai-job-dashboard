@@ -94,6 +94,7 @@ export default function CompaniesPage() {
         id,
         name: newName.trim(),
         jobId: newJobId || null,
+        logoUrl: null,
         whatTheyDo: null,
         productSummary: null,
         targetCustomers: null,
@@ -218,8 +219,13 @@ export default function CompaniesPage() {
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2 mb-2">
-                    <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
-                      <i className="ti ti-building text-gray-500 dark:text-gray-400 text-sm" aria-hidden="true" />
+                    <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden border border-gray-200 dark:border-gray-700">
+                      {company.logoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={company.logoUrl} alt={company.name} className="w-full h-full object-contain" />
+                      ) : (
+                        <i className="ti ti-building text-gray-500 dark:text-gray-400 text-sm" aria-hidden="true" />
+                      )}
                     </div>
                     <div onClick={(e) => e.stopPropagation()}>
                       <input

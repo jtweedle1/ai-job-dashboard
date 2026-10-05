@@ -135,7 +135,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ jobId: str
     setCreatingCompany(true);
     try {
       const id = await createCompany(user.uid, { name: job.company, jobId: job.id });
-      const newCompany: Company = { id, name: job.company, jobId: job.id, whatTheyDo: null, productSummary: null, targetCustomers: null, recentNews: null, values: null, competitors: null, whyInterested: null, createdAt: new Date(), updatedAt: new Date() };
+      const newCompany: Company = { id, name: job.company, jobId: job.id, logoUrl: null, whatTheyDo: null, productSummary: null, targetCustomers: null, recentNews: null, values: null, competitors: null, whyInterested: null, createdAt: new Date(), updatedAt: new Date() };
       setCompany(newCompany);
       router.push(`/companies/${id}`);
     } finally {

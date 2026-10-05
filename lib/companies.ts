@@ -21,6 +21,7 @@ function toCompany(id: string, d: Record<string, unknown>): Company {
     id,
     name: d.name as string,
     jobId: (d.jobId as string | null) ?? null,
+    logoUrl: (d.logoUrl as string | null) ?? null,
     whatTheyDo: (d.whatTheyDo as string | null) ?? null,
     productSummary: (d.productSummary as string | null) ?? null,
     targetCustomers: (d.targetCustomers as string | null) ?? null,
@@ -41,6 +42,7 @@ export async function createCompany(
   const docRef = await addDoc(ref, {
     name: data.name,
     jobId: data.jobId ?? null,
+    logoUrl: null,
     whatTheyDo: null,
     productSummary: null,
     targetCustomers: null,

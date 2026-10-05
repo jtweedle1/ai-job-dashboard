@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState, useEffect, useCallback } from "react";
+import { use, useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { authedFetch } from "@/lib/api-client";
@@ -9,6 +9,8 @@ import { getJob } from "@/lib/jobs";
 import EditableField from "@/components/EditableField";
 import type { Company } from "@/types/company";
 import type { Job } from "@/types/job";
+import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
+import { storage } from "@/lib/firebase";
 
 const PROFILE_FIELDS: { key: keyof Company; label: string; placeholder: string }[] = [
   { key: "whatTheyDo",       label: "What they do",       placeholder: "Describe what this company does…" },
@@ -41,7 +43,9 @@ export default function CompanyProfilePage({
   const [deleting, setDeleting] = useState(false);
   const [filling, setFilling] = useState(false);
   const [fillError, setFillError] = useState("");
-  const [toast, setToast] = useState("");
+  const [toast, setToast] = useState<{ msg: string; error?: boolean } | null>(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -65,9 +69,9 @@ export default function CompanyProfilePage({
     [user, company, companyId]
   );
 
-  function showToast(msg: string) {
-    setToast(msg);
-    setTimeout(() => setToast(""), 2500);
+  function showToast(msg: string, error = false) {
+    setToast({ msg, error });
+    setTimeout(() => setToast(null), 2500);
   }
 
   async function handleAutoFill() {
@@ -109,6 +113,29 @@ export default function CompanyProfilePage({
     }
   }
 
+  async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    if (!file.type.startsWith("image/")) {
+      showToast("Please select an image file", true);
+      return;
+    }
+    setUploadingLogo(true);
+    try {
+      const fileRef = storageRef(storage, `${user.uid}/companies/${companyId}/logo`);
+      await uploadBytes(fileRef, file);
+      const url = await getDownloadURL(fileRef);
+      await save({ logoUrl: url });
+      showToast("Logo uploaded");
+    } catch (err) {
+      console.error("Logo upload error:", err);
+      showToast("Upload failed — try again", true);
+    } finally {
+      setUploadingLogo(false);
+      if (logoInputRef.current) logoInputRef.current.value = "";
+    }
+  }
+
   async function handleDelete() {
     if (!user) return;
     setDeleting(true);
@@ -145,8 +172,12 @@ export default function CompanyProfilePage({
       {/* Toast */}
       {toast && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-lg">
-          <i className="ti ti-circle-check text-emerald-400 text-base" aria-hidden="true" />
-          {toast}
+          {toast.error ? (
+            <i className="ti ti-alert-circle text-red-400 text-base" aria-hidden="true" />
+          ) : (
+            <i className="ti ti-circle-check text-emerald-400 text-base" aria-hidden="true" />
+          )}
+          {toast.msg}
         </div>
       )}
 
@@ -160,14 +191,48 @@ export default function CompanyProfilePage({
       </button>
 
       {/* Header */}
+      <input
+        ref={logoInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleLogoUpload}
+      />
       <div className="flex items-start justify-between gap-4 mb-2">
-        <div className="flex-1 min-w-0">
-          <EditableField
-            value={company.name}
-            onSave={(v) => { if (v.trim()) { save({ name: v.trim() }); showToast("Name updated"); } }}
-            placeholder="Company name"
-            className="text-xl font-semibold text-gray-900 px-0 hover:bg-transparent"
-          />
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <button
+            onClick={() => logoInputRef.current?.click()}
+            disabled={uploadingLogo}
+            title="Upload logo"
+            className="relative w-11 h-11 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden group border border-gray-200 dark:border-gray-700 hover:border-emerald-400 transition-colors"
+          >
+            {uploadingLogo ? (
+              <i className="ti ti-loader-2 animate-spin text-gray-400 text-sm" aria-hidden="true" />
+            ) : company.logoUrl ? (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={company.logoUrl} alt={company.name} className="w-full h-full object-contain" />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <i className="ti ti-upload text-white text-xs" aria-hidden="true" />
+                </div>
+              </>
+            ) : (
+              <>
+                <i className="ti ti-building text-gray-400 text-sm group-hover:opacity-0 transition-opacity" aria-hidden="true" />
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <i className="ti ti-upload text-gray-500 dark:text-gray-400 text-sm" aria-hidden="true" />
+                </div>
+              </>
+            )}
+          </button>
+          <div className="flex-1 min-w-0">
+            <EditableField
+              value={company.name}
+              onSave={(v) => { if (v.trim()) { save({ name: v.trim() }); showToast("Name updated"); } }}
+              placeholder="Company name"
+              className="text-xl font-semibold text-gray-900 px-0 hover:bg-transparent"
+            />
+          </div>
         </div>
         <div className="flex items-center gap-2 shrink-0 pt-1">
           <button

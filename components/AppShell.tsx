@@ -3,11 +3,13 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { useTheme } from "@/lib/theme-context";
 import Sidebar from "./Sidebar";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const { theme, toggleTheme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -40,12 +42,19 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           >
             <i className="ti ti-menu-2 text-xl" aria-hidden="true" />
           </button>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-1">
             <div className="w-6 h-6 rounded-md bg-gray-900 dark:bg-gray-700 flex items-center justify-center">
               <i className="ti ti-briefcase text-emerald-400 text-xs" aria-hidden="true" />
             </div>
             <span className="text-sm font-semibold text-gray-900 dark:text-gray-50">HuntDesk</span>
           </div>
+          <button
+            onClick={toggleTheme}
+            className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            <i className={`ti ${theme === "dark" ? "ti-sun" : "ti-moon"} text-lg`} aria-hidden="true" />
+          </button>
         </header>
 
         <main className="flex-1 overflow-y-auto">{children}</main>

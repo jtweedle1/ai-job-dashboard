@@ -7,6 +7,8 @@ import { checkRateLimit } from "@/lib/rate-limit";
 
 const SYSTEM = `You are a company research assistant. Use web search to find current, accurate information about the company before responding.
 
+If a job description is provided, use it to identify the exact company (it disambiguates common names and surfaces details like location, product area, or stage that narrow your search). Search for that specific company, not a generic match on the name alone.
+
 Search for:
 1. The company's website and about page
 2. Recent news, funding rounds, product launches, or announcements from the past 6 months
@@ -24,6 +26,7 @@ After searching, return ONLY valid JSON with exactly these keys — no markdown,
 Use null only if you genuinely cannot find information after searching. Do not guess or fabricate details.`;
 
 const SYSTEM_FALLBACK = `You are a company research assistant. Using your training knowledge, fill in what you can about this company.
+If a job description is provided, use it to identify the exact company before drawing on your knowledge.
 Return ONLY valid JSON with exactly these keys — no markdown, no explanation outside the JSON:
 - "whatTheyDo": 2-3 sentences describing what the company does and their business model
 - "productSummary": 1 paragraph about their main product or service
@@ -60,7 +63,9 @@ export async function POST(request: Request) {
         .collection("users").doc(uid).collection("jobs").doc(company.jobId as string).get();
       if (jobSnap.exists) {
         const job = jobSnap.data()!;
+        const desc = (job.description as string | null)?.trim();
         jobContext = `\n\nLinked role: ${job.title}`;
+        if (desc) jobContext += `\n\nJob description:\n${desc.slice(0, 3000)}`;
       }
     }
 
