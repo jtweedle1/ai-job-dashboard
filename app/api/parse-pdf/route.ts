@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+// Must load before pdf-parse so its worker resolves on Vercel serverless.
+import "pdf-parse/worker";
 import { PDFParse } from "pdf-parse";
 
 export async function POST(request: Request) {
