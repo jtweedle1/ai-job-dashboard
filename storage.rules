@@ -1,6 +1,6 @@
 // Deploy with: firebase deploy --only storage
 // Or via Firebase Console: Storage > Rules
-// Update path prefix if files are stored under a different root.
+// Resumes live at resumes/{uid}/{fileName}; logos at {uid}/companies/{companyId}/logo.
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
@@ -9,18 +9,25 @@ service firebase.storage {
       allow read, write: if false;
     }
 
-    // User-scoped files: only the owner can read or write
-    match /{uid}/{allPaths=**} {
-      allow read: if request.auth != null && request.auth.uid == uid;
-      allow write: if request.auth != null && request.auth.uid == uid;
+    // Resumes: owner only, PDF, 5 MB cap.
+    // Size/type checks are on create/update only (request.resource is null on delete).
+    // A file with an empty File.type would be rejected; acceptable because the
+    // picker filters by accept="application/pdf".
+    match /resumes/{uid}/{fileName} {
+      allow read, delete: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if request.auth != null
+                            && request.auth.uid == uid
+                            && request.resource.size <= 5 * 1024 * 1024
+                            && request.resource.contentType.matches('application/pdf');
     }
 
-    // Resumes: enforce 5 MB upload limit
-    match /{uid}/resumes/{fileName} {
-      allow read: if request.auth != null && request.auth.uid == uid;
-      allow write: if request.auth != null
-                   && request.auth.uid == uid
-                   && request.resource.size <= 5 * 1024 * 1024;
+    // Company logos: owner only, image/*, 2 MB cap.
+    match /{uid}/companies/{companyId}/logo {
+      allow read, delete: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if request.auth != null
+                            && request.auth.uid == uid
+                            && request.resource.size <= 2 * 1024 * 1024
+                            && request.resource.contentType.matches('image/.*');
     }
   }
 }
