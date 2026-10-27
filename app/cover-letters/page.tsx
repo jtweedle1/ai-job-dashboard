@@ -13,6 +13,9 @@ import {
   setCoverLetterVoiceSample,
 } from "@/lib/coverLetters";
 import { createAnswer } from "@/lib/answerBank";
+import { getBackgrounds, setBackgroundIncluded } from "@/lib/backgrounds";
+import { backgroundHeading } from "@/types/background";
+import type { Background } from "@/types/background";
 import type { Job } from "@/types/job";
 import type { Resume } from "@/types/resume";
 import type { CoverLetter } from "@/types/coverLetter";
@@ -29,6 +32,7 @@ function CoverLettersContent() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [letters, setLetters] = useState<CoverLetter[]>([]);
+  const [backgrounds, setBackgrounds] = useState<Background[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [selectedJobId, setSelectedJobId] = useState("");
@@ -51,10 +55,12 @@ function CoverLettersContent() {
       getJobs(user.uid),
       getResumes(user.uid),
       getCoverLetters(user.uid),
-    ]).then(([j, r, l]) => {
+      getBackgrounds(user.uid),
+    ]).then(([j, r, l, b]) => {
       setJobs(j);
       setResumes(r);
       setLetters(l);
+      setBackgrounds(b);
       const preJobId = searchParams.get("jobId");
       const validPreJob = preJobId && j.find((job) => job.id === preJobId);
       setSelectedJobId(validPreJob ? preJobId : j[0]?.id ?? "");
@@ -75,7 +81,11 @@ function CoverLettersContent() {
     try {
       const res = await authedFetch("/api/cover-letter", {
         method: "POST",
-        body: JSON.stringify({ jobId: selectedJobId, resumeId: selectedResumeId }),
+        body: JSON.stringify({
+          jobId: selectedJobId,
+          resumeId: selectedResumeId,
+          backgroundIds: backgrounds.filter((b) => b.included).map((b) => b.id),
+        }),
       });
       const data = await res.json();
       if (res.status === 401 || data.error === "no_key") {
@@ -103,6 +113,13 @@ function CoverLettersContent() {
     } finally {
       setGenerating(false);
     }
+  }
+
+  // Saved on the position so the choice carries over to the next letter.
+  async function handleToggleBackground(id: string, included: boolean) {
+    if (!user) return;
+    setBackgrounds((prev) => prev.map((b) => (b.id === id ? { ...b, included } : b)));
+    await setBackgroundIncluded(user.uid, id, included);
   }
 
   function openLetter(letter: CoverLetter | null) {
@@ -269,6 +286,37 @@ function CoverLettersContent() {
                     ))}
                   </select>
                 </div>
+              </div>
+              <div>
+                <div className="flex items-center justify-between gap-3 mb-1.5">
+                  <label className="block text-xs text-gray-500 dark:text-gray-400">Background to draw from</label>
+                  <button
+                    onClick={() => router.push("/background")}
+                    className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 hover:text-emerald-600 transition-colors"
+                  >
+                    <i className="ti ti-briefcase text-xs" aria-hidden="true" />
+                    {backgrounds.length ? "Edit background" : "Add your background"}
+                  </button>
+                </div>
+                {backgrounds.length === 0 ? (
+                  <p className="text-xs text-gray-400 dark:text-gray-500">
+                    Write up the stories behind your past jobs once, and letters will draw from them.
+                  </p>
+                ) : (
+                  <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+                    {backgrounds.map((b) => (
+                      <label key={b.id} className="flex items-center gap-2 cursor-pointer text-sm text-gray-700 dark:text-gray-300">
+                        <input
+                          type="checkbox"
+                          checked={b.included}
+                          onChange={(e) => handleToggleBackground(b.id, e.target.checked)}
+                          className="accent-emerald-500"
+                        />
+                        {backgroundHeading({ ...b, startDate: "", endDate: "" })}
+                      </label>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="flex items-center gap-3 flex-wrap">
                 <button
