@@ -1,9 +1,9 @@
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
+import { Suspense, useState, useEffect, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
-import { authedFetch } from "@/lib/api-client";
+import { authedFetch, noKeyMessage } from "@/lib/api-client";
 import { getJobs } from "@/lib/jobs";
 import { getResumes } from "@/lib/resumes";
 import {
@@ -14,11 +14,16 @@ import {
 } from "@/lib/coverLetters";
 import { createAnswer } from "@/lib/answerBank";
 import { getBackgrounds, setBackgroundIncluded } from "@/lib/backgrounds";
+import { getVoiceProfile } from "@/lib/writingSamples";
+import { parseBannedPhrases } from "@/lib/banned-phrases";
+import { letterQualityChecks } from "@/lib/letter-quality";
+import LetterReview, { HighlightedLetter } from "@/components/LetterReview";
 import { backgroundHeading } from "@/types/background";
 import type { Background } from "@/types/background";
 import type { Job } from "@/types/job";
 import type { Resume } from "@/types/resume";
-import type { CoverLetter } from "@/types/coverLetter";
+import type { CoverLetter, LetterClaim } from "@/types/coverLetter";
+import { DEFAULT_VOICE_SETTINGS, type VoiceSettings } from "@/types/writingSample";
 
 function formatDate(d: Date) {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -40,8 +45,9 @@ function CoverLettersContent() {
   const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState("");
   const [letterNotes, setLetterNotes] = useState("");
-  // Banned phrases still in a fresh letter after the automatic rewrite.
-  const [flagged, setFlagged] = useState<{ letterId: string; phrases: string[] } | null>(null);
+  const [voiceSettings, setVoiceSettings] = useState<VoiceSettings>(DEFAULT_VOICE_SETTINGS);
+  const [checkingSources, setCheckingSources] = useState(false);
+  const [sourcesError, setSourcesError] = useState("");
 
   const [viewingLetter, setViewingLetter] = useState<CoverLetter | null>(null);
   const [copied, setCopied] = useState(false);
@@ -59,11 +65,13 @@ function CoverLettersContent() {
       getResumes(user.uid),
       getCoverLetters(user.uid),
       getBackgrounds(user.uid),
-    ]).then(([j, r, l, b]) => {
+      getVoiceProfile(user.uid),
+    ]).then(([j, r, l, b, v]) => {
       setJobs(j);
       setResumes(r);
       setLetters(l);
       setBackgrounds(b);
+      setVoiceSettings(v.settings);
       const preJobId = searchParams.get("jobId");
       const validPreJob = preJobId && j.find((job) => job.id === preJobId);
       setSelectedJobId(validPreJob ? preJobId : j[0]?.id ?? "");
@@ -93,7 +101,7 @@ function CoverLettersContent() {
       });
       const data = await res.json();
       if (res.status === 401 || data.error === "no_key") {
-        setGenerateError("Add your Anthropic API key in Settings to generate cover letters.");
+        setGenerateError(noKeyMessage("generate cover letters"));
         return;
       }
       if (data.error) {
@@ -107,12 +115,12 @@ function CoverLettersContent() {
         content: data.content,
         edited: false,
         useAsVoiceSample: false,
+        claims: (data.claims as LetterClaim[] | null) ?? null,
         createdAt: new Date(),
       };
       setLetters((prev) => [newLetter, ...prev]);
       openLetter(newLetter);
       const left: string[] = data.bannedPhrasesLeft ?? [];
-      setFlagged(left.length ? { letterId: data.id, phrases: left } : null);
       showToast(left.length ? "Generated, but check the flagged words" : "Cover letter generated");
     } catch {
       setGenerateError("Something went wrong. Try again.");
@@ -131,6 +139,34 @@ function CoverLettersContent() {
   function openLetter(letter: CoverLetter | null) {
     setViewingLetter(letter);
     setEditing(false);
+    setSourcesError("");
+  }
+
+  async function handleCheckSources() {
+    if (!viewingLetter) return;
+    const letterId = viewingLetter.id;
+    setCheckingSources(true);
+    setSourcesError("");
+    try {
+      const res = await authedFetch("/api/letter-claims", {
+        method: "POST",
+        body: JSON.stringify({ letterId }),
+      });
+      const data = await res.json();
+      if (res.status === 401 || data.error === "no_key") {
+        setSourcesError(noKeyMessage("check sources"));
+        return;
+      }
+      if (data.error) {
+        setSourcesError("The check failed. Try again.");
+        return;
+      }
+      patchLetter(letterId, { claims: data.claims as LetterClaim[] });
+    } catch {
+      setSourcesError("Something went wrong. Try again.");
+    } finally {
+      setCheckingSources(false);
+    }
   }
 
   function patchLetter(id: string, patch: Partial<CoverLetter>) {
@@ -143,8 +179,7 @@ function CoverLettersContent() {
     setSavingEdit(true);
     try {
       await updateCoverLetterContent(user.uid, viewingLetter.id, draft.trim());
-      patchLetter(viewingLetter.id, { content: draft.trim(), edited: true });
-      if (flagged?.letterId === viewingLetter.id) setFlagged(null);
+      patchLetter(viewingLetter.id, { content: draft.trim(), edited: true, claims: null });
       setEditing(false);
       showToast("Changes saved");
     } finally {
@@ -202,6 +237,19 @@ function CoverLettersContent() {
   function resumeLabel(resumeId: string) {
     return resumes.find((r) => r.id === resumeId)?.label ?? "Unknown resume";
   }
+
+  const bannedPhrases = useMemo(() => parseBannedPhrases(voiceSettings.neverSay), [voiceSettings.neverSay]);
+  const checks = useMemo(
+    () =>
+      viewingLetter
+        ? letterQualityChecks(viewingLetter.content, {
+            bannedPhrases,
+            targetWords: voiceSettings.targetWords,
+            claims: viewingLetter.claims,
+          })
+        : [],
+    [viewingLetter, bannedPhrases, voiceSettings.targetWords]
+  );
 
   const hasExistingForCombo = letters.some(
     (l) => l.jobId === selectedJobId && l.resumeId === selectedResumeId
@@ -430,11 +478,6 @@ function CoverLettersContent() {
             </div>
           </div>
           <div className="px-4 py-4">
-            {flagged?.letterId === viewingLetter.id && !editing && (
-              <p className="text-xs text-amber-600 dark:text-amber-500 mb-3">
-                Still uses words you&apos;ve banned: {flagged.phrases.join(", ")}. Edit them out before sending.
-              </p>
-            )}
             {editing ? (
               <div className="space-y-3">
                 <textarea
@@ -460,11 +503,18 @@ function CoverLettersContent() {
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
-                {viewingLetter.content}
-              </p>
+              <HighlightedLetter content={viewingLetter.content} claims={viewingLetter.claims} />
             )}
           </div>
+          {!editing && (
+            <LetterReview
+              claims={viewingLetter.claims}
+              checks={checks}
+              checking={checkingSources}
+              checkError={sourcesError}
+              onCheckSources={handleCheckSources}
+            />
+          )}
           <div className="px-4 py-3 border-t border-gray-50 dark:border-gray-800">
             <label className="flex items-start gap-2 cursor-pointer">
               <input

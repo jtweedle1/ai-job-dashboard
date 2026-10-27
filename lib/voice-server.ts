@@ -1,7 +1,10 @@
 // Server-only: gathers the writing a user has opted in as voice samples.
-// Used by /api/voice-profile and /api/cover-letter.
+// Used by /api/voice-profile, /api/cover-letter, and /api/draft-answer.
 
+import type Anthropic from "@anthropic-ai/sdk";
 import { adminDb } from "@/lib/firebase-admin";
+import { callAI } from "@/lib/ai";
+import { findBannedPhrases } from "@/lib/banned-phrases";
 
 export type VoiceSampleSource = "sample" | "cover_letter" | "answer_bank";
 
@@ -64,4 +67,36 @@ export function pickExamples(samples: VoiceSample[], maxCount = 3): VoiceSample[
 export function truncate(text: string, maxChars: number): string {
   const t = text.trim();
   return t.length <= maxChars ? t : t.slice(0, maxChars).trimEnd() + " […]";
+}
+
+// One rewrite pass when the draft still contains banned phrases. Returns whatever is left after it.
+export async function enforceBannedPhrases(
+  uid: string,
+  messages: Anthropic.MessageParam[],
+  system: string,
+  draft: string,
+  phrases: string[],
+  maxTokens: number,
+  model?: string
+): Promise<{ content: string; remaining: string[] }> {
+  const found = findBannedPhrases(draft, phrases);
+  if (found.length === 0) return { content: draft, remaining: [] };
+
+  const revision = await callAI(
+    uid,
+    [
+      ...messages,
+      { role: "assistant", content: draft },
+      {
+        role: "user",
+        content: `This draft uses words or phrases I banned: ${found.map((f) => `"${f}"`).join(", ")}.
+Rewrite only the sentences that contain them, in my voice, without using any other banned phrase. Keep everything else exactly the same. Output only the full text.`,
+      },
+    ],
+    system,
+    maxTokens,
+    model
+  );
+  if ("error" in revision) return { content: draft, remaining: found };
+  return { content: revision.content, remaining: findBannedPhrases(revision.content, phrases) };
 }

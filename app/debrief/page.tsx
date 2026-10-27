@@ -6,7 +6,9 @@ import { useAuth } from "@/lib/auth-context";
 import { getJobs } from "@/lib/jobs";
 import { createDebrief, getDebriefs, deleteDebrief } from "@/lib/debriefs";
 import type { Job } from "@/types/job";
+import { DEBRIEF_FIELDS } from "@/types/debrief";
 import type { Debrief } from "@/types/debrief";
+import StoryTabs from "@/components/StoryTabs";
 
 function todayString() {
   const d = new Date();
@@ -21,14 +23,6 @@ function parseLocalDate(s: string): Date {
 function formatDate(d: Date) {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
-
-const DEBRIEF_FIELDS: { key: keyof Omit<Debrief, "id" | "jobId" | "interviewDate" | "createdAt">; label: string; placeholder: string }[] = [
-  { key: "whatTheyAsked",         label: "What they asked",          placeholder: "Questions and topics that came up…" },
-  { key: "wentWell",              label: "Went well",                placeholder: "Moments you felt confident or connected…" },
-  { key: "feltWeird",             label: "Felt weird",               placeholder: "Anything that felt off or you stumbled on…" },
-  { key: "followUpOpportunities", label: "Follow-up opportunities",  placeholder: "Things to follow up on with the company…" },
-  { key: "answersToImprove",      label: "Answers to improve",       placeholder: "Responses you'd give differently next time…" },
-];
 
 function DebriefContent() {
   const { user } = useAuth();
@@ -144,6 +138,8 @@ function DebriefContent() {
           {toast}
         </div>
       )}
+
+      <StoryTabs />
 
       {/* Header */}
       <div className="mb-6">

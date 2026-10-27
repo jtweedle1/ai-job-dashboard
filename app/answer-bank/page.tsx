@@ -3,9 +3,11 @@
 import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { getJobs } from "@/lib/jobs";
+import { authedFetch, noKeyMessage } from "@/lib/api-client";
 import { createAnswer, getAnswers, updateAnswer, deleteAnswer } from "@/lib/answerBank";
 import type { Job } from "@/types/job";
 import type { AnswerEntry } from "@/types/answerBank";
+import StoryTabs from "@/components/StoryTabs";
 
 function parseTags(s: string): string[] {
   return s
@@ -36,6 +38,9 @@ export default function AnswerBankPage() {
   const [editSaving, setEditSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [toast, setToast] = useState("");
+  // "new" for the add form, otherwise the id of the answer being drafted.
+  const [draftingFor, setDraftingFor] = useState<string | null>(null);
+  const [draftError, setDraftError] = useState<{ for: string; message: string } | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -72,6 +77,50 @@ export default function AnswerBankPage() {
     } finally {
       setSaving(false);
     }
+  }
+
+  // Writes an answer from the user's background stories. Returns null (and shows why) on failure.
+  async function draftAnswer(target: string, q: string, jobId: string | null): Promise<string | null> {
+    setDraftingFor(target);
+    setDraftError(null);
+    try {
+      const res = await authedFetch("/api/draft-answer", {
+        method: "POST",
+        body: JSON.stringify({ question: q, jobId }),
+      });
+      const data = await res.json();
+      if (res.status === 401 || data.error === "no_key") {
+        setDraftError({ for: target, message: noKeyMessage("draft answers") });
+        return null;
+      }
+      if (data.error === "no_stories") {
+        setDraftError({ for: target, message: "Add a past position in Experience first, so there are stories to draw from." });
+        return null;
+      }
+      if (data.error) {
+        setDraftError({ for: target, message: "Drafting failed. Try again." });
+        return null;
+      }
+      return data.answer as string;
+    } catch {
+      setDraftError({ for: target, message: "Something went wrong. Try again." });
+      return null;
+    } finally {
+      setDraftingFor(null);
+    }
+  }
+
+  async function handleDraftNew() {
+    if (!question.trim()) return;
+    const text = await draftAnswer("new", question.trim(), selectedJobId || null);
+    if (text) setAnswer(text);
+  }
+
+  async function handleDraftExisting(entry: AnswerEntry) {
+    if (editingId !== entry.id) startEdit(entry);
+    const q = editingId === entry.id ? editFields.question : entry.question;
+    const text = await draftAnswer(entry.id, q.trim(), entry.jobId);
+    if (text) setEditFields((p) => ({ ...p, answer: text }));
   }
 
   function startEdit(entry: AnswerEntry) {
@@ -156,6 +205,8 @@ export default function AnswerBankPage() {
         </div>
       )}
 
+      <StoryTabs />
+
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-50">Answer bank</h1>
@@ -181,7 +232,15 @@ export default function AnswerBankPage() {
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Answer</label>
+            <div className="flex items-center justify-between gap-3 mb-1.5">
+              <label className="block text-xs text-gray-500 dark:text-gray-400">Answer</label>
+              <DraftButton
+                onClick={handleDraftNew}
+                drafting={draftingFor === "new"}
+                disabled={!question.trim() || draftingFor !== null}
+              />
+            </div>
+            {draftError?.for === "new" && <p className="text-xs text-amber-600 mb-1.5">{draftError.message}</p>}
             <textarea
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
@@ -285,7 +344,17 @@ export default function AnswerBankPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Answer</label>
+                    <div className="flex items-center justify-between gap-3 mb-1">
+                      <label className="block text-xs text-gray-500 dark:text-gray-400">Answer</label>
+                      <DraftButton
+                        onClick={() => handleDraftExisting(entry)}
+                        drafting={draftingFor === entry.id}
+                        disabled={!editFields.question.trim() || draftingFor !== null}
+                      />
+                    </div>
+                    {draftError?.for === entry.id && (
+                      <p className="text-xs text-amber-600 mb-1">{draftError.message}</p>
+                    )}
                     <textarea
                       value={editFields.answer}
                       onChange={(e) =>
@@ -393,10 +462,19 @@ export default function AnswerBankPage() {
                     </div>
                   )}
 
-                  {expandedId === entry.id && (
+                  {expandedId === entry.id && entry.answer.trim() && (
                     <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed mt-3 pt-3 border-t border-gray-50 dark:border-gray-800">
                       {entry.answer}
                     </p>
+                  )}
+                  {!entry.answer.trim() && (
+                    <div className="mt-2">
+                      <DraftButton
+                        onClick={() => handleDraftExisting(entry)}
+                        drafting={draftingFor === entry.id}
+                        disabled={draftingFor !== null}
+                      />
+                    </div>
                   )}
                 </>
               )}
@@ -422,5 +500,18 @@ export default function AnswerBankPage() {
         </div>
       )}
     </div>
+  );
+}
+
+function DraftButton({ onClick, drafting, disabled }: { onClick: () => void; drafting: boolean; disabled: boolean }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 hover:text-emerald-600 transition-colors disabled:opacity-50 disabled:hover:text-gray-400"
+    >
+      <i className={`ti ${drafting ? "ti-loader-2 animate-spin" : "ti-wand"} text-xs`} aria-hidden="true" />
+      {drafting ? "Drafting…" : "Draft from my stories"}
+    </button>
   );
 }

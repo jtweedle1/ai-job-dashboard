@@ -3,7 +3,7 @@
 import { use, useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
-import { authedFetch } from "@/lib/api-client";
+import { authedFetch, noKeyMessage } from "@/lib/api-client";
 import { getCompany, updateCompany, deleteCompany } from "@/lib/companies";
 import { getJob } from "@/lib/jobs";
 import EditableField from "@/components/EditableField";
@@ -85,7 +85,7 @@ export default function CompanyProfilePage({
       });
       const data = await res.json();
       if (res.status === 401 || data.error === "no_key") {
-        setFillError("Add your Anthropic API key in Settings to use AI auto-fill.");
+        setFillError(noKeyMessage("use AI auto-fill"));
         return;
       }
       if (data.error) {

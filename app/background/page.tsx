@@ -13,6 +13,7 @@ import {
 import Toggle from "@/components/Toggle";
 import { BACKGROUND_QUESTIONS, backgroundHeading, hasBackgroundContent } from "@/types/background";
 import type { Background } from "@/types/background";
+import StoryTabs from "@/components/StoryTabs";
 
 const cardClass = "bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl mb-4";
 const cardHeaderClass = "px-4 py-3 border-b border-gray-50 dark:border-gray-800";
@@ -141,6 +142,8 @@ export default function BackgroundPage() {
           {toast}
         </div>
       )}
+
+      <StoryTabs />
 
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>

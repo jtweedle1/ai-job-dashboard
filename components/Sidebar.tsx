@@ -10,6 +10,8 @@ type NavItem = {
   label: string;
   href: string;
   icon: string;
+  // Other routes that belong to this item.
+  also?: string[];
 };
 
 const trackingNav: NavItem[] = [
@@ -21,10 +23,8 @@ const trackingNav: NavItem[] = [
 const aiNav: NavItem[] = [
   { label: "Cover Letters", href: "/cover-letters", icon: "ti-mail" },
   { label: "My Voice", href: "/voice", icon: "ti-feather" },
-  { label: "My Background", href: "/background", icon: "ti-briefcase" },
+  { label: "Story Library", href: "/stories", icon: "ti-books", also: ["/background", "/answer-bank", "/debrief"] },
   { label: "Interview Prep", href: "/interview-prep", icon: "ti-microphone" },
-  { label: "Answer Bank", href: "/answer-bank", icon: "ti-bookmarks" },
-  { label: "Debrief", href: "/debrief", icon: "ti-clipboard-list" },
 ];
 
 const insightsNav: NavItem[] = [
@@ -54,7 +54,9 @@ function NavGroup({
         {label}
       </p>
       {items.map((item) => {
-        const active = pathname === item.href || pathname.startsWith(item.href + "/");
+        const active = [item.href, ...(item.also ?? [])].some(
+          (href) => pathname === href || pathname.startsWith(href + "/")
+        );
         return (
           <Link
             key={item.href}
@@ -88,7 +90,9 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps) {
   const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
-  const initials = user?.displayName
+  const initials = user?.isAnonymous
+    ? "D"
+    : user?.displayName
     ? user.displayName
         .split(" ")
         .map((n) => n[0])
@@ -143,7 +147,7 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps) {
             {initials}
           </div>
           <span className="text-xs text-gray-500 dark:text-gray-400 flex-1 truncate">
-            {user?.displayName ?? user?.email ?? "Account"}
+            {user?.isAnonymous ? "Demo visitor" : user?.displayName ?? user?.email ?? "Account"}
           </span>
           <button
             onClick={toggleTheme}

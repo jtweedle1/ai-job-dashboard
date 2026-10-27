@@ -40,9 +40,15 @@ function greetingOf(text: string): string | null {
 }
 
 // A sign-off is a short closing line ("Best," / "Thanks,") near the end, usually followed by a name.
+// Read line by line so "Thanks,\nRiley" counts, and skip the first paragraph so a greeting never does.
 function signOffOf(text: string): string | null {
-  const tail = paragraphs(text).slice(-3);
-  return tail.find((p) => /,$/.test(p) && words(p) <= 4) ?? null;
+  const tail = paragraphs(text)
+    .slice(1)
+    .flatMap((p) => p.split("\n"))
+    .map((l) => l.trim())
+    .filter(Boolean)
+    .slice(-3);
+  return tail.find((l) => /,$/.test(l) && words(l) <= 4) ?? null;
 }
 
 export function computeVoiceStats(texts: string[]): VoiceStats {

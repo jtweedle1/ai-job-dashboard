@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { authedFetch } from "@/lib/api-client";
+import { authedFetch, noKeyMessage } from "@/lib/api-client";
 import {
   getWritingSamples,
   createWritingSample,
@@ -130,7 +130,7 @@ export default function VoicePage() {
       const res = await authedFetch("/api/voice-profile", { method: "POST" });
       const data = await res.json();
       if (res.status === 401 || data.error === "no_key") {
-        setProfileError("Add your Anthropic API key in Settings to build a voice profile.");
+        setProfileError(noKeyMessage("build a voice profile"));
         return;
       }
       if (data.error === "no_samples") {
