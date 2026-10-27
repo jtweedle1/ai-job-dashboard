@@ -67,6 +67,7 @@
 .ti-pencil:before { content: "\eb04"; }
 .ti-player-play:before { content: "\ed46"; }
 .ti-plus:before { content: "\eb0b"; }
+.ti-pointer:before { content: "\f265"; }
 .ti-refresh:before { content: "\eb13"; }
 .ti-search:before { content: "\eb1c"; }
 .ti-selector:before { content: "\eb1d"; }

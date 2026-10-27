@@ -67,14 +67,22 @@ body {
   outline-offset: 2px;
 }
 
-/* The soft sunrise behind every page. Fixed so it stays put while content scrolls. */
-@utility app-backdrop {
+/*
+ * The soft sunrise, light only. Used directly by the always-light landing page; app-backdrop
+ * builds on it so the two can't drift apart.
+ */
+@utility sunrise {
   background-color: #fbf9fe;
   background-image:
     radial-gradient(60rem 40rem at -10% -10%, rgb(255 217 194 / 0.75), transparent 60%),
     radial-gradient(50rem 36rem at 110% 0%, rgb(211 208 252 / 0.8), transparent 60%),
     radial-gradient(56rem 40rem at 50% 120%, rgb(207 228 251 / 0.75), transparent 60%),
     radial-gradient(36rem 28rem at 85% 70%, rgb(251 211 228 / 0.55), transparent 60%);
+}
+
+/* The sunrise behind every app page. Fixed so it stays put while content scrolls. */
+@utility app-backdrop {
+  @apply sunrise;
   background-attachment: fixed;
 
   &:where(.dark, .dark *) {
@@ -86,23 +94,21 @@ body {
   }
 }
 
-/* The same sunrise without a dark version, for the always-light landing page. */
-@utility sunrise {
-  background-color: #fbf9fe;
-  background-image:
-    radial-gradient(60rem 40rem at -10% -10%, rgb(255 217 194 / 0.75), transparent 60%),
-    radial-gradient(50rem 36rem at 110% 0%, rgb(211 208 252 / 0.8), transparent 60%),
-    radial-gradient(56rem 40rem at 50% 120%, rgb(207 228 251 / 0.75), transparent 60%),
-    radial-gradient(36rem 28rem at 85% 70%, rgb(251 211 228 / 0.55), transparent 60%);
-}
-
-/* A card: frosted white on the backdrop, generous corners, a whisper of shadow. */
-@utility surface {
+/*
+ * A card: frosted white on the backdrop, generous corners, a whisper of shadow. surface-light
+ * never darkens (the landing page stays light even when the saved theme is dark); surface is the
+ * same card with a dark version for the app.
+ */
+@utility surface-light {
   background-color: rgb(255 255 255 / 0.78);
   border: 1px solid rgb(255 255 255 / 0.9);
   border-radius: var(--radius-3xl);
   box-shadow: 0 1px 2px rgb(47 43 72 / 0.04), 0 8px 24px -12px rgb(47 43 72 / 0.12);
   backdrop-filter: blur(12px);
+}
+
+@utility surface {
+  @apply surface-light;
 
   &:where(.dark, .dark *) {
     background-color: rgb(34 31 58 / 0.72);

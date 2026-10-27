@@ -108,24 +108,24 @@ export default function LandingPage() {
   if (user && !startingDemo) return null;
 
   return (
-    <div className="min-h-screen sunrise text-gray-900">
-      <header className="flex items-center justify-between px-6 sm:px-8 py-4 bg-white/40 backdrop-blur-xl border-b border-white/70">
+    <div className="min-h-screen sunrise text-gray-900 text-pretty selection:bg-primary-100 selection:text-gray-900">
+      <header className="flex items-center justify-between gap-2 pl-6 pr-3 sm:pl-8 sm:pr-5 py-2.5 bg-white/40 backdrop-blur-xl border-b border-white/70">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full sun-orb shadow-sm shadow-peach-400/40" aria-hidden="true" />
           <span className="text-lg font-display font-extrabold tracking-tight text-gray-900">Wayfinder</span>
         </div>
-        <nav aria-label="Get started" className="flex items-center gap-4">
+        <nav aria-label="Get started" className="flex items-center gap-1">
           <button
             onClick={handleDemo}
             disabled={startingDemo || signingIn}
-            className="text-sm font-medium text-primary-700 hover:text-primary-500 transition-colors disabled:opacity-50"
+            className="min-h-11 px-3 rounded-full text-sm font-medium text-primary-700 hover:bg-white/70 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Try the demo
           </button>
           <button
             onClick={handleSignIn}
             disabled={signingIn || startingDemo}
-            className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors disabled:opacity-50"
+            className="min-h-11 px-3 rounded-full flex items-center gap-2 text-sm font-medium text-gray-700 hover:bg-white/70 hover:text-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Sign in
             <i className="ti ti-arrow-right text-sm" aria-hidden="true" />
@@ -141,10 +141,10 @@ export default function LandingPage() {
             <i className="ti ti-sparkles text-sm" aria-hidden="true" />
             A job search tracker with honest AI
           </div>
-          <h1 className="relative font-display font-extrabold tracking-tight text-4xl sm:text-6xl text-gray-900 leading-[1.08] mb-5">
+          <h1 className="relative font-display font-extrabold tracking-tight text-4xl sm:text-6xl text-gray-900 leading-[1.08] mb-5 text-balance">
             Applications that sound
-            <br />
-            like you, not like AI
+            {/* The designed two-line break only fits from tablet up; phones balance the lines instead. */}
+            <br className="hidden sm:block" /> like you, not like AI
           </h1>
           <p className="relative text-lg text-gray-600 mb-8 max-w-xl mx-auto leading-relaxed">
             Wayfinder learns how you write, draws on the real stories behind your work, and checks every claim
@@ -154,7 +154,7 @@ export default function LandingPage() {
             <button
               onClick={handleDemo}
               disabled={startingDemo || signingIn}
-              className="inline-flex items-center gap-2 bg-primary-600 text-white text-sm font-medium px-6 py-3 rounded-full shadow-lg shadow-primary-600/25 hover:bg-primary-700 transition-colors disabled:opacity-50"
+              className="inline-flex items-center gap-2 bg-primary-600 text-white text-sm font-medium px-6 py-3 rounded-full shadow-lg shadow-primary-600/25 hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <i className={`ti ${startingDemo ? "ti-loader-2 animate-spin" : "ti-player-play"} text-sm`} aria-hidden="true" />
               {startingDemo ? "Setting up the demo…" : "Try the demo"}
@@ -162,7 +162,7 @@ export default function LandingPage() {
             <button
               onClick={handleSignIn}
               disabled={signingIn || startingDemo}
-              className="inline-flex items-center gap-3 bg-white/85 text-gray-800 text-sm font-medium px-6 py-3 rounded-full shadow-sm shadow-gray-900/5 hover:bg-white transition-colors disabled:opacity-50"
+              className="inline-flex items-center gap-3 bg-white/85 text-gray-800 text-sm font-medium px-6 py-3 rounded-full shadow-sm shadow-gray-900/5 hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {signingIn ? (
                 <i className="ti ti-loader-2 animate-spin text-sm" aria-hidden="true" />
@@ -186,10 +186,10 @@ export default function LandingPage() {
               </p>
             )}
           </div>
-          <p className="relative text-xs text-gray-500 mt-4">
+          <p className="relative text-xs text-gray-600 mt-4">
             The demo needs no sign-up. Your own account is free; bring your own Anthropic API key for AI features.
           </p>
-          <p className="relative text-xs text-gray-500 mt-2">
+          <p className="relative text-xs text-gray-600 mt-2">
             Recruiter or hiring manager? Jazmin is happy to provide a temporary API key so you can explore every
             feature.{" "}
             <a href="mailto:jazminrtweedle@gmail.com" className="text-primary-700 hover:underline">
@@ -203,20 +203,20 @@ export default function LandingPage() {
           <h2 id="different-heading" className="sr-only">What makes Wayfinder different</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {differentiators.map((f) => (
-              <div key={f.title} className="bg-white/75 backdrop-blur border border-white rounded-3xl p-6 shadow-sm shadow-gray-900/5">
+              <div key={f.title} className="surface-light p-6">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-peach-200 via-rose-200 to-primary-200 flex items-center justify-center mb-4">
                   <i className={`ti ${f.icon} text-gray-800 text-lg`} aria-hidden="true" />
                 </div>
                 <h3 className="font-display font-bold text-gray-900 mb-1">{f.title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{f.description}</p>
+                <p className="text-sm text-gray-600 leading-relaxed">{f.description}</p>
               </div>
             ))}
           </div>
         </section>
 
         {/* Claim tracing preview */}
-        <section aria-labelledby="preview-heading" className="max-w-3xl mx-auto px-6 pb-16">
-          <div className="bg-white/80 backdrop-blur border border-white rounded-3xl overflow-hidden shadow-sm shadow-gray-900/5">
+        <section aria-labelledby="preview-heading" className="max-w-4xl mx-auto px-6 pb-20">
+          <div className="surface-light overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-100 flex flex-wrap items-center justify-between gap-2">
               <h2 id="preview-heading" className="font-display font-bold text-sm text-gray-700">From a demo cover letter</h2>
               <div className="flex items-center gap-3 text-xs text-gray-500">
@@ -230,30 +230,41 @@ export default function LandingPage() {
                 </span>
               </div>
             </div>
-            <div className="px-6 py-5">
-              <HighlightedLetter content={previewText} claims={preview.claims} lightOnly />
-              <p className="relative text-xs text-gray-500 mt-4">
-                Hover a highlight to see the exact line it came from. The workshop claim isn&apos;t in Riley&apos;s
-                notes, so it&apos;s flagged before the letter goes out.
-              </p>
+            {/* On wide screens the evidence sits beside the letter like a margin note. */}
+            <div className="px-6 py-5 md:py-6 max-md:[&>p]:max-w-[31rem] md:grid md:grid-cols-[minmax(0,1fr)_15rem] md:gap-8 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-10">
+              <HighlightedLetter
+                content={previewText}
+                claims={preview.claims}
+                lightOnly
+                explain
+                asideClassName="mt-4 md:mt-0 md:border-l md:border-gray-100 md:pl-6"
+                note={
+                  <p className="text-xs text-gray-500 leading-relaxed mt-2">
+                    The workshop claim isn&apos;t in Riley&apos;s notes, so it&apos;s flagged before the letter goes out.
+                  </p>
+                }
+              />
             </div>
           </div>
         </section>
 
         {/* Everything else */}
         <section aria-labelledby="rest-heading" className="max-w-4xl mx-auto px-6 pb-20">
-          <h2 id="rest-heading" className="font-display font-bold text-lg text-gray-900 text-center mb-5">And the rest of your search, in one place</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <h2 id="rest-heading" className="font-display font-bold text-lg text-gray-900 text-center mb-8">And the rest of your search, in one place</h2>
+          {/* Supporting features, so a plain list rather than more cards: they shouldn't compete with the three above. */}
+          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-7 sm:px-4">
             {features.map((f) => (
-              <div key={f.title} className="flex items-start gap-3 bg-white/70 backdrop-blur border border-white rounded-3xl p-4">
-                <i className={`ti ${f.icon} text-primary-500 text-base mt-0.5`} aria-hidden="true" />
-                <div>
+              <li key={f.title} className="flex items-start gap-3">
+                <span className="w-8 h-8 shrink-0 rounded-full bg-white/80 shadow-sm shadow-gray-900/5 flex items-center justify-center">
+                  <i className={`ti ${f.icon} text-primary-600 text-base`} aria-hidden="true" />
+                </span>
+                <div className="min-w-0 pt-1">
                   <h3 className="text-sm font-medium text-gray-900">{f.title}</h3>
-                  <p className="text-xs text-gray-500 leading-relaxed">{f.description}</p>
+                  <p className="text-sm text-gray-600 leading-relaxed mt-0.5">{f.description}</p>
                 </div>
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
         </section>
       </main>
 
