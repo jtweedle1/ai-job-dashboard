@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import { callAI, WRITING_MODEL } from "@/lib/ai";
 import { requireAuth } from "@/lib/auth-server";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { adminDb } from "@/lib/firebase-admin";
 import { getVoiceSamples, rankSamples, truncate } from "@/lib/voice-server";
+import { toVoiceSettings } from "@/types/writingSample";
 import { computeVoiceStats, describeVoiceStats } from "@/lib/voice-stats";
 
 const PER_SAMPLE_CHARS = 6000;
@@ -29,6 +31,7 @@ Rules:
 - Be specific to this person. No generic writing advice.
 - Describe how they write, not their career history.
 - Write as direct instructions ("Open with...", "Close with...").
+- If the candidate gave WRITING RULES, never quote or recommend anything they ban, even if it appears in a sample. Mention in "Avoid" that their rules list applies.
 - Keep it under 350 words.
 
 Output only the profile.`;
@@ -42,7 +45,11 @@ export async function POST(request: Request) {
     const { limited } = await checkRateLimit(uid);
     if (limited) return NextResponse.json({ error: "rate_limited" }, { status: 429 });
 
-    const samples = await getVoiceSamples(uid);
+    const [samples, userSnap] = await Promise.all([
+      getVoiceSamples(uid),
+      adminDb.collection("users").doc(uid).get(),
+    ]);
+    const rules = toVoiceSettings(userSnap.get("voiceSettings")).neverSay.trim();
     if (samples.length === 0)
       return NextResponse.json({ error: "no_samples" }, { status: 400 });
 
@@ -61,7 +68,8 @@ export async function POST(request: Request) {
     const letters = samples.filter((s) => s.isCoverLetter);
     const stats = computeVoiceStats((letters.length ? letters : samples).map((s) => s.content));
 
-    const userMessage = `MEASUREMENTS:\n${describeVoiceStats(stats)}\n\nSAMPLES:\n\n${parts.join("\n\n---\n\n")}`;
+    let userMessage = `MEASUREMENTS:\n${describeVoiceStats(stats)}\n\nSAMPLES:\n\n${parts.join("\n\n---\n\n")}`;
+    if (rules) userMessage += `\n\nWRITING RULES FROM THE CANDIDATE:\n"""\n${truncate(rules, 12000)}\n"""`;
 
     const result = await callAI(
       uid,
