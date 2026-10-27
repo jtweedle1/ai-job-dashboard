@@ -15,15 +15,15 @@ import { BACKGROUND_QUESTIONS, backgroundHeading, hasBackgroundContent } from "@
 import type { Background } from "@/types/background";
 import StoryTabs from "@/components/StoryTabs";
 
-const cardClass = "bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl mb-4";
+const cardClass = "surface mb-4";
 const cardHeaderClass = "px-4 py-3 border-b border-gray-50 dark:border-gray-800";
-const cardTitleClass = "text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest";
+const cardTitleClass = "section-label";
 const inputClass =
-  "w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent dark:bg-gray-800";
+  "w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800";
 const primaryButtonClass =
-  "flex items-center gap-1.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
+  "flex items-center gap-1.5 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-xl hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
 const secondaryButtonClass =
-  "flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50";
+  "flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 px-3 py-1.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50";
 
 const EMPTY_FORM: BackgroundInput = { title: "", company: "", startDate: "", endDate: "", answers: {} };
 
@@ -127,7 +127,7 @@ export default function BackgroundPage() {
     return (
       <div className="p-6 max-w-3xl mx-auto animate-pulse space-y-4">
         <div className="h-7 bg-gray-100 dark:bg-gray-800 rounded w-48" />
-        <div className="h-48 bg-gray-100 dark:bg-gray-800 rounded-xl" />
+        <div className="h-48 bg-gray-100 dark:bg-gray-800 rounded-2xl" />
       </div>
     );
   }
@@ -137,8 +137,8 @@ export default function BackgroundPage() {
   return (
     <div className="p-6 max-w-3xl mx-auto">
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-lg">
-          <i className="ti ti-circle-check text-emerald-400 text-base" aria-hidden="true" />
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-full shadow-lg shadow-gray-900/20">
+          <i className="ti ti-circle-check text-primary-400 text-base" aria-hidden="true" />
           {toast}
         </div>
       )}
@@ -147,7 +147,7 @@ export default function BackgroundPage() {
 
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-50">My background</h1>
+          <h1 className="page-title">Experience</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">
             The real stories behind each job. Cover letters draw from the positions you switch on, so you
             don&apos;t have to retell them every time.
@@ -228,7 +228,7 @@ export default function BackgroundPage() {
             <div className="flex items-center justify-end gap-2">
               <button
                 onClick={() => setEditingId(null)}
-                className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 px-4 py-2 rounded-lg transition-colors"
+                className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 px-4 py-2 rounded-xl transition-colors"
               >
                 Cancel
               </button>
@@ -318,8 +318,8 @@ export default function BackgroundPage() {
       ) : (
         editingId === null && (
           <div className={`${cardClass} p-10 text-center`}>
-            <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center mx-auto mb-3">
-              <i className="ti ti-briefcase text-gray-400 dark:text-gray-500 text-xl" aria-hidden="true" />
+            <div className="w-10 h-10 rounded-full glow-gradient flex items-center justify-center mx-auto mb-3">
+            <i className="ti ti-briefcase text-gray-700 dark:text-gray-100 text-xl" aria-hidden="true" />
             </div>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               No positions yet. Add one and answer a few questions about what you did there.

@@ -6,7 +6,7 @@ import type { QualityCheck } from "@/lib/letter-quality";
 import type { LetterClaim } from "@/types/coverLetter";
 
 const backedMark =
-  "rounded-sm bg-emerald-50 dark:bg-emerald-950 underline decoration-emerald-500 decoration-1 underline-offset-4";
+  "rounded-sm bg-primary-50 dark:bg-primary-950 underline decoration-primary-500 decoration-1 underline-offset-4";
 const unbackedMark =
   "rounded-sm bg-amber-50 dark:bg-amber-950 text-amber-900 dark:text-amber-200 underline decoration-amber-500 decoration-wavy decoration-1 underline-offset-4";
 
@@ -67,14 +67,14 @@ export default function LetterReview({ claims, checks, checking, checkError, onC
   return (
     <div className="px-4 py-3 border-t border-gray-50 dark:border-gray-800 space-y-4">
       <div>
-        <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2">
+        <p className="section-label mb-2">
           Before you send
         </p>
         <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5">
           {checks.map((c) => (
             <li key={c.id} className="flex items-start gap-2 text-xs">
               <i
-                className={`ti ${c.ok ? "ti-circle-check text-emerald-500" : "ti-alert-triangle text-amber-500"} text-sm mt-px`}
+                className={`ti ${c.ok ? "ti-circle-check text-primary-500" : "ti-alert-triangle text-amber-500"} text-sm mt-px`}
                 aria-hidden="true"
               />
               <span className="min-w-0">
@@ -88,14 +88,14 @@ export default function LetterReview({ claims, checks, checking, checkError, onC
 
       <div>
         <div className="flex items-center justify-between gap-3 mb-2">
-          <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+          <p className="section-label">
             Where each claim came from
           </p>
           <div className="flex items-center gap-3">
             {claims && claims.length > 0 && (
               <button
                 onClick={() => setShowClaims((v) => !v)}
-                className="text-xs text-gray-400 dark:text-gray-500 hover:text-emerald-600 transition-colors"
+                className="text-xs text-gray-400 dark:text-gray-500 hover:text-primary-600 transition-colors"
               >
                 {showClaims ? "Hide" : `Show ${claims.length}`}
               </button>
@@ -103,7 +103,7 @@ export default function LetterReview({ claims, checks, checking, checkError, onC
             <button
               onClick={onCheckSources}
               disabled={checking}
-              className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 hover:text-emerald-600 transition-colors disabled:opacity-50"
+              className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 hover:text-primary-600 transition-colors disabled:opacity-50"
             >
               <i className={`ti ${checking ? "ti-loader-2 animate-spin" : "ti-refresh"} text-xs`} aria-hidden="true" />
               {checking ? "Checking…" : claims ? "Re-check" : "Check sources"}
@@ -131,7 +131,7 @@ export default function LetterReview({ claims, checks, checking, checkError, onC
                 {claims.map((c, i) => (
                   <li key={i} className="flex items-start gap-2 text-xs">
                     <i
-                      className={`ti ${c.source ? "ti-link text-emerald-500" : "ti-help-circle text-amber-500"} text-sm mt-px`}
+                      className={`ti ${c.source ? "ti-link text-primary-500" : "ti-help-circle text-amber-500"} text-sm mt-px`}
                       aria-hidden="true"
                     />
                     <div className="min-w-0">

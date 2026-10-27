@@ -32,8 +32,15 @@ Per-user Anthropic keys (bring-your-own) — no shared key pool; rate-limit per-
 - One `lib/<entity>.ts` CRUD module + one `types/<entity>.ts` per domain entity.
 - API route shape: `requireAuth → checkRateLimit → callAI`.
 - Changing an API route signature? Update both the route and its client caller.
-- Tailwind palette: primary `emerald-{50,100,500,700}`; text `gray-{900,500,400}`;
-  errors `red-{400,500}`; surfaces `white`/`gray-{50,100}`.
+- Calm theme (`app/globals.css`): `primary-*` (soft iris) for actions and links; `gray-*` is a
+  lavender neutral that deepens to night indigo in dark mode; `emerald` = good, `amber` = check
+  this, `red` = error. Cards use `surface`, headings `page-title` / `section-label`, warm accents
+  `glow-gradient` / `sun-orb`. Buttons are pills (`rounded-full`). Fonts: Figtree body, Nunito
+  (`font-display`) for headings.
+- Navigation lives in `components/navigation.ts`: Today, Jobs, Me, Settings, each with tabs
+  rendered by `SectionTabs` in `<AppShell>`. Letter, prep and debrief live inside a job
+  (`components/job/*`, steps in `lib/next-steps.ts`); `/cover-letters` and `/interview-prep`
+  only redirect.
 
 ## Next.js note
 

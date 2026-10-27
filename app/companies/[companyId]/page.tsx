@@ -147,8 +147,8 @@ export default function CompanyProfilePage({
     return (
       <div className="p-6 max-w-3xl mx-auto animate-pulse space-y-4">
         <div className="h-7 bg-gray-100 dark:bg-gray-800 rounded w-48" />
-        <div className="h-32 bg-gray-100 dark:bg-gray-800 rounded-xl" />
-        <div className="h-32 bg-gray-100 dark:bg-gray-800 rounded-xl" />
+        <div className="h-32 bg-gray-100 dark:bg-gray-800 rounded-2xl" />
+        <div className="h-32 bg-gray-100 dark:bg-gray-800 rounded-2xl" />
       </div>
     );
   }
@@ -159,7 +159,7 @@ export default function CompanyProfilePage({
         <p className="text-sm text-gray-500 mb-4">Company not found.</p>
         <button
           onClick={() => router.push("/companies")}
-          className="text-sm text-emerald-600 hover:underline"
+          className="text-sm text-primary-600 hover:underline"
         >
           Back to companies
         </button>
@@ -171,11 +171,11 @@ export default function CompanyProfilePage({
     <div className="p-6 max-w-3xl mx-auto">
       {/* Toast */}
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-lg">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-full shadow-lg shadow-gray-900/20">
           {toast.error ? (
             <i className="ti ti-alert-circle text-red-400 text-base" aria-hidden="true" />
           ) : (
-            <i className="ti ti-circle-check text-emerald-400 text-base" aria-hidden="true" />
+            <i className="ti ti-circle-check text-primary-400 text-base" aria-hidden="true" />
           )}
           {toast.msg}
         </div>
@@ -204,7 +204,7 @@ export default function CompanyProfilePage({
             onClick={() => logoInputRef.current?.click()}
             disabled={uploadingLogo}
             title="Upload logo"
-            className="relative w-11 h-11 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden group border border-gray-200 dark:border-gray-700 hover:border-emerald-400 transition-colors"
+            className="relative w-11 h-11 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden group border border-gray-200 dark:border-gray-700 hover:border-primary-400 transition-colors"
           >
             {uploadingLogo ? (
               <i className="ti ti-loader-2 animate-spin text-gray-400 text-sm" aria-hidden="true" />
@@ -238,7 +238,7 @@ export default function CompanyProfilePage({
           <button
             onClick={handleAutoFill}
             disabled={filling}
-            className="flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 px-3 py-1.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {filling ? (
               <i className="ti ti-loader-2 animate-spin text-xs" aria-hidden="true" />
@@ -283,9 +283,9 @@ export default function CompanyProfilePage({
       {!fillError && <div className="mb-6" />}
 
       {/* Linked job */}
-      <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl mb-4">
+      <div className="surface mb-4">
         <div className="px-4 py-3 border-b border-gray-50 dark:border-gray-800">
-          <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest">Linked role</p>
+          <p className="section-label">Linked role</p>
         </div>
         {linkedJob ? (
           <div className="px-4 py-3 flex items-center justify-between">
@@ -295,7 +295,7 @@ export default function CompanyProfilePage({
             </div>
             <button
               onClick={() => router.push(`/applications/${linkedJob.id}`)}
-              className="text-xs text-emerald-600 hover:underline shrink-0 ml-4"
+              className="text-xs text-primary-600 hover:underline shrink-0 ml-4"
             >
               View job
             </button>
@@ -308,9 +308,9 @@ export default function CompanyProfilePage({
       </div>
 
       {/* Profile fields */}
-      <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl mb-4">
+      <div className="surface mb-4">
         <div className="px-4 py-3 border-b border-gray-50 dark:border-gray-800">
-          <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest">Research notes</p>
+          <p className="section-label">Research notes</p>
         </div>
         <div className="divide-y divide-gray-50 dark:divide-gray-800">
           {PROFILE_FIELDS.map(({ key, label, placeholder }) => (

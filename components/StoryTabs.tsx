@@ -14,7 +14,7 @@ const tabs = [
 export default function StoryTabs() {
   const pathname = usePathname();
   return (
-    <nav className="flex gap-1 overflow-x-auto mb-6 border-b border-gray-100 dark:border-gray-800" aria-label="Story library">
+    <nav className="flex gap-2 overflow-x-auto mb-6" aria-label="Story library">
       {tabs.map((t) => {
         const active = pathname === t.href;
         return (
@@ -22,10 +22,10 @@ export default function StoryTabs() {
             key={t.href}
             href={t.href}
             aria-current={active ? "page" : undefined}
-            className={`flex items-center gap-1.5 whitespace-nowrap px-3 py-2 text-sm -mb-px border-b-2 transition-colors ${
+            className={`flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-full text-sm border transition-colors ${
               active
-                ? "border-emerald-500 text-emerald-700 dark:text-emerald-400 font-medium"
-                : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                ? "border-primary-200 dark:border-primary-800 bg-primary-50 dark:bg-primary-950 text-primary-700 dark:text-primary-300 font-medium"
+                : "border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-white/70 dark:hover:bg-white/5"
             }`}
           >
             <i className={`ti ${t.icon} text-sm`} aria-hidden="true" />

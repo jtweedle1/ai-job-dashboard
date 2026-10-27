@@ -63,7 +63,7 @@ export default function StoriesPage() {
     return (
       <div className="p-6 max-w-3xl mx-auto animate-pulse space-y-4">
         <div className="h-7 bg-gray-100 dark:bg-gray-800 rounded w-48" />
-        <div className="h-48 bg-gray-100 dark:bg-gray-800 rounded-xl" />
+        <div className="h-48 bg-gray-100 dark:bg-gray-800 rounded-2xl" />
       </div>
     );
   }
@@ -73,7 +73,7 @@ export default function StoriesPage() {
       <StoryTabs />
 
       <div className="mb-6">
-        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-50">Story library</h1>
+        <h1 className="page-title">Your stories</h1>
         <p className="text-sm text-gray-500 dark:text-gray-400">
           Everything you&apos;ve told HuntDesk about your work, in one place. Write a story once and use it everywhere.
         </p>
@@ -81,9 +81,9 @@ export default function StoriesPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
         {USES.map((u) => (
-          <div key={u.title} className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-4">
+          <div key={u.title} className="surface p-4">
             <div className="flex items-center gap-2 mb-1.5">
-              <i className={`ti ${u.icon} text-emerald-600 text-base`} aria-hidden="true" />
+              <i className={`ti ${u.icon} text-primary-600 text-base`} aria-hidden="true" />
               <p className="text-sm font-medium text-gray-900 dark:text-gray-50">{u.title}</p>
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">{u.body}</p>
@@ -92,13 +92,13 @@ export default function StoriesPage() {
       </div>
 
       {items.length === 0 ? (
-        <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-10 text-center">
-          <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center mx-auto mb-3">
-            <i className="ti ti-books text-gray-400 dark:text-gray-500 text-xl" aria-hidden="true" />
+        <div className="surface p-10 text-center">
+          <div className="w-10 h-10 rounded-full glow-gradient flex items-center justify-center mx-auto mb-3">
+            <i className="ti ti-books text-gray-700 dark:text-gray-100 text-xl" aria-hidden="true" />
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400">
             No stories yet.{" "}
-            <Link href="/background" className="text-emerald-600 hover:underline">
+            <Link href="/background" className="text-primary-600 hover:underline">
               Add a past position
             </Link>{" "}
             and answer a few questions about what you did there.
@@ -117,7 +117,7 @@ export default function StoriesPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search every story, e.g. onboarding, conflict, Figma…"
-                className="w-full border border-gray-200 dark:border-gray-700 rounded-lg pl-8 pr-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white dark:bg-gray-800"
+                className="w-full border border-gray-200 dark:border-gray-700 rounded-xl pl-8 pr-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-800"
               />
             </div>
             {KINDS.map((k) => (
@@ -126,7 +126,7 @@ export default function StoriesPage() {
                 onClick={() => setKind(kind === k ? null : k)}
                 className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full border transition-colors ${
                   kind === k
-                    ? "bg-emerald-600 text-white border-emerald-600"
+                    ? "bg-primary-600 text-white border-primary-600"
                     : "bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500"
                 }`}
               >
@@ -137,11 +137,11 @@ export default function StoriesPage() {
           </div>
 
           {filtered.length === 0 ? (
-            <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-8 text-center">
+            <div className="surface p-8 text-center">
               <p className="text-sm text-gray-400 dark:text-gray-500">No stories match your search.</p>
             </div>
           ) : (
-            <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl divide-y divide-gray-50 dark:divide-gray-800">
+            <div className="surface divide-y divide-gray-50 dark:divide-gray-800">
               {filtered.map((item) => {
                 const open = expandedId === item.id;
                 return (
@@ -163,7 +163,7 @@ export default function StoriesPage() {
                       </button>
                       <Link
                         href={item.href}
-                        className="shrink-0 text-xs text-gray-400 dark:text-gray-500 hover:text-emerald-600 transition-colors"
+                        className="shrink-0 text-xs text-gray-400 dark:text-gray-500 hover:text-primary-600 transition-colors"
                       >
                         Open
                       </Link>

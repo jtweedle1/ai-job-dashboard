@@ -33,7 +33,7 @@ function formatDate(d: Date) {
 function Badge({ tone, children }: { tone: "emerald" | "amber"; children: React.ReactNode }) {
   const cls =
     tone === "emerald"
-      ? "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950"
+      ? "text-primary-700 dark:text-primary-400 bg-primary-50 dark:bg-primary-950"
       : "text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950";
   return (
     <span className={`inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full ${cls}`}>
@@ -42,15 +42,15 @@ function Badge({ tone, children }: { tone: "emerald" | "amber"; children: React.
   );
 }
 
-const cardClass = "bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl mb-4";
+const cardClass = "surface mb-4";
 const cardHeaderClass = "px-4 py-3 border-b border-gray-50 dark:border-gray-800";
-const cardTitleClass = "text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest";
+const cardTitleClass = "section-label";
 const inputClass =
-  "w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent dark:bg-gray-800";
+  "w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800";
 const primaryButtonClass =
-  "flex items-center gap-1.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
+  "flex items-center gap-1.5 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-xl hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
 const secondaryButtonClass =
-  "flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50";
+  "flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 px-3 py-1.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50";
 
 export default function VoicePage() {
   const { user } = useAuth();
@@ -257,8 +257,8 @@ export default function VoicePage() {
     return (
       <div className="p-6 max-w-3xl mx-auto animate-pulse space-y-4">
         <div className="h-7 bg-gray-100 dark:bg-gray-800 rounded w-48" />
-        <div className="h-40 bg-gray-100 dark:bg-gray-800 rounded-xl" />
-        <div className="h-48 bg-gray-100 dark:bg-gray-800 rounded-xl" />
+        <div className="h-40 bg-gray-100 dark:bg-gray-800 rounded-2xl" />
+        <div className="h-48 bg-gray-100 dark:bg-gray-800 rounded-2xl" />
       </div>
     );
   }
@@ -277,14 +277,14 @@ export default function VoicePage() {
   return (
     <div className="p-6 max-w-3xl mx-auto">
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-lg">
-          <i className="ti ti-circle-check text-emerald-400 text-base" aria-hidden="true" />
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-full shadow-lg shadow-gray-900/20">
+          <i className="ti ti-circle-check text-primary-400 text-base" aria-hidden="true" />
           {toast}
         </div>
       )}
 
       <div className="mb-6">
-        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-50">My voice</h1>
+        <h1 className="page-title">Your voice</h1>
         <p className="text-sm text-gray-500 dark:text-gray-400">
           Cover letters are written to sound like you, based only on the writing you include here.
         </p>
@@ -459,7 +459,7 @@ export default function VoicePage() {
                 <option value="other">Other writing</option>
               </select>
             </div>
-            <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+            <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
               {(["paste", "pdf"] as Tab[]).map((t) => (
                 <button
                   key={t}
@@ -478,7 +478,7 @@ export default function VoicePage() {
             {tab === "pdf" && (
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-5 text-center cursor-pointer hover:border-emerald-300 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/30 transition-colors"
+                className="border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl p-5 text-center cursor-pointer hover:border-primary-300 hover:bg-primary-50/30 dark:hover:bg-primary-950/30 transition-colors"
               >
                 <input
                   ref={fileInputRef}
@@ -509,7 +509,7 @@ export default function VoicePage() {
             <div className="flex items-center justify-end gap-2">
               <button
                 onClick={resetForm}
-                className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 px-4 py-2 rounded-lg transition-colors"
+                className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 px-4 py-2 rounded-xl transition-colors"
               >
                 Cancel
               </button>
@@ -599,7 +599,7 @@ export default function VoicePage() {
       {/* Answer bank (opt-in) */}
       <div className={cardClass}>
         <div className={cardHeaderClass}>
-          <p className={cardTitleClass}>Answer bank</p>
+          <p className={cardTitleClass}>Saved answers</p>
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 normal-case">
             Off by default. Turn on answers you wrote yourself.
           </p>

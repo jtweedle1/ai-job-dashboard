@@ -73,11 +73,10 @@ export default function ApplicationsPage() {
     }
   }
 
+  // A new job opens straight into its first step.
   function handleSaved(job: Job) {
-    setJobs((prev) => [job, ...prev]);
     setModalOpen(false);
-    setToast("Job added");
-    setTimeout(() => setToast(""), 3000);
+    router.push(`/applications/${job.id}`);
   }
 
   const filtered = useMemo(() => {
@@ -158,8 +157,8 @@ export default function ApplicationsPage() {
   return (
     <div className="p-6 max-w-6xl mx-auto">
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-lg">
-          <i className="ti ti-circle-check text-emerald-400 text-base" aria-hidden="true" />
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-full shadow-lg shadow-gray-900/20">
+          <i className="ti ti-circle-check text-primary-400 text-base" aria-hidden="true" />
           {toast}
         </div>
       )}
@@ -167,7 +166,7 @@ export default function ApplicationsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-50">Applications</h1>
+          <h1 className="page-title">Your jobs</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">{jobs.length} job{jobs.length !== 1 ? "s" : ""} tracked</p>
         </div>
         <div className="flex items-center gap-2">
@@ -175,7 +174,7 @@ export default function ApplicationsPage() {
             <button
               onClick={handleDeleteSelected}
               disabled={deleting}
-              className="flex items-center gap-2 bg-red-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
+              className="flex items-center gap-2 bg-red-600 text-white text-sm font-medium px-4 py-2 rounded-xl hover:bg-red-700 disabled:opacity-50 transition-colors"
             >
               <i className="ti ti-trash text-sm" aria-hidden="true" />
               {deleting ? "Deleting…" : `Delete ${selectedIds.size}`}
@@ -183,7 +182,7 @@ export default function ApplicationsPage() {
           )}
           <button
             onClick={() => setModalOpen(true)}
-            className="flex items-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
+            className="flex items-center gap-2 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-primary-700 transition-colors"
           >
             <i className="ti ti-plus text-sm" aria-hidden="true" />
             Add job
@@ -197,7 +196,7 @@ export default function ApplicationsPage() {
           <select
             value={stageFilter}
             onChange={(e) => setStageFilter(e.target.value as JobStage | "all")}
-            className="border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 text-xs text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-1.5 text-xs text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <option value="all">All stages</option>
             {ALL_STAGES.map((s) => (
@@ -207,7 +206,7 @@ export default function ApplicationsPage() {
           <select
             value={sourceFilter}
             onChange={(e) => setSourceFilter(e.target.value as JobSource | "all")}
-            className="border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 text-xs text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-1.5 text-xs text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <option value="all">All sources</option>
             {ALL_SOURCES.map((s) => (
@@ -227,7 +226,7 @@ export default function ApplicationsPage() {
 
       {/* Content */}
       {loading ? (
-        <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl overflow-hidden">
+        <div className="surface overflow-hidden">
           {[1, 2, 3].map((n) => (
             <div key={n} className="flex items-center gap-4 px-4 py-3 border-b border-gray-50 dark:border-gray-800 animate-pulse">
               <div className="h-4 bg-gray-100 dark:bg-gray-800 rounded w-40" />
@@ -237,9 +236,9 @@ export default function ApplicationsPage() {
           ))}
         </div>
       ) : jobs.length === 0 ? (
-        <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-12 text-center">
-          <div className="w-12 h-12 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center mx-auto mb-4">
-            <i className="ti ti-file-text text-gray-400 dark:text-gray-500 text-2xl" aria-hidden="true" />
+        <div className="surface p-12 text-center">
+          <div className="w-12 h-12 rounded-full glow-gradient flex items-center justify-center mx-auto mb-4">
+            <i className="ti ti-file-text text-gray-700 dark:text-gray-100 text-2xl" aria-hidden="true" />
           </div>
           <h2 className="text-sm font-medium text-gray-900 dark:text-gray-50 mb-1">No applications yet</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-5 max-w-xs mx-auto">
@@ -247,24 +246,24 @@ export default function ApplicationsPage() {
           </p>
           <button
             onClick={() => setModalOpen(true)}
-            className="inline-flex items-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
+            className="inline-flex items-center gap-2 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-primary-700 transition-colors"
           >
             <i className="ti ti-plus text-sm" aria-hidden="true" />
             Add job
           </button>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-10 text-center">
+        <div className="surface p-10 text-center">
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">No jobs match your filters.</p>
           <button
             onClick={() => { setStageFilter("all"); setSourceFilter("all"); }}
-            className="text-sm text-emerald-600 hover:underline"
+            className="text-sm text-primary-600 hover:underline"
           >
             Clear filters
           </button>
         </div>
       ) : (
-        <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl overflow-hidden">
+        <div className="surface overflow-hidden">
           <table className="w-full">
             <thead className="border-b border-gray-100 dark:border-gray-800">
               <tr>
@@ -274,7 +273,7 @@ export default function ApplicationsPage() {
                     type="checkbox"
                     checked={allFilteredSelected}
                     onChange={handleToggleAll}
-                    className="rounded border-gray-300 dark:border-gray-600 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                    className="rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500 cursor-pointer"
                     aria-label="Select all"
                   />
                 </th>
@@ -303,14 +302,14 @@ export default function ApplicationsPage() {
                 <tr
                   key={job.id}
                   onClick={() => router.push(`/applications/${job.id}`)}
-                  className={`border-b border-gray-50 dark:border-gray-800 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors ${selectedIds.has(job.id) ? "bg-emerald-50 dark:bg-emerald-950 hover:bg-emerald-50 dark:hover:bg-emerald-950" : ""}`}
+                  className={`border-b border-gray-50 dark:border-gray-800 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors ${selectedIds.has(job.id) ? "bg-primary-50 dark:bg-primary-950 hover:bg-primary-50 dark:hover:bg-primary-950" : ""}`}
                 >
                   <td className="px-4 py-3 w-8" onClick={(e) => e.stopPropagation()}>
                     <input
                       type="checkbox"
                       checked={selectedIds.has(job.id)}
                       onChange={() => handleToggleSelect(job.id)}
-                      className="rounded border-gray-300 dark:border-gray-600 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                      className="rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500 cursor-pointer"
                       aria-label={`Select ${job.title}`}
                     />
                   </td>

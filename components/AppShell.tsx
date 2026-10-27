@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { useTheme } from "@/lib/theme-context";
 import { signOutUser } from "@/lib/auth";
-import Sidebar from "./Sidebar";
+import Sidebar, { Logo } from "./Sidebar";
+import SectionTabs from "./SectionTabs";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -21,7 +22,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
+      <div className="min-h-screen app-backdrop flex items-center justify-center">
         <i className="ti ti-loader-2 animate-spin text-gray-300 text-2xl" aria-hidden="true" />
       </div>
     );
@@ -30,12 +31,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   if (!user) return null;
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="flex h-screen app-backdrop">
       <Sidebar mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         {/* Mobile top bar */}
-        <header className="flex md:hidden items-center gap-3 px-4 py-3 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 shrink-0">
+        <header className="flex md:hidden items-center gap-3 px-4 py-3 bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl border-b border-white/80 dark:border-white/5 shrink-0">
           <button
             onClick={() => setSidebarOpen(true)}
             className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
@@ -43,11 +44,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           >
             <i className="ti ti-menu-2 text-xl" aria-hidden="true" />
           </button>
-          <div className="flex items-center gap-2 flex-1">
-            <div className="w-6 h-6 rounded-md bg-gray-900 dark:bg-gray-700 flex items-center justify-center">
-              <i className="ti ti-briefcase text-emerald-400 text-xs" aria-hidden="true" />
-            </div>
-            <span className="text-sm font-semibold text-gray-900 dark:text-gray-50">HuntDesk</span>
+          <div className="flex-1">
+            <Logo small />
           </div>
           <button
             onClick={toggleTheme}
@@ -59,7 +57,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </header>
 
         {user.isAnonymous && (
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2 bg-emerald-50 dark:bg-emerald-950 border-b border-emerald-100 dark:border-emerald-900 text-xs text-emerald-700 dark:text-emerald-300 shrink-0">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2 glow-gradient text-xs text-gray-700 dark:text-gray-100 shrink-0">
             <i className="ti ti-eye text-sm" aria-hidden="true" />
             <span className="flex-1 min-w-0">
               You&apos;re exploring a demo job search for Riley, a product designer. Click around and change anything.
@@ -82,7 +80,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         )}
 
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        <main className="flex-1 overflow-y-auto">
+          <SectionTabs />
+          {children}
+        </main>
       </div>
     </div>
   );
