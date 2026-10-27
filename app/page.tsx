@@ -160,6 +160,13 @@ export default function LandingPage() {
         <p className="text-xs text-gray-400 mt-3">
           The demo needs no sign-up. Your own account is free; bring your own Anthropic API key for AI features.
         </p>
+        <p className="text-xs text-gray-500 mt-2">
+          Recruiter or hiring manager? Jazmin is happy to provide a temporary API key so you can explore every
+          feature.{" "}
+          <a href="mailto:jazminrtweedle@gmail.com" className="text-emerald-700 hover:underline">
+            jazminrtweedle@gmail.com
+          </a>
+        </p>
       </section>
 
       {/* What makes it different */}

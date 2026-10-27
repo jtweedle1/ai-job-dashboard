@@ -22,6 +22,6 @@ export async function authedFetch(
 // What to tell the user when an AI call fails for lack of a key. Demo visitors start without one.
 export function noKeyMessage(action: string): string {
   return auth.currentUser?.isAnonymous
-    ? `This demo has no AI key, so the sample data shows what it makes. Add your own Anthropic key in Settings to ${action} live.`
+    ? `This demo has no AI key, so the sample data shows what it makes. Add an Anthropic key in Settings to ${action} live. Recruiters and hiring managers can email jazminrtweedle@gmail.com for a temporary key.`
     : `Add your Anthropic API key in Settings to ${action}.`;
 }
