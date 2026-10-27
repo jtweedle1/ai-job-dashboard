@@ -47,11 +47,18 @@ export async function getVoiceSamples(uid: string): Promise<VoiceSample[]> {
   return [...samples, ...letters, ...answers].filter((s) => s.content.trim().length > 0);
 }
 
-// The one sample shown verbatim alongside the profile: prefer hand-written cover letters.
-export function pickReferenceSample(samples: VoiceSample[]): VoiceSample | null {
-  const rank = (s: VoiceSample) =>
-    (s.isCoverLetter ? 2 : 0) + (s.handWritten ? 1 : 0) + (s.source === "sample" ? 0.5 : 0);
-  return [...samples].sort((a, b) => rank(b) - rank(a))[0] ?? null;
+// Hand-written cover letters are the strongest signal of how someone writes a letter.
+function rank(s: VoiceSample): number {
+  return (s.isCoverLetter ? 2 : 0) + (s.handWritten ? 1 : 0) + (s.source === "sample" ? 0.5 : 0);
+}
+
+export function rankSamples(samples: VoiceSample[]): VoiceSample[] {
+  return [...samples].sort((a, b) => rank(b) - rank(a));
+}
+
+// The samples shown in full as examples when writing a letter.
+export function pickExamples(samples: VoiceSample[], maxCount = 3): VoiceSample[] {
+  return rankSamples(samples).slice(0, maxCount);
 }
 
 export function truncate(text: string, maxChars: number): string {

@@ -19,11 +19,16 @@ async function getApiKey(uid: string): Promise<string | { error: string }> {
   }
 }
 
+export const DEFAULT_MODEL = "claude-haiku-4-5-20251001";
+// Imitating a person's voice is subtle; the smaller model flattens it into generic prose.
+export const WRITING_MODEL = "claude-sonnet-4-6";
+
 export async function callAI(
   uid: string,
   messages: Anthropic.MessageParam[],
   system?: string,
-  maxTokens = 1024
+  maxTokens = 1024,
+  model = DEFAULT_MODEL
 ): Promise<{ content: string } | { error: string }> {
   const keyResult = await getApiKey(uid);
   if (typeof keyResult !== "string") return keyResult;
@@ -31,7 +36,7 @@ export async function callAI(
   try {
     const client = new Anthropic({ apiKey: keyResult });
     const response = await client.messages.create({
-      model: "claude-haiku-4-5-20251001",
+      model,
       max_tokens: maxTokens,
       ...(system ? { system } : {}),
       messages,

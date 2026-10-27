@@ -10,11 +10,14 @@ import {
   deleteWritingSample,
   getVoiceProfile,
   saveVoiceProfile,
+  saveVoiceSettings,
 } from "@/lib/writingSamples";
+import { computeVoiceStats } from "@/lib/voice-stats";
+import { DEFAULT_VOICE_SETTINGS } from "@/types/writingSample";
 import { getCoverLetters, setCoverLetterVoiceSample } from "@/lib/coverLetters";
 import { getAnswers, updateAnswer } from "@/lib/answerBank";
 import { getJobs } from "@/lib/jobs";
-import type { WritingSample, WritingSampleKind } from "@/types/writingSample";
+import type { WritingSample, WritingSampleKind, VoiceSettings, LetterFormat } from "@/types/writingSample";
 import type { CoverLetter } from "@/types/coverLetter";
 import type { AnswerEntry } from "@/types/answerBank";
 import type { Job } from "@/types/job";
@@ -90,6 +93,10 @@ export default function VoicePage() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileError, setProfileError] = useState("");
 
+  const [settings, setSettings] = useState<VoiceSettings>(DEFAULT_VOICE_SETTINGS);
+  const [savedSettings, setSavedSettings] = useState<VoiceSettings>(DEFAULT_VOICE_SETTINGS);
+  const [savingSettings, setSavingSettings] = useState(false);
+
   const [adding, setAdding] = useState(false);
   const [tab, setTab] = useState<Tab>("paste");
   const [label, setLabel] = useState("");
@@ -120,6 +127,8 @@ export default function VoicePage() {
       setProfile(p.content);
       setSavedProfile(p.content);
       setProfileUpdatedAt(p.updatedAt);
+      setSettings(p.settings);
+      setSavedSettings(p.settings);
       setLoading(false);
     });
   }, [user]);
@@ -180,6 +189,18 @@ export default function VoicePage() {
       showToast("Voice profile saved");
     } finally {
       setSavingProfile(false);
+    }
+  }
+
+  async function handleSaveSettings() {
+    if (!user) return;
+    setSavingSettings(true);
+    try {
+      await saveVoiceSettings(user.uid, settings);
+      setSavedSettings(settings);
+      showToast("Preferences saved");
+    } finally {
+      setSavingSettings(false);
     }
   }
 
@@ -269,6 +290,14 @@ export default function VoicePage() {
   }
 
   const profileDirty = profile.trim() !== savedProfile;
+  const settingsDirty = JSON.stringify(settings) !== JSON.stringify(savedSettings);
+
+  // Same measurements the server uses, so users can see what "match my samples" means.
+  const includedLetterTexts = [
+    ...samples.filter((s) => s.included && s.kind === "cover_letter").map((s) => s.content),
+    ...letters.filter((l) => l.useAsVoiceSample).map((l) => l.content),
+  ];
+  const stats = includedLetterTexts.length ? computeVoiceStats(includedLetterTexts) : null;
 
   return (
     <div className="p-6 max-w-3xl mx-auto">
@@ -326,6 +355,77 @@ export default function VoicePage() {
             <p className="text-xs text-gray-400 dark:text-gray-500">
               Rebuilding replaces your edits. Rebuild after you change which samples are included.
             </p>
+          )}
+        </div>
+      </div>
+
+      {/* Preferences */}
+      <div className={cardClass}>
+        <div className={`${cardHeaderClass} flex items-center justify-between gap-4`}>
+          <p className={cardTitleClass}>Preferences</p>
+          {stats && (
+            <p className="text-xs text-gray-400 dark:text-gray-500">
+              Your letters: ~{stats.medianWords} words · {stats.medianParagraphs} paragraphs ·{" "}
+              {stats.contractionsPer100Words >= 1 ? "uses contractions" : "few contractions"}
+            </p>
+          )}
+        </div>
+        <div className="px-4 py-4 space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Length (words)</label>
+              <input
+                type="number"
+                min={50}
+                max={800}
+                value={settings.targetWords ?? ""}
+                onChange={(e) =>
+                  setSettings({ ...settings, targetWords: e.target.value ? Number(e.target.value) : null })
+                }
+                placeholder={stats ? `Match my letters (~${stats.medianWords})` : "Match my letters"}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Format</label>
+              <select
+                value={settings.format}
+                onChange={(e) => setSettings({ ...settings, format: e.target.value as LetterFormat })}
+                className={inputClass}
+              >
+                <option value="full">Full letter (greeting and sign-off)</option>
+                <option value="body">Body only</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">
+              Things to weave in when relevant
+            </label>
+            <textarea
+              value={settings.alwaysMention}
+              onChange={(e) => setSettings({ ...settings, alwaysMention: e.target.value })}
+              rows={3}
+              placeholder="Side projects, a story about how you got started, values you want to come through, a closing line you love…"
+              className={`${inputClass} resize-y`}
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Never say</label>
+            <textarea
+              value={settings.neverSay}
+              onChange={(e) => setSettings({ ...settings, neverSay: e.target.value })}
+              rows={2}
+              placeholder="One phrase per line, e.g. leverage, synergy"
+              className={`${inputClass} resize-y`}
+            />
+          </div>
+          {settingsDirty && (
+            <div className="flex justify-end">
+              <button onClick={handleSaveSettings} disabled={savingSettings} className={primaryButtonClass}>
+                {savingSettings ? "Saving…" : "Save preferences"}
+              </button>
+            </div>
           )}
         </div>
       </div>

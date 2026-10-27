@@ -20,8 +20,8 @@ Per-user Anthropic keys (bring-your-own) — no shared key pool; rate-limit per-
   via `checkRateLimit` (`lib/rate-limit.ts`).
 - **API keys:** Anthropic keys are AES-256-GCM encrypted (`lib/encryption.ts`,
   `ENCRYPTION_SECRET`), decrypted only server-side in `lib/ai.ts`. Never sent to client.
-- **AI calls:** all go through `lib/ai.ts` (model `claude-haiku-4-5-20251001`,
-  `max_tokens: 1024`). Returns `{ content } | { error }`; branch with `"error" in result`.
+- **AI calls:** all go through `lib/ai.ts` (default model `claude-haiku-4-5-20251001`,
+  `max_tokens: 1024`; voice-matched writing passes `WRITING_MODEL`). Returns `{ content } | { error }`; branch with `"error" in result`.
 - **Client → API fetch:** use `authedFetch` (`lib/api-client.ts`), not raw `fetch` —
   it attaches the Firebase ID token as a Bearer header.
 

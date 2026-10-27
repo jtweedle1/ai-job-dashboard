@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { adminDb } from "@/lib/firebase-admin";
-import { callAI } from "@/lib/ai";
+import { callAI, WRITING_MODEL } from "@/lib/ai";
 import { requireAuth } from "@/lib/auth-server";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { getVoiceSamples, pickReferenceSample, truncate } from "@/lib/voice-server";
+import { getVoiceSamples, pickExamples, truncate, type VoiceSample } from "@/lib/voice-server";
+import { computeVoiceStats, describeVoiceStats } from "@/lib/voice-stats";
+import { toVoiceSettings, type VoiceSettings } from "@/types/writingSample";
 
+// Default prompt, used until the user has set up their voice.
 const SYSTEM_TEMPLATE = `You are an expert cover letter writer who specializes in natural, human-sounding applications that feel warm, specific, and professional without sounding stiff or AI-generated.
 
 Your task is to write the body of a cover letter for a candidate using:
@@ -58,23 +61,85 @@ I'm a quick learner and can pick up new technologies quickly to support the full
 Don't hesitate to reach out if you have any questions about my application,
 Grace”`;
 
-const REFERENCE_SAMPLE_CHARS = 2000;
+// Phrases that read as AI-generated. Any the user writes themselves are allowed back in.
+const AI_CLICHES = [
+  "I am writing to express my interest",
+  "I am excited to apply",
+  "I believe my skills align",
+  "My background has equipped me",
+  "I would be a valuable asset",
+  "Thank you for your time and consideration",
+  "I am confident that",
+  "dynamic team",
+  "fast-paced environment",
+  "passionate about leveraging",
+];
 
-function buildSystem(voiceProfile: string, reference: string | null): string {
-  if (!voiceProfile && !reference)
-    return SYSTEM_TEMPLATE.replace("{{VOICE}}", DEFAULT_REFERENCE);
+const EXAMPLE_CHARS = 6000;
+const FALLBACK_WORDS = 300;
+
+function normalize(text: string): string {
+  return text.toLowerCase().replace(/[’‘]/g, "'").replace(/\s+/g, " ");
+}
+
+function buildVoiceSystem(
+  profile: string,
+  samples: VoiceSample[],
+  settings: VoiceSettings
+): string {
+  const examples = pickExamples(samples);
+  const letterSamples = samples.filter((s) => s.isCoverLetter);
+  const stats = computeVoiceStats((letterSamples.length ? letterSamples : samples).map((s) => s.content));
+  const targetWords =
+    settings.targetWords ?? (letterSamples.length ? stats.medianWords : FALLBACK_WORDS);
+
+  const sampleText = normalize(samples.map((s) => s.content).join("\n"));
+  const cliches = AI_CLICHES.filter((p) => !sampleText.includes(normalize(p)));
+  const userNeverSay = settings.neverSay
+    .split(/\n|;/)
+    .map((l) => l.replace(/^[-*•]\s*/, "").trim())
+    .filter(Boolean);
+  const neverSay = [...cliches.map((c) => `"${c}"`), ...userNeverSay];
+
+  const format =
+    settings.format === "full"
+      ? "Write the full letter: a greeting addressed to this company in the candidate's usual style, the body, and their usual sign-off and name exactly as they write them."
+      : "Write only the body paragraphs: no greeting, no sign-off, no name.";
 
   const sections = [
-    "Voice:",
-    "Write in the candidate's own voice. Where their voice differs from the tone guidance above (formality, length of sentences, warmth), follow their voice. The factual rules and the list of AI phrases to avoid always apply.",
+    `You ghostwrite cover letters for one specific person. Your goal is a letter they would read and think "that sounds exactly like me." Sounding like them matters more than sounding polished.`,
+
+    `HOW TO SOUND LIKE THEM
+- Study the EXAMPLES below closely. Mirror their structure, paragraph count, rhythm, warmth, and how they explain why a role matters to them.
+- Keep their personality: the asides, the value statements, the memorable closing lines, the small stories about how they got into their work. These are what make the letter theirs. Don't sand them down into generic professional prose.
+- Reusing their signature lines and recurring phrases word for word is good (for example a line about who they are or a closing they always use). Never reuse company-specific details from the examples.
+- Follow the VOICE PROFILE. Where it disagrees with the examples, the examples win.`,
+
+    `LENGTH AND FORMAT
+- About ${targetWords} words (stay within 15%).
+- ${format}`,
+
+    `FACTS
+- Only state facts about the candidate that appear in the RESUME, the THINGS TO WEAVE IN notes, or their own hand-written examples. Don't invent numbers, tools, titles, or results.
+- Use the job description to choose which of their experiences to lead with and to connect them to what this company needs.
+- If something is missing, make a reasonable choice. Never leave placeholders like [TIME].`,
+
+    `NEVER USE
+${neverSay.map((n) => `- ${n}`).join("\n")}`,
   ];
-  if (voiceProfile)
-    sections.push(`Here is a profile of how the candidate writes:\n"""\n${voiceProfile}\n"""`);
-  if (reference)
-    sections.push(
-      `Here is something the candidate wrote. Match its voice and rhythm, but do not copy its wording, facts, or company details:\n"""\n${reference}\n"""`
-    );
-  return SYSTEM_TEMPLATE.replace("{{VOICE}}", sections.join("\n\n"));
+
+  if (stats.sampleCount > 0)
+    sections.push(`MEASUREMENTS OF THEIR WRITING (facts, not suggestions)\n${describeVoiceStats(stats)}`);
+  if (profile) sections.push(`VOICE PROFILE\n"""\n${profile}\n"""`);
+
+  examples.forEach((e, i) => {
+    const kind = e.isCoverLetter ? "cover letter" : "other writing";
+    const origin = e.handWritten ? "written by them" : "an AI draft they approved";
+    sections.push(`EXAMPLE ${i + 1} (${kind}, ${origin})\n"""\n${truncate(e.content, EXAMPLE_CHARS)}\n"""`);
+  });
+
+  sections.push("Output only the letter. No notes, explanations, or alternatives.");
+  return sections.join("\n\n");
 }
 
 export async function POST(request: Request) {
@@ -103,8 +168,11 @@ export async function POST(request: Request) {
 
     const job = jobSnap.data()!;
     const resume = resumeSnap.data()!;
+    const voiceProfile = ((userSnap.get("voiceProfile") as string | undefined) ?? "").trim();
+    const settings = toVoiceSettings(userSnap.get("voiceSettings"));
+    const voiceMode = voiceSamples.length > 0 || voiceProfile.length > 0;
 
-    const userMessage = `JOB TITLE: ${job.title}
+    let userMessage = `JOB TITLE: ${job.title}
 COMPANY: ${job.company}
 
 JOB DESCRIPTION:
@@ -114,15 +182,22 @@ ${job.description || "(no description provided)"}
 
 RESUME:
 ${resume.content}`;
+    if (voiceMode && settings.alwaysMention.trim())
+      userMessage += `\n\n---\n\nTHINGS TO WEAVE IN WHEN RELEVANT (true facts from the candidate):\n${settings.alwaysMention.trim()}`;
 
-    const voiceProfile = ((userSnap.get("voiceProfile") as string | undefined) ?? "").trim();
-    const reference = pickReferenceSample(voiceSamples);
-    const system = buildSystem(
-      voiceProfile,
-      reference ? truncate(reference.content, REFERENCE_SAMPLE_CHARS) : null
-    );
-
-    const result = await callAI(uid, [{ role: "user", content: userMessage }], system);
+    const result = voiceMode
+      ? await callAI(
+          uid,
+          [{ role: "user", content: userMessage }],
+          buildVoiceSystem(voiceProfile, voiceSamples, settings),
+          2048,
+          WRITING_MODEL
+        )
+      : await callAI(
+          uid,
+          [{ role: "user", content: userMessage }],
+          SYSTEM_TEMPLATE.replace("{{VOICE}}", DEFAULT_REFERENCE)
+        );
 
     if ("error" in result)
       return NextResponse.json(
@@ -146,7 +221,7 @@ ${resume.content}`;
     return NextResponse.json({
       id: ref.id,
       content: result.content,
-      usedVoice: Boolean(voiceProfile || reference),
+      usedVoice: voiceMode,
     });
   } catch (err) {
     console.error("[cover-letter] Error:", err);
