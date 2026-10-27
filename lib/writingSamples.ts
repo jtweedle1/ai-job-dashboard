@@ -12,7 +12,8 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { db } from "./firebase";
-import type { WritingSample } from "@/types/writingSample";
+import { toVoiceSettings } from "@/types/writingSample";
+import type { WritingSample, VoiceSettings } from "@/types/writingSample";
 
 type CreateSampleData = Omit<WritingSample, "id" | "createdAt">;
 
@@ -57,6 +58,7 @@ export async function deleteWritingSample(uid: string, sampleId: string): Promis
 export interface VoiceProfile {
   content: string;
   updatedAt: Date | null;
+  settings: VoiceSettings;
 }
 
 // The voice profile lives on the user doc so the cover letter route can read it in one get.
@@ -67,6 +69,7 @@ export async function getVoiceProfile(uid: string): Promise<VoiceProfile> {
     content: (d.voiceProfile as string) ?? "",
     updatedAt:
       d.voiceProfileUpdatedAt instanceof Timestamp ? d.voiceProfileUpdatedAt.toDate() : null,
+    settings: toVoiceSettings(d.voiceSettings),
   };
 }
 
@@ -75,4 +78,8 @@ export async function saveVoiceProfile(uid: string, content: string): Promise<vo
     voiceProfile: content,
     voiceProfileUpdatedAt: serverTimestamp(),
   });
+}
+
+export async function saveVoiceSettings(uid: string, settings: VoiceSettings): Promise<void> {
+  await updateDoc(doc(db, "users", uid), { voiceSettings: settings });
 }
