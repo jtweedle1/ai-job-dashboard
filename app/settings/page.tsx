@@ -114,7 +114,7 @@ export default function SettingsPage() {
                 <span className="font-medium text-gray-700 dark:text-gray-200">Anthropic API key</span>{" "}
                 to unlock AI features — JD extraction, cover letter generation, role-fit scoring, and more.
               </p>
-              <p className="text-xs text-gray-400 dark:text-gray-500">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
                 Your key is encrypted before being stored. It is never returned to the browser after saving.
               </p>
               <div className="flex gap-2">
@@ -124,7 +124,7 @@ export default function SettingsPage() {
                   onChange={(e) => setKeyInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSaveKey()}
                   placeholder="sk-ant-..."
-                  className={`flex-1 ${inputClass} font-mono placeholder-gray-400 dark:placeholder-gray-500`}
+                  className={`flex-1 ${inputClass} font-mono placeholder-gray-500 dark:placeholder-gray-400`}
                 />
                 <button
                   onClick={handleSaveKey}
@@ -173,10 +173,10 @@ export default function SettingsPage() {
                 )}
                 <div>
                   <p className="text-sm font-medium text-gray-900 dark:text-gray-50">{user.displayName}</p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500">{user.email}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
                 </div>
               </div>
-              <p className="text-xs text-gray-400 dark:text-gray-500">Signed in with Google</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Signed in with Google</p>
             </>
           ) : (
             <div className="h-8 bg-gray-100 dark:bg-gray-800 rounded w-48 animate-pulse" />

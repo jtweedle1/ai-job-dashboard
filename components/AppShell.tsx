@@ -23,7 +23,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   if (loading) {
     return (
       <div className="min-h-screen app-backdrop flex items-center justify-center">
-        <i className="ti ti-loader-2 animate-spin text-gray-300 text-2xl" aria-hidden="true" />
+        <i className="ti ti-loader-2 animate-spin text-gray-400 text-2xl" aria-hidden="true" />
       </div>
     );
   }
@@ -49,7 +49,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </div>
           <button
             onClick={toggleTheme}
-            className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            className="text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
             aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
           >
             <i className={`ti ${theme === "dark" ? "ti-sun" : "ti-moon"} text-lg`} aria-hidden="true" />

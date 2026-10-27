@@ -247,7 +247,7 @@ export default function WeeklyReviewPage() {
               <button
                 onClick={() => handleDelete(activeId)}
                 disabled={deletingId === activeId}
-                className="text-gray-300 dark:text-gray-600 hover:text-red-400 transition-colors disabled:opacity-50"
+                className="text-gray-500 dark:text-gray-400 hover:text-red-400 transition-colors disabled:opacity-50"
                 aria-label="Delete review"
               >
                 <i className="ti ti-trash text-sm" aria-hidden="true" />
@@ -308,7 +308,7 @@ export default function WeeklyReviewPage() {
                     onChange={(e) => setField(key, e.target.value)}
                     placeholder={placeholder}
                     rows={2}
-                    className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none dark:bg-gray-800"
+                    className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none dark:bg-gray-800"
                   />
                 </div>
               ))}
@@ -349,7 +349,7 @@ export default function WeeklyReviewPage() {
               {activeId && (
                 <button
                   onClick={startNewReview}
-                  className="text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                  className="text-sm text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                 >
                   Close
                 </button>
@@ -435,7 +435,7 @@ export default function WeeklyReviewPage() {
                       <p className="text-sm font-medium text-gray-900 dark:text-gray-50">
                         Week of {formatWeek(review.weekOf)}
                       </p>
-                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                         {review.applicationsSent} sent · {review.interviewsBooked} interviews ·{" "}
                         {review.responsesReceived} responses
                         {review.aiSummary && (
@@ -446,7 +446,7 @@ export default function WeeklyReviewPage() {
                     <div className="flex items-center gap-2 shrink-0">
                       <button
                         onClick={() => loadReview(review)}
-                        className="text-xs font-medium text-gray-400 hover:text-primary-600 transition-colors"
+                        className="text-xs font-medium text-gray-500 hover:text-primary-600 transition-colors"
                       >
                         Edit
                       </button>
@@ -463,7 +463,7 @@ export default function WeeklyReviewPage() {
                           expandedArchiveId === review.id
                             ? "ti-chevron-up"
                             : "ti-chevron-down"
-                        } text-gray-300 dark:text-gray-600 text-sm`}
+                        } text-gray-500 dark:text-gray-400 text-sm`}
                         aria-hidden="true"
                       />
                     </div>
@@ -479,7 +479,7 @@ export default function WeeklyReviewPage() {
                         .filter((f) => f.value)
                         .map((f) => (
                           <div key={f.label}>
-                            <p className="text-xs font-medium text-gray-400 dark:text-gray-500 mb-0.5">
+                            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">
                               {f.label}
                             </p>
                             <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">

@@ -79,7 +79,7 @@ export default function LetterReview({ claims, checks, checking, checkError, onC
               />
               <span className="min-w-0">
                 <span className="text-gray-700 dark:text-gray-300">{c.label}</span>
-                <span className="block text-gray-400 dark:text-gray-500">{c.detail}</span>
+                <span className="block text-gray-500 dark:text-gray-400">{c.detail}</span>
               </span>
             </li>
           ))}
@@ -95,7 +95,7 @@ export default function LetterReview({ claims, checks, checking, checkError, onC
             {claims && claims.length > 0 && (
               <button
                 onClick={() => setShowClaims((v) => !v)}
-                className="text-xs text-gray-400 dark:text-gray-500 hover:text-primary-600 transition-colors"
+                className="text-xs text-gray-500 dark:text-gray-400 hover:text-primary-600 transition-colors"
               >
                 {showClaims ? "Hide" : `Show ${claims.length}`}
               </button>
@@ -103,7 +103,7 @@ export default function LetterReview({ claims, checks, checking, checkError, onC
             <button
               onClick={onCheckSources}
               disabled={checking}
-              className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 hover:text-primary-600 transition-colors disabled:opacity-50"
+              className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-primary-600 transition-colors disabled:opacity-50"
             >
               <i className={`ti ${checking ? "ti-loader-2 animate-spin" : "ti-refresh"} text-xs`} aria-hidden="true" />
               {checking ? "Checking…" : claims ? "Re-check" : "Check sources"}
@@ -114,11 +114,11 @@ export default function LetterReview({ claims, checks, checking, checkError, onC
         {checkError && <p className="text-xs text-amber-600 mb-2">{checkError}</p>}
 
         {!claims ? (
-          <p className="text-xs text-gray-400 dark:text-gray-500">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
             Not checked yet. Run a check to trace every claim back to your resume and background.
           </p>
         ) : claims.length === 0 ? (
-          <p className="text-xs text-gray-400 dark:text-gray-500">This letter makes no specific claims about you.</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">This letter makes no specific claims about you.</p>
         ) : (
           <>
             <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -137,7 +137,7 @@ export default function LetterReview({ claims, checks, checking, checkError, onC
                     <div className="min-w-0">
                       <p className="text-gray-700 dark:text-gray-300">&ldquo;{c.quote}&rdquo;</p>
                       {c.source ? (
-                        <p className="text-gray-400 dark:text-gray-500 mt-0.5">
+                        <p className="text-gray-500 dark:text-gray-400 mt-0.5">
                           {c.source}
                           <span className="block italic">&ldquo;{c.evidence}&rdquo;</span>
                         </p>

@@ -2,7 +2,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
- * HuntDesk's calm palette. "gray" is a soft lavender neutral that deepens into a
+ * Wayfinder's calm palette. "gray" is a soft lavender neutral that deepens into a
  * night-sky indigo (dark mode surfaces), and "primary" is a gentle iris used for
  * actions and links. Emerald, amber and red keep their stock meanings (good,
  * check this, error). Warm peach, rose and sky only appear in the backdrop and
@@ -13,8 +13,8 @@
   --color-gray-100: #f1eef8;
   --color-gray-200: #e4dff0;
   --color-gray-300: #cbc5dc;
-  --color-gray-400: #a39cb8;
-  --color-gray-500: #7b7494;
+  --color-gray-400: #8f88a8;
+  --color-gray-500: #6f6889;
   --color-gray-600: #5e5878;
   --color-gray-700: #474260;
   --color-gray-800: #2f2b48;
@@ -56,6 +56,15 @@ body {
 .dark body {
   background: var(--color-gray-950);
   color: var(--color-gray-50);
+}
+
+/*
+ * A visible keyboard focus ring on everything interactive (WCAG 2.2 AA). :where() keeps it at zero
+ * specificity, so inputs that draw their own focus:ring with outline-none still win.
+ */
+:where(a, button, summary, select, [role="button"], [role="switch"], [role="tab"], [tabindex]:not([tabindex="-1"])):focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
 }
 
 /* The soft sunrise behind every page. Fixed so it stays put while content scrolls. */
@@ -127,7 +136,7 @@ body {
   }
 }
 
-/* The sun mark: HuntDesk's logo and the warm accent on Today. */
+/* The sun mark: Wayfinder's logo and the warm accent on Today. */
 @utility sun-orb {
   background-image: radial-gradient(circle at 30% 30%, #ffd9a8, #ff9f6e 45%, #f07aa8 100%);
 }

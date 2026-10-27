@@ -16,11 +16,11 @@ function ChartCard({ title, subtitle, children, empty }: {
     <div className="surface p-5">
       <div className="mb-4">
         <p className="text-sm font-medium text-gray-900 dark:text-gray-50">{title}</p>
-        {subtitle && <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{subtitle}</p>}
+        {subtitle && <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{subtitle}</p>}
       </div>
       {empty ? (
         <div className="h-40 flex items-center justify-center">
-          <p className="text-sm text-gray-400 dark:text-gray-500">Not enough data yet.</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Not enough data yet.</p>
         </div>
       ) : children}
     </div>
@@ -30,12 +30,12 @@ function ChartCard({ title, subtitle, children, empty }: {
 const tooltipStyle = {
   contentStyle: { border: "1px solid #e4dff0", borderRadius: "12px", fontSize: "12px", boxShadow: "0 1px 6px rgba(0,0,0,0.06)" },
   labelStyle: { color: "#47425f", fontWeight: 600 },
-  itemStyle: { color: "#7b7494" },
+  itemStyle: { color: "#6f6889" },
 };
 
 function PercentTick(props: Record<string, unknown>) {
   const { x, y, payload } = props as { x: number; y: number; payload: { value: number } };
-  return <text x={x} y={y} dy={4} textAnchor="end" fill="#a39cb8" fontSize={11}>{payload.value}%</text>;
+  return <text x={x} y={y} dy={4} textAnchor="end" fill="#6f6889" className="fill-gray-500 dark:fill-gray-400" fontSize={11}>{payload.value}%</text>;
 }
 
 function PercentTooltip(props: Record<string, unknown>) {
@@ -101,8 +101,8 @@ export default function AnalyticsPage() {
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={sourceStats} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1eef8" />
-                <XAxis dataKey="source" tick={{ fontSize: 11, fill: "#a39cb8" }} axisLine={false} tickLine={false} />
-                <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "#a39cb8" }} axisLine={false} tickLine={false} />
+                <XAxis dataKey="source" tick={{ fontSize: 11, fill: "#6f6889", className: "fill-gray-500 dark:fill-gray-400" }} axisLine={false} tickLine={false} />
+                <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "#6f6889", className: "fill-gray-500 dark:fill-gray-400" }} axisLine={false} tickLine={false} />
                 <Tooltip contentStyle={tooltipStyle.contentStyle} labelStyle={tooltipStyle.labelStyle} itemStyle={tooltipStyle.itemStyle} cursor={{ fill: "#f1eef8" }} />
                 <Bar dataKey="applications" name="Applications" fill="#948df0" radius={[8, 8, 0, 0]} />
               </BarChart>
@@ -113,9 +113,9 @@ export default function AnalyticsPage() {
             <ResponsiveContainer width="100%" height={200}>
               <LineChart data={weeklyData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1eef8" />
-                <XAxis dataKey="week" tick={{ fontSize: 10, fill: "#a39cb8" }} axisLine={false} tickLine={false} interval={2} />
-                <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "#a39cb8" }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={tooltipStyle.contentStyle} labelStyle={tooltipStyle.labelStyle} itemStyle={tooltipStyle.itemStyle} cursor={{ stroke: "#e5e7eb" }} />
+                <XAxis dataKey="week" tick={{ fontSize: 10, fill: "#6f6889", className: "fill-gray-500 dark:fill-gray-400" }} axisLine={false} tickLine={false} interval={2} />
+                <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "#6f6889", className: "fill-gray-500 dark:fill-gray-400" }} axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={tooltipStyle.contentStyle} labelStyle={tooltipStyle.labelStyle} itemStyle={tooltipStyle.itemStyle} cursor={{ stroke: "#e4dff0" }} />
                 <Line type="monotone" dataKey="count" name="Applications" stroke="#948df0" strokeWidth={2} dot={{ r: 3, fill: "#948df0", strokeWidth: 0 }} activeDot={{ r: 5, fill: "#948df0", strokeWidth: 0 }} />
               </LineChart>
             </ResponsiveContainer>
@@ -125,7 +125,7 @@ export default function AnalyticsPage() {
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={sourceStats} margin={{ top: 0, right: 0, left: -10, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1eef8" />
-                <XAxis dataKey="source" tick={{ fontSize: 11, fill: "#a39cb8" }} axisLine={false} tickLine={false} />
+                <XAxis dataKey="source" tick={{ fontSize: 11, fill: "#6f6889", className: "fill-gray-500 dark:fill-gray-400" }} axisLine={false} tickLine={false} />
                 <YAxis domain={[0, 100]} tick={<PercentTick />} axisLine={false} tickLine={false} />
                 <Tooltip content={<PercentTooltip />} cursor={{ fill: "#f1eef8" }} />
                 <Bar dataKey="responseRate" name="Response rate" fill="#ff9f6e" radius={[8, 8, 0, 0]} />
@@ -137,7 +137,7 @@ export default function AnalyticsPage() {
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={sourceStats} margin={{ top: 0, right: 0, left: -10, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1eef8" />
-                <XAxis dataKey="source" tick={{ fontSize: 11, fill: "#a39cb8" }} axisLine={false} tickLine={false} />
+                <XAxis dataKey="source" tick={{ fontSize: 11, fill: "#6f6889", className: "fill-gray-500 dark:fill-gray-400" }} axisLine={false} tickLine={false} />
                 <YAxis domain={[0, 100]} tick={<PercentTick />} axisLine={false} tickLine={false} />
                 <Tooltip content={<PercentTooltip />} cursor={{ fill: "#f1eef8" }} />
                 <Bar dataKey="conversionRate" name="Conversion rate" fill="#f07aa8" radius={[8, 8, 0, 0]} />

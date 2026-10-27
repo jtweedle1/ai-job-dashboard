@@ -11,8 +11,8 @@ colors:
   lavender-50: "#f8f6fc"
   lavender-100: "#f1eef8"
   lavender-200: "#e4dff0"
-  lavender-400: "#a39cb8"
-  lavender-500: "#7b7494"
+  lavender-400: "#8f88a8"
+  lavender-500: "#6f6889"
   lavender-600: "#5e5878"
   lavender-700: "#474260"
   night-indigo: "#221f3a"
@@ -108,8 +108,6 @@ components:
 
 # Design System: Wayfinder
 
-<!-- The code still says "HuntDesk" (logo, metadata, globals.css comments). The product is being renamed; all new work uses "Wayfinder". -->
-
 ## Overview
 
 **Creative North Star: "The Calm Morning"**
@@ -144,8 +142,9 @@ A soft, lavender-tinted palette with a single cool accent and a warm dawn glow t
 ### Neutral
 - **Morning Paper** (#fbf9fe): the page background under the sunrise washes.
 - **Lavender 50–200** (#f8f6fc, #f1eef8, #e4dff0): subtle fills, hover backgrounds, input borders and dividers.
-- **Lavender 400** (#a39cb8): decorative icons and trailing arrows only. It is not text (about 2.5:1 on light surfaces).
-- **Lavender 500** (#7b7494): secondary and hint text. It is borderline for AA at small sizes (about 4.2:1 on Morning Paper), so prefer Lavender 600 for any text that must be read.
+- **Lavender 400** (#8f88a8): icons only in light mode (about 3.2:1, which meets the 3:1 non-text minimum). In dark mode it is the secondary and hint text color (about 5.4:1 on Night Sky).
+- **Lavender 500** (#6f6889): secondary and hint text in light mode (about 5:1 on Morning Paper, which passes AA). In dark mode it is for icons only (about 3.5:1).
+- **Lavender 300** (#cbc5dc): borders and fills only. It is never text or an icon.
 - **Lavender 600 / 700** (#5e5878 / #474260): body-secondary text and section labels.
 - **Night Indigo** (#221f3a): primary text in light mode, and the dark-mode card tint.
 - **Night Sky** (#17142b): the dark-mode page background.
@@ -213,7 +212,7 @@ Soft, confident pills.
 - **Soft:** 90% white fill with Night Indigo text. Used on glowing surfaces (Today hero, nudges) where Iris would fight the gradient. Hover is solid white.
 - **Outline:** 1px Lavender 200 border with Lavender 600 text in Label size, padding 6px × 12px. Used for secondary actions in cards. Hover is a white fill.
 - **Icon:** a 32px circle with a Lavender 400 glyph; hover is a white fill and darker glyph.
-- **Focus:** buttons currently have no visible focus style beyond the browser default. Add `focus-visible:ring-2 ring-primary-500 ring-offset-2` (see Do's).
+- **Focus:** a global rule in `globals.css` gives every link, button, switch, tab and focusable element a 2px Iris Soft outline offset by 2px on `:focus-visible`. Don't add `outline-none` to buttons or links.
 
 ### Chips / Badges
 - **Style:** Iris Wash fill with Iris Deep text, 10–12px semibold, padding 2px × 8px, pill shape. Neutral chips use 70% white with a white border and Lavender 500 text.
@@ -227,7 +226,7 @@ Soft, confident pills.
 - **Internal Padding:** 20px. The section label sits on top with a 12px gap.
 
 ### Inputs / Fields
-- **Style:** 1px Lavender 200 border, 12px radius, white fill (Lavender 800 in dark), 14px Figtree, padding 8px × 12px, Lavender 400 placeholder.
+- **Style:** 1px Lavender 200 border, 12px radius, white fill (Lavender 800 in dark), 14px Figtree, padding 8px × 12px, Lavender 500 placeholder (Lavender 400 in dark).
 - **Focus:** the border goes transparent and a 2px Iris Soft ring appears.
 - **Toggle:** a 36 × 20px pill track, Iris Soft when on and Lavender 200 when off, with a white 16px knob.
 
@@ -253,13 +252,11 @@ A 40–48px `glow-gradient` circle medallion holds a single icon, centered above
 - **Do** use `glow-gradient` only for the current or active item, nudges, the Today hero and empty-state medallions.
 - **Do** use `page-title` once per page and `section-label` for card headings.
 - **Do** keep everything clickable pill-shaped, and keep containers between 12px and 32px radius by size.
-- **Do** add a visible `focus-visible` ring (2px Iris Soft with offset) to every button and link. WCAG 2.2 AA is required.
-- **Do** use Lavender 600 or darker for any text that must be read. Lavender 400 is for icons only.
+- **Do** keep the global `:focus-visible` outline working: never add `outline-none` to buttons or links. WCAG 2.2 AA is required.
+- **Do** use `text-gray-500 dark:text-gray-400` (or darker) for muted text, and `text-gray-400 dark:text-gray-500` for icons only. Never put `text-gray-300` or `dark:text-gray-600` on text or icons.
 - **Do** design dark mode alongside light: night-indigo glass, dimmed dawn washes, `primary-950` badge fills.
-- **Do** say "Wayfinder" in new UI, copy and metadata.
-
 ### Don't:
-- **Don't** use "HuntDesk" in any new work.
+- **Don't** reintroduce the old name "HuntDesk". The product is Wayfinder.
 - **Don't** introduce stock Tailwind slate, zinc or neutral grays, or pure black. Neutrals are lavender, and dark is night indigo.
 - **Don't** use the warm glow or peach/rose as status colors. Status is emerald, amber or red only.
 - **Don't** use shadows darker than about 12% opacity, except on toasts.

@@ -149,7 +149,7 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
   const canSave = title.trim().length > 0 && company.trim().length > 0;
 
   const inputClass =
-    "w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800";
+    "w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -160,7 +160,7 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
           <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-50">Add job</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            className="text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
             aria-label="Close"
           >
             <i className="ti ti-x text-base" aria-hidden="true" />
@@ -220,7 +220,7 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
                   </button>
                 </div>
                 {fetchError && <p className="text-xs text-red-500">{fetchError}</p>}
-                <p className="text-xs text-gray-400 dark:text-gray-500">
+                <p className="text-xs text-gray-500 dark:text-gray-400">
                   Some sites block scraping — if it fails, paste the JD text directly.
                 </p>
               </div>

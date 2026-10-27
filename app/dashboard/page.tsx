@@ -150,7 +150,7 @@ export default function TodayPage() {
             <section className="surface p-5">
               <div className="flex items-baseline justify-between gap-3 mb-3">
                 <h2 className="section-label">Get set up</h2>
-                <span className="text-xs text-gray-400 dark:text-gray-500">
+                <span className="text-xs text-gray-500 dark:text-gray-400">
                   {setupSteps.length - setupLeft} of {setupSteps.length} done
                 </span>
               </div>
@@ -166,12 +166,12 @@ export default function TodayPage() {
                         {s.done ? <i className="ti ti-check" aria-hidden="true" /> : i + 1}
                       </span>
                       <span className="flex-1 min-w-0">
-                        <span className={`block text-sm font-medium ${s.done ? "text-gray-400 dark:text-gray-500 line-through" : "text-gray-900 dark:text-gray-50"}`}>
+                        <span className={`block text-sm font-medium ${s.done ? "text-gray-500 dark:text-gray-400 line-through" : "text-gray-900 dark:text-gray-50"}`}>
                           {s.label}
                         </span>
                         {!s.done && <span className="block text-xs text-gray-500 dark:text-gray-400">{s.detail}</span>}
                       </span>
-                      {!s.done && <i className="ti ti-arrow-right text-gray-300 dark:text-gray-600" aria-hidden="true" />}
+                      {!s.done && <i className="ti ti-arrow-right text-gray-400 dark:text-gray-500" aria-hidden="true" />}
                     </>
                   );
                   const cls = "w-full flex items-center gap-3 px-2 py-2 rounded-2xl text-left hover:bg-white/70 dark:hover:bg-white/5 transition-colors";
@@ -197,7 +197,7 @@ export default function TodayPage() {
             {actions.length === 0 ? (
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 {jobs.length === 0
-                  ? "Add a job and HuntDesk will walk you through it, one step at a time."
+                  ? "Add a job and Wayfinder will walk you through it, one step at a time."
                   : "Nothing waiting on you. Add another role when you find one you like."}
               </p>
             ) : (
@@ -219,7 +219,7 @@ export default function TodayPage() {
                             {a.title} · {a.company} · {a.detail}
                           </span>
                         </span>
-                        <i className="ti ti-arrow-right text-gray-300 dark:text-gray-600 group-hover:text-primary-500 transition-colors" aria-hidden="true" />
+                        <i className="ti ti-arrow-right text-gray-400 dark:text-gray-500 group-hover:text-primary-500 transition-colors" aria-hidden="true" />
                       </Link>
                     </li>
                   );
@@ -227,7 +227,7 @@ export default function TodayPage() {
               </ul>
             )}
             {actions.length > 6 && (
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-2 px-2">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 px-2">
                 And {actions.length - 6} more in <Link href="/applications" className="text-primary-600 hover:underline">your jobs</Link>.
               </p>
             )}

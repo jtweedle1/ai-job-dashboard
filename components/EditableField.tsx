@@ -73,10 +73,10 @@ export default function EditableField({
       {value ? (
         <span className="text-gray-900 dark:text-gray-100 whitespace-pre-wrap">{value}</span>
       ) : (
-        <span className="text-gray-400 dark:text-gray-500">{placeholder}</span>
+        <span className="text-gray-500 dark:text-gray-400">{placeholder}</span>
       )}
       <i
-        className="ti ti-pencil text-gray-300 dark:text-gray-600 group-hover:text-gray-400 dark:group-hover:text-gray-500 text-xs ml-2 opacity-0 group-hover:opacity-100 transition-opacity"
+        className="ti ti-pencil text-gray-400 dark:text-gray-500 group-hover:text-gray-400 dark:group-hover:text-gray-500 text-xs ml-2 opacity-0 group-hover:opacity-100 transition-opacity"
         aria-hidden="true"
       />
     </button>

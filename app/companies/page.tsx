@@ -238,7 +238,7 @@ export default function CompaniesPage() {
                     </div>
                   </div>
                   <p className="text-sm font-medium text-gray-900 dark:text-gray-50 mb-1 truncate">{company.name}</p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500 truncate mb-2">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate mb-2">
                     {linked ? (
                       <span className="flex items-center gap-1">
                         <i className="ti ti-briefcase text-xs" aria-hidden="true" />
@@ -248,7 +248,7 @@ export default function CompaniesPage() {
                       "No linked role"
                     )}
                   </p>
-                  <p className="text-xs text-gray-300 dark:text-gray-600">Updated {formatDate(company.updatedAt)}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Updated {formatDate(company.updatedAt)}</p>
                 </div>
               );
             })}
@@ -265,7 +265,7 @@ export default function CompaniesPage() {
               <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-50">Add company</h2>
               <button
                 onClick={closeModal}
-                className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                className="text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                 aria-label="Close"
               >
                 <i className="ti ti-x text-base" aria-hidden="true" />

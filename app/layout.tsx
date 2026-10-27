@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Figtree, Nunito, Geist_Mono } from "next/font/google";
+import "@/styles/icons/tabler-icons.css";
 import "./globals.css";
 import Providers from "./providers";
 
@@ -20,7 +21,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "HuntDesk: Job Search Dashboard",
+  title: "Wayfinder: Job Search Dashboard",
   description: "Track your job search, generate cover letters, prep for interviews, and review your pipeline — all in one place.",
   icons: { icon: "/favicon.svg" },
 };
@@ -35,12 +36,6 @@ export default function RootLayout({
       lang="en"
       className={`${figtree.variable} ${nunito.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <head>
-        <link
-          rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"
-        />
-      </head>
       <body className="min-h-full flex flex-col">
         <Providers>{children}</Providers>
       </body>

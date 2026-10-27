@@ -241,7 +241,7 @@ function JobWorkspace({ jobId }: { jobId: string }) {
     <div className="p-6 max-w-3xl mx-auto">
       <Toast message={toast} />
 
-      <Link href="/applications" className="inline-flex items-center gap-1.5 text-sm text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors mb-4">
+      <Link href="/applications" className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors mb-4">
         <i className="ti ti-arrow-left text-sm" aria-hidden="true" />
         All jobs
       </Link>
@@ -265,10 +265,10 @@ function JobWorkspace({ jobId }: { jobId: string }) {
               <button onClick={handleDelete} disabled={deleting} className="text-xs font-medium text-red-600 hover:text-red-700 transition-colors">
                 {deleting ? "Deleting…" : "Delete"}
               </button>
-              <button onClick={() => setDeleteConfirm(false)} className="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">Keep</button>
+              <button onClick={() => setDeleteConfirm(false)} className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">Keep</button>
             </>
           ) : (
-            <button onClick={() => setDeleteConfirm(true)} className="w-8 h-8 rounded-full flex items-center justify-center text-gray-300 dark:text-gray-600 hover:text-red-400 transition-colors" aria-label="Delete job">
+            <button onClick={() => setDeleteConfirm(true)} className="w-8 h-8 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-red-400 transition-colors" aria-label="Delete job">
               <i className="ti ti-trash text-sm" aria-hidden="true" />
             </button>
           )}
@@ -284,7 +284,7 @@ function JobWorkspace({ jobId }: { jobId: string }) {
             <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between gap-3">
               <div>
                 <p className="section-label">Is it a fit?</p>
-                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Measured against your resume and your goals in Me.</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Measured against your resume and your goals in Me.</p>
               </div>
               <button onClick={handleScore} disabled={scoring} className="flex items-center gap-1.5 text-xs font-medium text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-950 px-3 py-1.5 rounded-full hover:bg-primary-100 dark:hover:bg-primary-900 disabled:opacity-50 transition-colors shrink-0">
                 {scoring ? <i className="ti ti-loader-2 animate-spin text-xs" aria-hidden="true" /> : <i className="ti ti-sparkles text-xs" aria-hidden="true" />}
@@ -356,14 +356,14 @@ function JobWorkspace({ jobId }: { jobId: string }) {
                 { label: "Salary", value: job.salary, key: "salary", placeholder: "Add salary range" },
               ] as { label: string; value: string | null; key: keyof Job; placeholder?: string }[]).map(({ label, value, key, placeholder }) => (
                 <div key={key} className="flex items-center gap-4 px-5">
-                  <span className="text-xs text-gray-400 dark:text-gray-500 w-20 shrink-0">{label}</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 w-20 shrink-0">{label}</span>
                   <div className="flex-1 py-1">
                     <EditableField value={value} placeholder={placeholder ?? "—"} onSave={(v) => save({ [key]: v || null })} />
                   </div>
                 </div>
               ))}
               <div className="flex items-center gap-4 px-5">
-                <span className="text-xs text-gray-400 dark:text-gray-500 w-20 shrink-0">URL</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 w-20 shrink-0">URL</span>
                 <div className="flex-1 py-1 flex items-center gap-2">
                   <EditableField value={job.url} placeholder="Add job URL" onSave={(v) => save({ url: v || null })} className="flex-1" />
                   {job.url && (
@@ -374,14 +374,14 @@ function JobWorkspace({ jobId }: { jobId: string }) {
                 </div>
               </div>
               <div className="flex items-center gap-4 px-5 py-2.5">
-                <span className="text-xs text-gray-400 dark:text-gray-500 w-20 shrink-0">Source</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 w-20 shrink-0">Source</span>
                 <select value={job.source} onChange={(e) => handleSourceChange(e.target.value as JobSource)} className={`${selectClass} font-normal`}>
                   {ALL_SOURCES.map((s) => <option key={s} value={s}>{SOURCE_LABELS[s]}</option>)}
                 </select>
               </div>
               {resumes.length > 0 && (
                 <div className="flex items-center gap-4 px-5 py-2.5">
-                  <span className="text-xs text-gray-400 dark:text-gray-500 w-20 shrink-0">Resume</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 w-20 shrink-0">Resume</span>
                   <select
                     value={job.resumeIdUsed ?? ""}
                     onChange={(e) => { save({ resumeIdUsed: e.target.value || null }); showToast("Resume updated"); }}
@@ -394,12 +394,12 @@ function JobWorkspace({ jobId }: { jobId: string }) {
               )}
               {job.appliedAt && (
                 <div className="flex items-center gap-4 px-5 py-2.5">
-                  <span className="text-xs text-gray-400 dark:text-gray-500 w-20 shrink-0">Applied</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 w-20 shrink-0">Applied</span>
                   <span className="text-sm text-gray-600 dark:text-gray-300">{formatDate(job.appliedAt)}</span>
                 </div>
               )}
               <div className="flex items-center gap-4 px-5 py-2.5">
-                <span className="text-xs text-gray-400 dark:text-gray-500 w-20 shrink-0">Added</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 w-20 shrink-0">Added</span>
                 <span className="text-sm text-gray-500 dark:text-gray-400">{formatDate(job.createdAt)}</span>
               </div>
             </div>
@@ -456,7 +456,7 @@ function JobWorkspace({ jobId }: { jobId: string }) {
         <div className="space-y-4">
           <div className="surface p-5">
             <p className="section-label mb-1">How did it end?</p>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">Closing the loop keeps Today focused on what&apos;s still open.</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Closing the loop keeps Today focused on what&apos;s still open.</p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {OUTCOMES.map((o) => {
                 const chosen = job.stage === o.stage;
@@ -481,7 +481,7 @@ function JobWorkspace({ jobId }: { jobId: string }) {
           </div>
           <div className="surface px-5 py-4">
             <p className="section-label">One thing to remember</p>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">A sentence for future you. It stays in this job&apos;s notes.</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">A sentence for future you. It stays in this job&apos;s notes.</p>
             <EditableField value={job.notes} placeholder="e.g. Ask about team size earlier next time." multiline onSave={(v) => save({ notes: v || null })} />
           </div>
           <Link href="/weekly-review" className="flex items-center gap-1.5 text-sm text-primary-700 dark:text-primary-300 hover:underline">

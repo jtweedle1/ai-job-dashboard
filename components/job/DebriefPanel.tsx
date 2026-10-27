@@ -113,7 +113,7 @@ export default function DebriefPanel({
   }
 
   const fieldClass =
-    "w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-800";
+    "w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-800";
 
   if (loading) {
     return <div className="h-48 bg-white/60 dark:bg-gray-800 rounded-3xl animate-pulse" />;
@@ -127,7 +127,7 @@ export default function DebriefPanel({
         <div className="surface">
           <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
             <p className="section-label">How did it go?</p>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
               Jot it down while it&apos;s fresh. Every debrief lands in Me → Stories, so the next letter and the
               next interview can use it.
             </p>
@@ -191,13 +191,13 @@ export default function DebriefPanel({
                           {job ? formatDate(debrief.interviewDate) : dj?.title ?? "Unknown job"}
                         </p>
                         {!job && (
-                          <p className="text-xs text-gray-400 dark:text-gray-500">
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
                             {dj?.company} · {formatDate(debrief.interviewDate)}
                           </p>
                         )}
                       </div>
                       <i
-                        className={`ti ${open ? "ti-chevron-up" : "ti-chevron-down"} text-gray-300 dark:text-gray-600 text-sm`}
+                        className={`ti ${open ? "ti-chevron-up" : "ti-chevron-down"} text-gray-500 dark:text-gray-400 text-sm`}
                         aria-hidden="true"
                       />
                     </button>
@@ -212,7 +212,7 @@ export default function DebriefPanel({
                     <button
                       onClick={() => handleDelete(debrief.id)}
                       disabled={deletingId === debrief.id}
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-gray-300 dark:text-gray-600 hover:text-red-400 transition-colors disabled:opacity-50 shrink-0"
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-red-400 transition-colors disabled:opacity-50 shrink-0"
                       aria-label="Delete debrief"
                     >
                       <i className="ti ti-trash text-xs" aria-hidden="true" />
@@ -224,7 +224,7 @@ export default function DebriefPanel({
                       {DEBRIEF_FIELDS.map(({ key, label }) =>
                         debrief[key] ? (
                           <div key={key}>
-                            <p className="text-xs font-medium text-gray-400 dark:text-gray-500 mb-1">{label}</p>
+                            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{label}</p>
                             <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
                               {debrief[key]}
                             </p>
@@ -232,7 +232,7 @@ export default function DebriefPanel({
                         ) : null
                       )}
                       {DEBRIEF_FIELDS.every(({ key }) => !debrief[key]) && (
-                        <p className="text-sm text-gray-400 dark:text-gray-500 italic">No notes recorded.</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 italic">No notes recorded.</p>
                       )}
                     </div>
                   )}
