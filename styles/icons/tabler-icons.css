@@ -26,8 +26,10 @@
 .ti-alert-circle:before { content: "\ea05"; }
 .ti-alert-triangle:before { content: "\ea06"; }
 .ti-align-left:before { content: "\ea09"; }
+.ti-arrow-down:before { content: "\ea16"; }
 .ti-arrow-left:before { content: "\ea19"; }
 .ti-arrow-right:before { content: "\ea1f"; }
+.ti-ban:before { content: "\ea2e"; }
 .ti-bookmarks:before { content: "\ed08"; }
 .ti-books:before { content: "\eff2"; }
 .ti-briefcase:before { content: "\ea46"; }
@@ -68,6 +70,8 @@
 .ti-player-play:before { content: "\ed46"; }
 .ti-plus:before { content: "\eb0b"; }
 .ti-refresh:before { content: "\eb13"; }
+.ti-repeat:before { content: "\eb72"; }
+.ti-robot:before { content: "\f00b"; }
 .ti-search:before { content: "\eb1c"; }
 .ti-selector:before { content: "\eb1d"; }
 .ti-settings:before { content: "\eb20"; }
@@ -82,4 +86,5 @@
 .ti-user:before { content: "\eb4d"; }
 .ti-user-circle:before { content: "\ef68"; }
 .ti-wand:before { content: "\ebcb"; }
+.ti-wave-sine:before { content: "\ecd4"; }
 .ti-x:before { content: "\eb55"; }
