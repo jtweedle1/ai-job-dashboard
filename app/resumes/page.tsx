@@ -5,6 +5,7 @@ import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useAuth } from "@/lib/auth-context";
 import { db, storage } from "@/lib/firebase";
+import { authedFetch } from "@/lib/api-client";
 import { getResumes, createResume, deleteResume, setActiveResume } from "@/lib/resumes";
 import type { Resume } from "@/types/resume";
 
@@ -64,7 +65,7 @@ export default function ResumesPage() {
     formData.append("file", file);
 
     try {
-      const res = await fetch("/api/parse-pdf", { method: "POST", body: formData });
+      const res = await authedFetch("/api/parse-pdf", { method: "POST", body: formData });
       const data = await res.json();
       if (data.text) {
         setPdfText(data.text);
@@ -159,25 +160,25 @@ export default function ResumesPage() {
     label.trim().length > 0 &&
     (tab === "paste" ? content.trim().length > 0 : pdfText.trim().length > 0);
 
-  const inputClass = "w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent dark:bg-gray-800";
+  const inputClass = "w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800";
 
   return (
     <div className="p-6 max-w-3xl mx-auto">
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-lg animate-fade-in">
-          <i className="ti ti-circle-check text-emerald-400 text-base" aria-hidden="true" />
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-full shadow-lg shadow-gray-900/20 animate-fade-in">
+          <i className="ti ti-circle-check text-primary-400 text-base" aria-hidden="true" />
           {toast}
         </div>
       )}
 
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-50">Resumes</h1>
+          <h1 className="page-title">Resume</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">Manage your resume versions</p>
         </div>
         <button
           onClick={() => setModalOpen(true)}
-          className="flex items-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
+          className="flex items-center gap-2 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-primary-700 transition-colors"
         >
           <i className="ti ti-plus text-sm" aria-hidden="true" />
           Add resume
@@ -187,16 +188,16 @@ export default function ResumesPage() {
       {loading ? (
         <div className="space-y-3">
           {[1, 2].map((n) => (
-            <div key={n} className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-4 animate-pulse">
+            <div key={n} className="surface p-4 animate-pulse">
               <div className="h-4 bg-gray-100 dark:bg-gray-800 rounded w-48 mb-2" />
               <div className="h-3 bg-gray-100 dark:bg-gray-800 rounded w-24" />
             </div>
           ))}
         </div>
       ) : resumes.length === 0 ? (
-        <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-12 text-center">
-          <div className="w-12 h-12 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center mx-auto mb-4">
-            <i className="ti ti-file-cv text-gray-400 dark:text-gray-500 text-2xl" aria-hidden="true" />
+        <div className="surface p-12 text-center">
+          <div className="w-12 h-12 rounded-full glow-gradient flex items-center justify-center mx-auto mb-4">
+            <i className="ti ti-file-cv text-gray-700 dark:text-gray-100 text-2xl" aria-hidden="true" />
           </div>
           <h2 className="text-sm font-medium text-gray-900 dark:text-gray-50 mb-1">No resumes yet</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-5 max-w-xs mx-auto">
@@ -204,7 +205,7 @@ export default function ResumesPage() {
           </p>
           <button
             onClick={() => setModalOpen(true)}
-            className="inline-flex items-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
+            className="inline-flex items-center gap-2 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-primary-700 transition-colors"
           >
             <i className="ti ti-plus text-sm" aria-hidden="true" />
             Add resume
@@ -219,8 +220,8 @@ export default function ResumesPage() {
             return (
               <div
                 key={resume.id}
-                className={`bg-white dark:bg-gray-900 border rounded-xl p-4 flex items-start justify-between gap-4 ${
-                  isActive ? "border-emerald-200 dark:border-emerald-800" : "border-gray-100 dark:border-gray-800"
+                className={`bg-white dark:bg-gray-900 border rounded-2xl p-4 flex items-start justify-between gap-4 ${
+                  isActive ? "border-primary-200 dark:border-primary-800" : "border-gray-100 dark:border-gray-800"
                 }`}
               >
                 <div className="flex-1 min-w-0">
@@ -229,7 +230,7 @@ export default function ResumesPage() {
                       {resume.label}
                     </span>
                     {isActive && (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded-full">
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-primary-700 dark:text-primary-400 bg-primary-50 dark:bg-primary-950 px-2 py-0.5 rounded-full">
                         <i className="ti ti-check text-xs" aria-hidden="true" />
                         Active
                       </span>
@@ -241,7 +242,7 @@ export default function ResumesPage() {
                       href={resume.fileUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs text-emerald-600 hover:underline mt-1"
+                      className="inline-flex items-center gap-1 text-xs text-primary-600 hover:underline mt-1"
                     >
                       <i className="ti ti-file-type-pdf text-xs" aria-hidden="true" />
                       View PDF
@@ -253,7 +254,7 @@ export default function ResumesPage() {
                   {!isActive && (
                     <button
                       onClick={() => handleSetActive(resume.id)}
-                      className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 px-3 py-1.5 rounded-lg transition-colors"
+                      className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 px-3 py-1.5 rounded-xl transition-colors"
                     >
                       Set active
                     </button>
@@ -315,7 +316,7 @@ export default function ResumesPage() {
               </div>
 
               <div>
-                <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1 mb-4">
+                <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-xl p-1 mb-4">
                   {(["paste", "pdf"] as Tab[]).map((t) => (
                     <button
                       key={t}
@@ -344,7 +345,7 @@ export default function ResumesPage() {
                   <div className="space-y-3">
                     <div
                       onClick={() => fileInputRef.current?.click()}
-                      className="border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-6 text-center cursor-pointer hover:border-emerald-300 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/30 transition-colors"
+                      className="border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl p-6 text-center cursor-pointer hover:border-primary-300 hover:bg-primary-50/30 dark:hover:bg-primary-950/30 transition-colors"
                     >
                       <input
                         ref={fileInputRef}
@@ -395,13 +396,13 @@ export default function ResumesPage() {
 
             <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-gray-100 dark:border-gray-800 flex-wrap">
               {saveError && <p className="text-xs text-red-500 w-full text-right">{saveError}</p>}
-              <button onClick={closeModal} className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 px-4 py-2 rounded-lg transition-colors">
+              <button onClick={closeModal} className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 px-4 py-2 rounded-xl transition-colors">
                 Cancel
               </button>
               <button
                 onClick={handleSave}
                 disabled={!canSave || saving}
-                className="flex items-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {saving ? (
                   <>

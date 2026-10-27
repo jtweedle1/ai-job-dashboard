@@ -120,13 +120,13 @@ export default function CompaniesPage() {
     setNewJobId("");
   }
 
-  const inputClass = "w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent dark:bg-gray-800 dark:text-gray-100";
+  const inputClass = "w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800 dark:text-gray-100";
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-lg">
-          <i className="ti ti-circle-check text-emerald-400 text-base" aria-hidden="true" />
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-full shadow-lg shadow-gray-900/20">
+          <i className="ti ti-circle-check text-primary-400 text-base" aria-hidden="true" />
           {toast}
         </div>
       )}
@@ -134,7 +134,7 @@ export default function CompaniesPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-50">Companies</h1>
+          <h1 className="page-title">Companies</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">
             {companies.length} profile{companies.length !== 1 ? "s" : ""}
           </p>
@@ -144,7 +144,7 @@ export default function CompaniesPage() {
             <button
               onClick={handleDeleteSelected}
               disabled={deleting}
-              className="flex items-center gap-2 bg-red-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
+              className="flex items-center gap-2 bg-red-600 text-white text-sm font-medium px-4 py-2 rounded-xl hover:bg-red-700 disabled:opacity-50 transition-colors"
             >
               <i className="ti ti-trash text-sm" aria-hidden="true" />
               {deleting ? "Deleting…" : `Delete ${selectedIds.size}`}
@@ -152,7 +152,7 @@ export default function CompaniesPage() {
           )}
           <button
             onClick={() => setModalOpen(true)}
-            className="flex items-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
+            className="flex items-center gap-2 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-primary-700 transition-colors"
           >
             <i className="ti ti-plus text-sm" aria-hidden="true" />
             Add company
@@ -164,7 +164,7 @@ export default function CompaniesPage() {
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {[1, 2, 3].map((n) => (
-            <div key={n} className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-4 animate-pulse">
+            <div key={n} className="surface p-4 animate-pulse">
               <div className="h-4 bg-gray-100 dark:bg-gray-800 rounded w-32 mb-2" />
               <div className="h-3 bg-gray-100 dark:bg-gray-800 rounded w-48 mb-3" />
               <div className="h-3 bg-gray-100 dark:bg-gray-800 rounded w-24" />
@@ -172,9 +172,9 @@ export default function CompaniesPage() {
           ))}
         </div>
       ) : companies.length === 0 ? (
-        <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-12 text-center">
-          <div className="w-12 h-12 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center mx-auto mb-4">
-            <i className="ti ti-building text-gray-400 dark:text-gray-500 text-2xl" aria-hidden="true" />
+        <div className="surface p-12 text-center">
+          <div className="w-12 h-12 rounded-full glow-gradient flex items-center justify-center mx-auto mb-4">
+            <i className="ti ti-building text-gray-700 dark:text-gray-100 text-2xl" aria-hidden="true" />
           </div>
           <h2 className="text-sm font-medium text-gray-900 dark:text-gray-50 mb-1">No company profiles yet</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-5 max-w-xs mx-auto">
@@ -182,7 +182,7 @@ export default function CompaniesPage() {
           </p>
           <button
             onClick={() => setModalOpen(true)}
-            className="inline-flex items-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
+            className="inline-flex items-center gap-2 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-primary-700 transition-colors"
           >
             <i className="ti ti-plus text-sm" aria-hidden="true" />
             Add company
@@ -196,7 +196,7 @@ export default function CompaniesPage() {
               type="checkbox"
               checked={allSelected}
               onChange={handleToggleAll}
-              className="rounded border-gray-300 dark:border-gray-600 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+              className="rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500 cursor-pointer"
               aria-label="Select all companies"
             />
             <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -212,14 +212,14 @@ export default function CompaniesPage() {
                 <div
                   key={company.id}
                   onClick={() => router.push(`/companies/${company.id}`)}
-                  className={`bg-white dark:bg-gray-900 border rounded-xl p-4 cursor-pointer hover:shadow-sm transition-all ${
+                  className={`bg-white dark:bg-gray-900 border rounded-2xl p-4 cursor-pointer hover:shadow-sm transition-all ${
                     isSelected
-                      ? "border-emerald-400 ring-1 ring-emerald-400 bg-emerald-50 dark:bg-emerald-950"
+                      ? "border-primary-400 ring-1 ring-primary-400 bg-primary-50 dark:bg-primary-950"
                       : "border-gray-100 dark:border-gray-800 hover:border-gray-200 dark:hover:border-gray-700"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2 mb-2">
-                    <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden border border-gray-200 dark:border-gray-700">
+                    <div className="w-8 h-8 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden border border-gray-200 dark:border-gray-700">
                       {company.logoUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={company.logoUrl} alt={company.name} className="w-full h-full object-contain" />
@@ -232,7 +232,7 @@ export default function CompaniesPage() {
                         type="checkbox"
                         checked={isSelected}
                         onChange={() => handleToggleSelect(company.id)}
-                        className="rounded border-gray-300 dark:border-gray-600 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                        className="rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500 cursor-pointer"
                         aria-label={`Select ${company.name}`}
                       />
                     </div>
@@ -307,14 +307,14 @@ export default function CompaniesPage() {
             <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-gray-100 dark:border-gray-800">
               <button
                 onClick={closeModal}
-                className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 px-4 py-2 rounded-lg transition-colors"
+                className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 px-4 py-2 rounded-xl transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSave}
                 disabled={!newName.trim() || saving}
-                className="flex items-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {saving ? (
                   <>

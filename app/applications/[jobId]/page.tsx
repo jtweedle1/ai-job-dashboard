@@ -1,50 +1,114 @@
 "use client";
 
-import { use, useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, use, useState, useEffect, useCallback } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
-import { authedFetch } from "@/lib/api-client";
+import { authedFetch, noKeyMessage } from "@/lib/api-client";
 import { getJob, updateJob, deleteJob } from "@/lib/jobs";
 import { getCompanyByJobId, createCompany } from "@/lib/companies";
 import { getResumes } from "@/lib/resumes";
 import { getCoverLettersByJobId } from "@/lib/coverLetters";
 import { getInterviewPrepsByJobId } from "@/lib/interviewPreps";
 import { getDebriefsByJobId } from "@/lib/debriefs";
+import { JOB_STEPS, isStep, stepsDone, suggestedStep, type JobActivity, type JobStep } from "@/lib/next-steps";
 import EditableField from "@/components/EditableField";
+import Toast from "@/components/Toast";
+import CoverLetterPanel from "@/components/job/CoverLetterPanel";
+import InterviewPrepPanel from "@/components/job/InterviewPrepPanel";
+import DebriefPanel from "@/components/job/DebriefPanel";
 import {
   STAGE_META, SOURCE_LABELS, ALL_STAGES, ALL_SOURCES,
   type Job, type JobStage, type JobSource,
 } from "@/types/job";
 import type { Company } from "@/types/company";
 import type { Resume } from "@/types/resume";
-import type { CoverLetter } from "@/types/coverLetter";
-import type { InterviewPrep } from "@/types/interviewPrep";
-import type { Debrief } from "@/types/debrief";
 
 function formatDate(d: Date) {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-function StageBadge({ stage }: { stage: JobStage }) {
-  const meta = STAGE_META[stage];
+const selectClass =
+  "border border-gray-200 dark:border-gray-700 rounded-full px-3 py-1.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white/80 dark:bg-gray-800 dark:text-gray-100";
+
+function StepRail({
+  current,
+  done,
+  onSelect,
+}: {
+  current: JobStep;
+  done: Record<JobStep, boolean>;
+  onSelect: (step: JobStep) => void;
+}) {
   return (
-    <span className={`inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full ${meta.badge}`}>
-      {meta.label}
-    </span>
+    <nav aria-label="Steps for this job" className="mb-6 -mx-1 overflow-x-auto">
+      <ol className="flex items-center gap-1 px-1 min-w-max">
+        {JOB_STEPS.map((s, i) => {
+          const active = s.id === current;
+          return (
+            <li key={s.id} className="flex items-center gap-1">
+              {i > 0 && <span className="w-4 sm:w-6 h-px bg-gray-200 dark:bg-gray-700" aria-hidden="true" />}
+              <button
+                onClick={() => onSelect(s.id)}
+                aria-current={active ? "step" : undefined}
+                className={`flex items-center gap-2 pl-1.5 pr-3.5 py-1.5 rounded-full text-sm font-display font-bold transition-all ${
+                  active
+                    ? "glow-gradient text-gray-900 dark:text-white shadow-sm shadow-gray-900/5"
+                    : "text-gray-500 dark:text-gray-400 hover:bg-white/70 dark:hover:bg-white/5"
+                }`}
+              >
+                <span
+                  className={`w-7 h-7 rounded-full flex items-center justify-center text-sm ${
+                    active
+                      ? "bg-white/80 dark:bg-white/15"
+                      : done[s.id]
+                      ? "bg-primary-100 dark:bg-primary-950 text-primary-700 dark:text-primary-300"
+                      : "bg-white/70 dark:bg-white/5"
+                  }`}
+                >
+                  <i className={`ti ${done[s.id] && !active ? "ti-check" : s.icon}`} aria-hidden="true" />
+                </span>
+                {s.label}
+                {done[s.id] && <span className="sr-only">(done)</span>}
+              </button>
+            </li>
+          );
+        })}
+      </ol>
+    </nav>
   );
 }
 
-export default function JobDetailPage({ params }: { params: Promise<{ jobId: string }> }) {
-  const { jobId } = use(params);
+function Nudge({ text, action, onClick }: { text: string; action: string; onClick: () => void }) {
+  return (
+    <div className="mb-4 flex items-center gap-3 flex-wrap px-5 py-3 rounded-3xl glow-gradient">
+      <p className="text-sm text-gray-800 dark:text-gray-100 flex-1 min-w-[12rem]">{text}</p>
+      <button
+        onClick={onClick}
+        className="text-sm font-medium bg-white/90 dark:bg-white/15 text-gray-900 dark:text-white px-4 py-1.5 rounded-full hover:bg-white dark:hover:bg-white/25 transition-colors"
+      >
+        {action}
+      </button>
+    </div>
+  );
+}
+
+const OUTCOMES: { stage: JobStage; label: string; icon: string; blurb: string }[] = [
+  { stage: "offer", label: "Got an offer", icon: "ti-confetti", blurb: "Well earned." },
+  { stage: "rejected", label: "Not this time", icon: "ti-cloud-rain", blurb: "It happens to everyone. Your notes still count." },
+  { stage: "withdrawn", label: "I stepped away", icon: "ti-door-exit", blurb: "Knowing when to walk away is a skill." },
+];
+
+function JobWorkspace({ jobId }: { jobId: string }) {
   const { user } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [job, setJob] = useState<Job | null>(null);
   const [company, setCompany] = useState<Company | null>(null);
   const [resumes, setResumes] = useState<Resume[]>([]);
-  const [coverLetters, setCoverLetters] = useState<CoverLetter[]>([]);
-  const [interviewPreps, setInterviewPreps] = useState<InterviewPrep[]>([]);
-  const [debriefs, setDebriefs] = useState<Debrief[]>([]);
+  const [activity, setActivity] = useState<JobActivity>({ letters: 0, preps: 0, debriefs: 0 });
+  const [step, setStep] = useState<JobStep>("decide");
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
@@ -64,15 +128,20 @@ export default function JobDetailPage({ params }: { params: Promise<{ jobId: str
       getInterviewPrepsByJobId(user.uid, jobId),
       getDebriefsByJobId(user.uid, jobId),
     ]).then(([j, c, r, cl, ip, db]) => {
+      const a = { letters: cl.length, preps: ip.length, debriefs: db.length };
       if (!j) setNotFound(true);
-      else setJob(j);
+      else {
+        setJob(j);
+        const asked = searchParams.get("step");
+        setStep(isStep(asked) ? asked : suggestedStep(j, a));
+      }
       setCompany(c);
       setResumes(r);
-      setCoverLetters(cl);
-      setInterviewPreps(ip);
-      setDebriefs(db);
+      setActivity(a);
       setLoading(false);
     });
+    // The step param only picks the starting step; later changes come from goTo.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, jobId]);
 
   const save = useCallback(
@@ -89,11 +158,16 @@ export default function JobDetailPage({ params }: { params: Promise<{ jobId: str
     setTimeout(() => setToast(""), 2500);
   }
 
+  function goTo(next: JobStep) {
+    setStep(next);
+    router.replace(`/applications/${jobId}?step=${next}`, { scroll: false });
+  }
+
   async function handleStageChange(stage: JobStage) {
     const patch: Partial<Job> = { stage };
     if (stage === "applied" && !job?.appliedAt) patch.appliedAt = new Date();
     await save(patch);
-    showToast("Stage updated");
+    showToast(`Moved to ${STAGE_META[stage].label}`);
   }
 
   async function handleSourceChange(source: JobSource) {
@@ -111,8 +185,8 @@ export default function JobDetailPage({ params }: { params: Promise<{ jobId: str
         body: JSON.stringify({ jobId }),
       });
       const data = await res.json();
-      if (res.status === 401 || data.error === "no_key") { setScoreError("Add your Anthropic API key in Settings to score roles."); return; }
-      if (data.error === "no_resume") { setScoreError("Add a resume in the Resumes section first."); return; }
+      if (res.status === 401 || data.error === "no_key") { setScoreError(noKeyMessage("score roles")); return; }
+      if (data.error === "no_resume") { setScoreError("Add a resume in Me first."); return; }
       if (data.error) { setScoreError("Scoring failed. Try again."); return; }
       setJob((prev) => prev ? { ...prev, fitScore: data.score, fitReasoning: data.reasoning } : prev);
       showToast("Fit score updated");
@@ -135,8 +209,6 @@ export default function JobDetailPage({ params }: { params: Promise<{ jobId: str
     setCreatingCompany(true);
     try {
       const id = await createCompany(user.uid, { name: job.company, jobId: job.id });
-      const newCompany: Company = { id, name: job.company, jobId: job.id, logoUrl: null, whatTheyDo: null, productSummary: null, targetCustomers: null, recentNews: null, values: null, competitors: null, whyInterested: null, createdAt: new Date(), updatedAt: new Date() };
-      setCompany(newCompany);
       router.push(`/companies/${id}`);
     } finally {
       setCreatingCompany(false);
@@ -146,9 +218,9 @@ export default function JobDetailPage({ params }: { params: Promise<{ jobId: str
   if (loading) {
     return (
       <div className="p-6 max-w-3xl mx-auto animate-pulse space-y-4">
-        <div className="h-7 bg-gray-100 dark:bg-gray-800 rounded w-64" />
-        <div className="h-4 bg-gray-100 dark:bg-gray-800 rounded w-40" />
-        <div className="h-32 bg-gray-100 dark:bg-gray-800 rounded-xl" />
+        <div className="h-8 bg-white/60 dark:bg-gray-800 rounded-full w-64" />
+        <div className="h-10 bg-white/60 dark:bg-gray-800 rounded-full w-full" />
+        <div className="h-48 bg-white/60 dark:bg-gray-800 rounded-3xl" />
       </div>
     );
   }
@@ -157,242 +229,276 @@ export default function JobDetailPage({ params }: { params: Promise<{ jobId: str
     return (
       <div className="p-6 max-w-3xl mx-auto text-center pt-20">
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Job not found.</p>
-        <button onClick={() => router.push("/applications")} className="text-sm text-emerald-600 hover:underline">Back to applications</button>
+        <Link href="/applications" className="text-sm text-primary-600 hover:underline">Back to your jobs</Link>
       </div>
     );
   }
 
-  const selectClass = "border border-gray-200 dark:border-gray-700 rounded-lg px-2.5 py-1.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-gray-800 dark:text-gray-100";
+  const done = stepsDone(job, activity);
+  const interviewing = job.stage === "phone_screen" || job.stage === "interview";
 
   return (
     <div className="p-6 max-w-3xl mx-auto">
-      {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-lg">
-          <i className="ti ti-circle-check text-emerald-400 text-base" aria-hidden="true" />
-          {toast}
-        </div>
-      )}
+      <Toast message={toast} />
 
-      <button onClick={() => router.push("/applications")} className="flex items-center gap-1.5 text-sm text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors mb-5">
+      <Link href="/applications" className="inline-flex items-center gap-1.5 text-sm text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors mb-4">
         <i className="ti ti-arrow-left text-sm" aria-hidden="true" />
-        Applications
-      </button>
+        All jobs
+      </Link>
 
+      {/* Header */}
       <div className="flex items-start justify-between gap-4 mb-5">
         <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-50 mb-0.5">{job.title}</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">{job.company}</p>
+          <h1 className="page-title mb-0.5">{job.title}</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {job.company}
+            {job.location ? ` · ${job.location}` : ""}
+          </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
+          <label className="sr-only" htmlFor="stage">Stage</label>
+          <select id="stage" value={job.stage} onChange={(e) => handleStageChange(e.target.value as JobStage)} className={selectClass}>
+            {ALL_STAGES.map((s) => <option key={s} value={s}>{STAGE_META[s].label}</option>)}
+          </select>
           {deleteConfirm ? (
             <>
-              <span className="text-xs text-gray-500 dark:text-gray-400">Delete this job?</span>
               <button onClick={handleDelete} disabled={deleting} className="text-xs font-medium text-red-600 hover:text-red-700 transition-colors">
-                {deleting ? "Deleting…" : "Yes, delete"}
+                {deleting ? "Deleting…" : "Delete"}
               </button>
-              <button onClick={() => setDeleteConfirm(false)} className="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">Cancel</button>
+              <button onClick={() => setDeleteConfirm(false)} className="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">Keep</button>
             </>
           ) : (
-            <button onClick={() => setDeleteConfirm(true)} className="text-gray-300 dark:text-gray-600 hover:text-red-400 transition-colors" aria-label="Delete job">
+            <button onClick={() => setDeleteConfirm(true)} className="w-8 h-8 rounded-full flex items-center justify-center text-gray-300 dark:text-gray-600 hover:text-red-400 transition-colors" aria-label="Delete job">
               <i className="ti ti-trash text-sm" aria-hidden="true" />
             </button>
           )}
         </div>
       </div>
 
-      <div className="flex items-center gap-3 mb-6 flex-wrap">
-        <div className="flex items-center gap-2">
-          <label className="text-xs text-gray-500 dark:text-gray-400">Stage</label>
-          <select value={job.stage} onChange={(e) => handleStageChange(e.target.value as JobStage)} className={selectClass}>
-            {ALL_STAGES.map((s) => <option key={s} value={s}>{STAGE_META[s].label}</option>)}
-          </select>
-        </div>
-        <StageBadge stage={job.stage} />
-        <div className="flex items-center gap-2 ml-2">
-          <label className="text-xs text-gray-500 dark:text-gray-400">Source</label>
-          <select value={job.source} onChange={(e) => handleSourceChange(e.target.value as JobSource)} className={`${selectClass} font-normal`}>
-            {ALL_SOURCES.map((s) => <option key={s} value={s}>{SOURCE_LABELS[s]}</option>)}
-          </select>
-        </div>
-        {resumes.length > 0 && (
-          <div className="flex items-center gap-2 ml-2">
-            <label className="text-xs text-gray-500 dark:text-gray-400">Resume used</label>
-            <select
-              value={job.resumeIdUsed ?? ""}
-              onChange={(e) => { save({ resumeIdUsed: e.target.value || null }); showToast("Resume updated"); }}
-              className={`${selectClass} font-normal`}
-            >
-              <option value="">Not set</option>
-              {resumes.map((r) => <option key={r.id} value={r.id}>{r.label}</option>)}
-            </select>
-            {job.resumeIdUsed && (() => {
-              const resume = resumes.find((r) => r.id === job.resumeIdUsed);
-              if (!resume) return null;
-              return resume.fileUrl ? (
-                <a
-                  href={resume.fileUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-xs font-medium text-emerald-600 hover:text-emerald-700 transition-colors"
-                >
-                  <i className="ti ti-eye text-xs" aria-hidden="true" />
-                  View
-                </a>
-              ) : (
-                <button
-                  onClick={() => router.push("/resumes")}
-                  className="flex items-center gap-1 text-xs font-medium text-emerald-600 hover:text-emerald-700 transition-colors"
-                >
-                  <i className="ti ti-eye text-xs" aria-hidden="true" />
-                  View
-                </button>
-              );
-            })()}
-          </div>
-        )}
-      </div>
+      <StepRail current={step} done={done} onSelect={goTo} />
 
-      {/* Details */}
-      <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl mb-4">
-        <div className="px-4 py-3 border-b border-gray-50 dark:border-gray-800">
-          <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest">Details</p>
-        </div>
-        <div className="divide-y divide-gray-50 dark:divide-gray-800">
-          {([
-            { label: "Title", value: job.title, key: "title" },
-            { label: "Company", value: job.company, key: "company" },
-            { label: "Location", value: job.location, key: "location", placeholder: "Add location" },
-            { label: "Salary", value: job.salary, key: "salary", placeholder: "Add salary range" },
-          ] as { label: string; value: string | null; key: keyof Job; placeholder?: string }[]).map(({ label, value, key, placeholder }) => (
-            <div key={key} className="flex items-center gap-4 px-4">
-              <span className="text-xs text-gray-400 dark:text-gray-500 w-20 shrink-0">{label}</span>
-              <div className="flex-1 py-1">
-                <EditableField value={value} placeholder={placeholder ?? "—"} onSave={(v) => save({ [key]: v || null })} />
+      {/* Decide: is this worth your time? */}
+      {step === "decide" && (
+        <div className="space-y-4">
+          <div className="surface">
+            <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between gap-3">
+              <div>
+                <p className="section-label">Is it a fit?</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Measured against your resume and your goals in Me.</p>
+              </div>
+              <button onClick={handleScore} disabled={scoring} className="flex items-center gap-1.5 text-xs font-medium text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-950 px-3 py-1.5 rounded-full hover:bg-primary-100 dark:hover:bg-primary-900 disabled:opacity-50 transition-colors shrink-0">
+                {scoring ? <i className="ti ti-loader-2 animate-spin text-xs" aria-hidden="true" /> : <i className="ti ti-sparkles text-xs" aria-hidden="true" />}
+                {scoring ? "Scoring…" : job.fitScore != null ? "Score again" : "Score this role"}
+              </button>
+            </div>
+            <div className="px-5 py-4">
+              {job.fitScore != null ? (
+                <div className="flex items-start gap-4">
+                  <span className={`text-3xl font-display font-extrabold shrink-0 ${job.fitScore >= 80 ? "text-emerald-600" : job.fitScore >= 60 ? "text-amber-500" : "text-red-500"}`}>
+                    {job.fitScore}
+                  </span>
+                  <div>
+                    <div className={`inline-flex items-center text-xs font-medium px-2.5 py-0.5 rounded-full mb-1.5 ${job.fitScore >= 80 ? "bg-emerald-50 text-emerald-700" : job.fitScore >= 60 ? "bg-amber-50 text-amber-700" : "bg-red-50 text-red-600"}`}>
+                      {job.fitScore >= 80 ? "Strong fit" : job.fitScore >= 60 ? "Moderate fit" : "Weak fit"}
+                    </div>
+                    {job.fitReasoning && <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{job.fitReasoning}</p>}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {scoreError ? <span className="text-amber-600">{scoreError}</span> : "Score it to see how well this role matches you before you spend an evening on it."}
+                </p>
+              )}
+              {scoreError && job.fitScore != null && <p className="text-xs text-amber-600 mt-2">{scoreError}</p>}
+            </div>
+          </div>
+
+          <div className="surface">
+            <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
+              <p className="section-label">Job description</p>
+            </div>
+            <div className="px-5 py-2">
+              <EditableField value={job.description || null} placeholder="Paste the job description…" multiline onSave={(v) => save({ description: v })} />
+            </div>
+          </div>
+
+          <div className="surface">
+            <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
+              <p className="section-label">The company</p>
+            </div>
+            {company ? (
+              <div className="px-5 py-3 flex items-center justify-between">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-50">{company.name}</p>
+                  {company.whatTheyDo && <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">{company.whatTheyDo}</p>}
+                </div>
+                <Link href={`/companies/${company.id}`} className="text-xs text-primary-600 hover:underline shrink-0 ml-4">Open research</Link>
+              </div>
+            ) : (
+              <div className="px-5 py-3 flex items-center justify-between gap-4">
+                <p className="text-sm text-gray-500 dark:text-gray-400">Research what they do, their values and recent news.</p>
+                <button onClick={handleCreateCompany} disabled={creatingCompany} className="text-xs text-primary-600 hover:underline disabled:opacity-50 shrink-0">
+                  {creatingCompany ? "Starting…" : "Start research"}
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="surface">
+            <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
+              <p className="section-label">Details</p>
+            </div>
+            <div className="divide-y divide-gray-100 dark:divide-gray-800">
+              {([
+                { label: "Title", value: job.title, key: "title" },
+                { label: "Company", value: job.company, key: "company" },
+                { label: "Location", value: job.location, key: "location", placeholder: "Add location" },
+                { label: "Salary", value: job.salary, key: "salary", placeholder: "Add salary range" },
+              ] as { label: string; value: string | null; key: keyof Job; placeholder?: string }[]).map(({ label, value, key, placeholder }) => (
+                <div key={key} className="flex items-center gap-4 px-5">
+                  <span className="text-xs text-gray-400 dark:text-gray-500 w-20 shrink-0">{label}</span>
+                  <div className="flex-1 py-1">
+                    <EditableField value={value} placeholder={placeholder ?? "—"} onSave={(v) => save({ [key]: v || null })} />
+                  </div>
+                </div>
+              ))}
+              <div className="flex items-center gap-4 px-5">
+                <span className="text-xs text-gray-400 dark:text-gray-500 w-20 shrink-0">URL</span>
+                <div className="flex-1 py-1 flex items-center gap-2">
+                  <EditableField value={job.url} placeholder="Add job URL" onSave={(v) => save({ url: v || null })} className="flex-1" />
+                  {job.url && (
+                    <a href={job.url} target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:text-primary-700 shrink-0" aria-label="Open job posting">
+                      <i className="ti ti-external-link text-sm" aria-hidden="true" />
+                    </a>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center gap-4 px-5 py-2.5">
+                <span className="text-xs text-gray-400 dark:text-gray-500 w-20 shrink-0">Source</span>
+                <select value={job.source} onChange={(e) => handleSourceChange(e.target.value as JobSource)} className={`${selectClass} font-normal`}>
+                  {ALL_SOURCES.map((s) => <option key={s} value={s}>{SOURCE_LABELS[s]}</option>)}
+                </select>
+              </div>
+              {resumes.length > 0 && (
+                <div className="flex items-center gap-4 px-5 py-2.5">
+                  <span className="text-xs text-gray-400 dark:text-gray-500 w-20 shrink-0">Resume</span>
+                  <select
+                    value={job.resumeIdUsed ?? ""}
+                    onChange={(e) => { save({ resumeIdUsed: e.target.value || null }); showToast("Resume updated"); }}
+                    className={`${selectClass} font-normal`}
+                  >
+                    <option value="">Not set</option>
+                    {resumes.map((r) => <option key={r.id} value={r.id}>{r.label}</option>)}
+                  </select>
+                </div>
+              )}
+              {job.appliedAt && (
+                <div className="flex items-center gap-4 px-5 py-2.5">
+                  <span className="text-xs text-gray-400 dark:text-gray-500 w-20 shrink-0">Applied</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-300">{formatDate(job.appliedAt)}</span>
+                </div>
+              )}
+              <div className="flex items-center gap-4 px-5 py-2.5">
+                <span className="text-xs text-gray-400 dark:text-gray-500 w-20 shrink-0">Added</span>
+                <span className="text-sm text-gray-500 dark:text-gray-400">{formatDate(job.createdAt)}</span>
               </div>
             </div>
-          ))}
-          <div className="flex items-center gap-4 px-4">
-            <span className="text-xs text-gray-400 dark:text-gray-500 w-20 shrink-0">URL</span>
-            <div className="flex-1 py-1 flex items-center gap-2">
-              <EditableField value={job.url} placeholder="Add job URL" onSave={(v) => save({ url: v || null })} className="flex-1" />
-              {job.url && (
-                <a href={job.url} target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-700 shrink-0" onClick={(e) => e.stopPropagation()}>
-                  <i className="ti ti-external-link text-sm" aria-hidden="true" />
-                </a>
-              )}
-            </div>
           </div>
-          {job.appliedAt && (
-            <div className="flex items-center gap-4 px-4 py-2.5">
-              <span className="text-xs text-gray-400 dark:text-gray-500 w-20 shrink-0">Applied</span>
-              <span className="text-sm text-gray-600 dark:text-gray-300">{formatDate(job.appliedAt)}</span>
-            </div>
-          )}
-          <div className="flex items-center gap-4 px-4 py-2.5">
-            <span className="text-xs text-gray-400 dark:text-gray-500 w-20 shrink-0">Added</span>
-            <span className="text-sm text-gray-500 dark:text-gray-400">{formatDate(job.createdAt)}</span>
-          </div>
-        </div>
-      </div>
 
-      {/* Company profile */}
-      <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl mb-4">
-        <div className="px-4 py-3 border-b border-gray-50 dark:border-gray-800">
-          <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest">Company profile</p>
-        </div>
-        {company ? (
-          <div className="px-4 py-3 flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-900 dark:text-gray-50">{company.name}</p>
-              {company.whatTheyDo && <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-1">{company.whatTheyDo}</p>}
+          <div className="surface">
+            <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
+              <p className="section-label">Notes</p>
             </div>
-            <button onClick={() => router.push(`/companies/${company.id}`)} className="text-xs text-emerald-600 hover:underline shrink-0 ml-4">View profile</button>
+            <div className="px-5 py-2">
+              <EditableField value={job.notes} placeholder="Anything worth remembering about this role…" multiline onSave={(v) => save({ notes: v || null })} />
+            </div>
           </div>
-        ) : (
-          <div className="px-4 py-3 flex items-center justify-between">
-            <p className="text-sm text-gray-400 dark:text-gray-500">No company profile yet.</p>
-            <button onClick={handleCreateCompany} disabled={creatingCompany} className="text-xs text-emerald-600 hover:underline disabled:opacity-50">
-              {creatingCompany ? "Creating…" : "Create profile"}
+
+          <div className="flex justify-end">
+            <button onClick={() => goTo("apply")} className="flex items-center gap-1.5 text-sm font-medium text-primary-700 dark:text-primary-300 hover:underline">
+              Next: write your letter
+              <i className="ti ti-arrow-right text-sm" aria-hidden="true" />
             </button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
-      {/* Notes */}
-      <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl mb-4">
-        <div className="px-4 py-3 border-b border-gray-50 dark:border-gray-800">
-          <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest">Notes</p>
-        </div>
-        <div className="px-4 py-2">
-          <EditableField value={job.notes} placeholder="Add notes about this role…" multiline onSave={(v) => save({ notes: v || null })} />
-        </div>
-      </div>
-
-      {/* Job description */}
-      <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl mb-4">
-        <div className="px-4 py-3 border-b border-gray-50 dark:border-gray-800">
-          <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest">Job description</p>
-        </div>
-        <div className="px-4 py-2">
-          <EditableField value={job.description || null} placeholder="Paste the job description…" multiline onSave={(v) => save({ description: v })} />
-        </div>
-      </div>
-
-      {/* Fit score */}
-      <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl mb-4">
-        <div className="px-4 py-3 border-b border-gray-50 dark:border-gray-800 flex items-center justify-between">
-          <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest">Fit score</p>
-          <button onClick={handleScore} disabled={scoring} className="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 disabled:opacity-50 transition-colors">
-            {scoring ? <i className="ti ti-loader-2 animate-spin text-xs" aria-hidden="true" /> : <i className="ti ti-refresh text-xs" aria-hidden="true" />}
-            {scoring ? "Scoring…" : job.fitScore != null ? "Recalculate" : "Score this role"}
-          </button>
-        </div>
-        <div className="px-4 py-3">
-          {job.fitScore != null ? (
-            <div className="flex items-start gap-3">
-              <span className={`text-2xl font-semibold shrink-0 ${job.fitScore >= 80 ? "text-emerald-600" : job.fitScore >= 60 ? "text-amber-500" : "text-red-500"}`}>
-                {job.fitScore}
-              </span>
-              <div>
-                <div className={`inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full mb-1.5 ${job.fitScore >= 80 ? "bg-emerald-50 text-emerald-700" : job.fitScore >= 60 ? "bg-amber-50 text-amber-700" : "bg-red-50 text-red-600"}`}>
-                  {job.fitScore >= 80 ? "Strong fit" : job.fitScore >= 60 ? "Moderate fit" : "Weak fit"}
-                </div>
-                {job.fitReasoning && <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{job.fitReasoning}</p>}
-              </div>
-            </div>
-          ) : (
-            <p className="text-sm text-gray-400 dark:text-gray-500">
-              {scoreError ? <span className="text-amber-600">{scoreError}</span> : "Score this role to see how well your resume matches the job description."}
-            </p>
+      {/* Apply: the letter */}
+      {step === "apply" && (
+        <>
+          {job.stage === "saved" && activity.letters > 0 && (
+            <Nudge text="Sent it off?" action="Mark as applied" onClick={() => handleStageChange("applied")} />
           )}
-          {scoreError && job.fitScore != null && <p className="text-xs text-amber-600 mt-2">{scoreError}</p>}
-        </div>
-      </div>
+          {job.stage === "applied" && (
+            <Nudge text="Heard back with an interview?" action="Move to interviewing" onClick={() => { handleStageChange("interview"); goTo("interview"); }} />
+          )}
+          <CoverLetterPanel job={job} onLettersChange={(letters) => setActivity((a) => ({ ...a, letters }))} />
+        </>
+      )}
 
-      {/* Linked resources */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {[
-          { href: `/cover-letters?jobId=${jobId}`, icon: "ti-mail", label: "Cover letter", count: coverLetters.length, empty: "Generate →" },
-          { href: `/interview-prep?jobId=${jobId}`, icon: "ti-microphone", label: "Interview prep", count: interviewPreps.length, empty: "Generate →" },
-          { href: `/debrief?jobId=${jobId}`, icon: "ti-clipboard-list", label: "Debriefs", count: debriefs.length, empty: "Log debrief →" },
-        ].map((item) => (
-          <button
-            key={item.label}
-            onClick={() => router.push(item.href)}
-            className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-4 flex flex-col items-center text-center gap-2 hover:border-gray-200 dark:hover:border-gray-700 hover:shadow-sm transition-all"
-          >
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center">
-              <i className={`ti ${item.icon} text-emerald-600 dark:text-emerald-400 text-base`} aria-hidden="true" />
+      {/* Interview: prep */}
+      {step === "interview" && (
+        <>
+          {!interviewing && job.stage !== "offer" && (
+            <Nudge text="Got an interview on the calendar?" action="Move to interviewing" onClick={() => handleStageChange("interview")} />
+          )}
+          <InterviewPrepPanel job={job} onPrepsChange={(preps) => setActivity((a) => ({ ...a, preps }))} />
+        </>
+      )}
+
+      {/* Debrief: what happened */}
+      {step === "debrief" && (
+        <DebriefPanel job={job} onDebriefsChange={(debriefs) => setActivity((a) => ({ ...a, debriefs }))} />
+      )}
+
+      {/* Outcome: how it ended */}
+      {step === "outcome" && (
+        <div className="space-y-4">
+          <div className="surface p-5">
+            <p className="section-label mb-1">How did it end?</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">Closing the loop keeps Today focused on what&apos;s still open.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {OUTCOMES.map((o) => {
+                const chosen = job.stage === o.stage;
+                return (
+                  <button
+                    key={o.stage}
+                    onClick={() => handleStageChange(o.stage)}
+                    aria-pressed={chosen}
+                    className={`text-left p-4 rounded-2xl border transition-all ${
+                      chosen
+                        ? "glow-gradient border-transparent shadow-sm"
+                        : "border-gray-200 dark:border-gray-700 hover:bg-white/70 dark:hover:bg-white/5"
+                    }`}
+                  >
+                    <i className={`ti ${o.icon} text-xl text-gray-700 dark:text-gray-200`} aria-hidden="true" />
+                    <p className="mt-2 text-sm font-display font-bold text-gray-900 dark:text-gray-50">{o.label}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{o.blurb}</p>
+                  </button>
+                );
+              })}
             </div>
-            <p className="text-xs font-medium text-gray-600 dark:text-gray-300">{item.label}</p>
-            {item.count > 0 ? (
-              <p className="text-xs text-emerald-600 dark:text-emerald-400">{item.count} {item.label === "Debriefs" ? `session${item.count !== 1 ? "s" : ""}` : item.label === "Interview prep" ? `session${item.count !== 1 ? "s" : ""}` : `letter${item.count !== 1 ? "s" : ""}`} →</p>
-            ) : (
-              <p className="text-xs text-gray-400 dark:text-gray-500">{item.empty}</p>
-            )}
-          </button>
-        ))}
-      </div>
+          </div>
+          <div className="surface px-5 py-4">
+            <p className="section-label">One thing to remember</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">A sentence for future you. It stays in this job&apos;s notes.</p>
+            <EditableField value={job.notes} placeholder="e.g. Ask about team size earlier next time." multiline onSave={(v) => save({ notes: v || null })} />
+          </div>
+          <Link href="/weekly-review" className="flex items-center gap-1.5 text-sm text-primary-700 dark:text-primary-300 hover:underline">
+            <i className="ti ti-calendar-heart text-sm" aria-hidden="true" />
+            Reflect on it in your weekly review
+          </Link>
+        </div>
+      )}
     </div>
+  );
+}
+
+export default function JobDetailPage({ params }: { params: Promise<{ jobId: string }> }) {
+  const { jobId } = use(params);
+  return (
+    <Suspense>
+      <JobWorkspace jobId={jobId} />
+    </Suspense>
   );
 }

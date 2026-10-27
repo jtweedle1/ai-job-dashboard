@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { authedFetch } from "@/lib/api-client";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import Link from "next/link";
 
 type KeyStatus = "loading" | "saved" | "none";
 
@@ -18,10 +17,6 @@ export default function SettingsPage() {
   const [keyError, setKeyError] = useState("");
   const [keyToast, setKeyToast] = useState("");
 
-  const [goals, setGoals] = useState("");
-  const [goalsLoading, setGoalsLoading] = useState(true);
-  const [savingGoals, setSavingGoals] = useState(false);
-  const [goalsToast, setGoalsToast] = useState("");
 
   useEffect(() => {
     if (!user) return;
@@ -31,12 +26,6 @@ export default function SettingsPage() {
       .then((d) => setKeyStatus(d.hasKey ? "saved" : "none"))
       .catch(() => setKeyStatus("none"));
 
-    getDoc(doc(db, "users", user.uid))
-      .then((snap) => {
-        setGoals(snap.data()?.goals ?? "");
-        setGoalsLoading(false);
-      })
-      .catch(() => setGoalsLoading(false));
   }, [user]);
 
   function showKeyToast(msg: string) {
@@ -44,10 +33,6 @@ export default function SettingsPage() {
     setTimeout(() => setKeyToast(""), 3000);
   }
 
-  function showGoalsToast(msg: string) {
-    setGoalsToast(msg);
-    setTimeout(() => setGoalsToast(""), 3000);
-  }
 
   async function handleSaveKey() {
     if (!user || !keyInput.trim()) return;
@@ -86,42 +71,24 @@ export default function SettingsPage() {
     }
   }
 
-  async function handleSaveGoals() {
-    if (!user) return;
-    setSavingGoals(true);
-    try {
-      await updateDoc(doc(db, "users", user.uid), { goals });
-      showGoalsToast("Goals saved");
-    } catch {
-      // silently fail — goals are non-critical
-    } finally {
-      setSavingGoals(false);
-    }
-  }
 
-  const inputClass = "border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent dark:bg-gray-800 dark:text-gray-100";
+  const inputClass = "border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800 dark:text-gray-100";
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
       {keyToast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-lg">
-          <i className="ti ti-circle-check text-emerald-400 text-base" aria-hidden="true" />
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-full shadow-lg shadow-gray-900/20">
+          <i className="ti ti-circle-check text-primary-400 text-base" aria-hidden="true" />
           {keyToast}
         </div>
       )}
-      {goalsToast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-lg">
-          <i className="ti ti-circle-check text-emerald-400 text-base" aria-hidden="true" />
-          {goalsToast}
-        </div>
-      )}
 
-      <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-50 mb-6">Settings</h1>
+      <h1 className="page-title mb-6">Settings</h1>
 
       {/* API Key */}
-      <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl mb-4">
+      <div className="surface mb-4">
         <div className="px-4 py-3 border-b border-gray-50 dark:border-gray-800">
-          <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest">Anthropic API key</p>
+          <p className="section-label">Anthropic API key</p>
         </div>
         <div className="px-4 py-4 space-y-3">
           {keyStatus === "loading" ? (
@@ -129,7 +96,7 @@ export default function SettingsPage() {
           ) : keyStatus === "saved" ? (
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                <div className="w-2 h-2 rounded-full bg-primary-500" />
                 <span className="text-sm text-gray-700 dark:text-gray-200">Key saved</span>
               </div>
               <button
@@ -162,7 +129,7 @@ export default function SettingsPage() {
                 <button
                   onClick={handleSaveKey}
                   disabled={!keyInput.trim() || savingKey}
-                  className="flex items-center gap-1.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                  className="flex items-center gap-1.5 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
                 >
                   {savingKey ? (
                     <i className="ti ti-loader-2 animate-spin text-sm" aria-hidden="true" />
@@ -176,45 +143,22 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* Career goals */}
-      <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl mb-4">
-        <div className="px-4 py-3 border-b border-gray-50 dark:border-gray-800">
-          <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest">Career goals</p>
+      {/* Goals moved */}
+      <Link
+        href="/goals"
+        className="surface mb-4 px-5 py-4 flex items-center justify-between gap-4 hover:shadow-md transition-shadow"
+      >
+        <div>
+          <p className="section-label">Career goals</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Now live in Me, next to your resume, stories and voice.</p>
         </div>
-        <div className="px-4 py-4 space-y-3">
-          <p className="text-xs text-gray-400 dark:text-gray-500">
-            Used by the role-fit scorer to personalise scores. Describe what you're looking for: income needs, growth path, interests, deal-breakers.
-          </p>
-          {goalsLoading ? (
-            <div className="h-20 bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse" />
-          ) : (
-            <textarea
-              value={goals}
-              onChange={(e) => setGoals(e.target.value)}
-              placeholder="e.g. Looking for a senior IC role at a Series B–D startup. Interested in developer tools or data infrastructure. Targeting $180k–$220k. Remote-first preferred."
-              rows={5}
-              className={`w-full ${inputClass} placeholder-gray-400 dark:placeholder-gray-500 resize-none`}
-            />
-          )}
-          <div className="flex justify-end">
-            <button
-              onClick={handleSaveGoals}
-              disabled={goalsLoading || savingGoals}
-              className="flex items-center gap-1.5 text-sm font-medium text-white dark:text-gray-900 bg-gray-900 dark:bg-white px-4 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {savingGoals ? (
-                <i className="ti ti-loader-2 animate-spin text-sm" aria-hidden="true" />
-              ) : null}
-              {savingGoals ? "Saving…" : "Save goals"}
-            </button>
-          </div>
-        </div>
-      </div>
+        <i className="ti ti-arrow-right text-gray-400" aria-hidden="true" />
+      </Link>
 
       {/* Account */}
-      <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl">
+      <div className="surface">
         <div className="px-4 py-3 border-b border-gray-50 dark:border-gray-800">
-          <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest">Account</p>
+          <p className="section-label">Account</p>
         </div>
         <div className="px-4 py-4 space-y-2">
           {user ? (

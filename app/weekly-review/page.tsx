@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { authedFetch } from "@/lib/api-client";
+import { authedFetch, noKeyMessage } from "@/lib/api-client";
 import {
   createReview,
   getReviews,
@@ -154,7 +154,7 @@ export default function WeeklyReviewPage() {
       });
       const data = await res.json();
       if (res.status === 401 || data.error === "no_key") {
-        setSummaryError("Add your Anthropic API key in Settings to generate summaries.");
+        setSummaryError(noKeyMessage("generate summaries"));
         return;
       }
       if (data.error) {
@@ -197,7 +197,7 @@ export default function WeeklyReviewPage() {
     return (
       <div className="p-6 max-w-3xl mx-auto animate-pulse space-y-4">
         <div className="h-7 bg-gray-100 dark:bg-gray-800 rounded w-40" />
-        <div className="h-64 bg-gray-100 dark:bg-gray-800 rounded-xl" />
+        <div className="h-64 bg-gray-100 dark:bg-gray-800 rounded-2xl" />
       </div>
     );
   }
@@ -205,8 +205,8 @@ export default function WeeklyReviewPage() {
   return (
     <div className="p-6 max-w-3xl mx-auto">
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-lg">
-          <i className="ti ti-circle-check text-emerald-400 text-base" aria-hidden="true" />
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-full shadow-lg shadow-gray-900/20">
+          <i className="ti ti-circle-check text-primary-400 text-base" aria-hidden="true" />
           {toast}
         </div>
       )}
@@ -214,7 +214,7 @@ export default function WeeklyReviewPage() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-50">Weekly review</h1>
+          <h1 className="page-title">Weekly review</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">
             {reviews.length} review{reviews.length !== 1 ? "s" : ""} logged
           </p>
@@ -224,7 +224,7 @@ export default function WeeklyReviewPage() {
             onClick={
               thisWeekReview ? () => loadReview(thisWeekReview) : startNewReview
             }
-            className="flex items-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors shrink-0"
+            className="flex items-center gap-2 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-primary-700 transition-colors shrink-0"
           >
             <i className="ti ti-plus text-sm" aria-hidden="true" />
             {thisWeekReview ? "Continue this week" : "Start this week's review"}
@@ -234,10 +234,10 @@ export default function WeeklyReviewPage() {
 
       {/* Active form */}
       {(activeId !== null || reviews.length === 0) && (
-        <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl mb-4">
+        <div className="surface mb-4">
           <div className="px-4 py-3 border-b border-gray-50 dark:border-gray-800 flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+              <p className="section-label">
                 {activeId
                   ? `Week of ${formatWeek(activeReview!.weekOf)}`
                   : `Week of ${formatWeek(thisWeekStart)}`}
@@ -274,7 +274,7 @@ export default function WeeklyReviewPage() {
                     onChange={(e) =>
                       setField(key, Math.max(0, parseInt(e.target.value) || 0))
                     }
-                    className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent dark:bg-gray-800"
+                    className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800"
                   />
                 </div>
               ))}
@@ -308,7 +308,7 @@ export default function WeeklyReviewPage() {
                     onChange={(e) => setField(key, e.target.value)}
                     placeholder={placeholder}
                     rows={2}
-                    className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none dark:bg-gray-800"
+                    className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none dark:bg-gray-800"
                   />
                 </div>
               ))}
@@ -319,7 +319,7 @@ export default function WeeklyReviewPage() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="flex items-center gap-1.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors disabled:opacity-50"
+                className="flex items-center gap-1.5 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-primary-700 transition-colors disabled:opacity-50"
               >
                 {saving ? (
                   <i className="ti ti-loader-2 animate-spin text-sm" aria-hidden="true" />
@@ -331,7 +331,7 @@ export default function WeeklyReviewPage() {
                 <button
                   onClick={handleGenerateSummary}
                   disabled={generatingSummary}
-                  className="flex items-center gap-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
+                  className="flex items-center gap-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 px-4 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
                 >
                   {generatingSummary ? (
                     <i className="ti ti-loader-2 animate-spin text-sm" aria-hidden="true" />
@@ -364,7 +364,7 @@ export default function WeeklyReviewPage() {
           {/* AI summary */}
           {parsedSummary && (
             <div className="border-t border-gray-50 dark:border-gray-800 px-4 py-4 space-y-3">
-              <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+              <p className="section-label">
                 AI summary
               </p>
               <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
@@ -372,13 +372,13 @@ export default function WeeklyReviewPage() {
               </p>
               {parsedSummary.steps.length > 0 && (
                 <div className="space-y-1.5 pt-1">
-                  <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+                  <p className="section-label">
                     Next steps
                   </p>
                   {parsedSummary.steps.map((step, i) => (
                     <div key={i} className="flex gap-2">
                       <i
-                        className="ti ti-arrow-right text-emerald-500 text-sm shrink-0 mt-0.5"
+                        className="ti ti-arrow-right text-primary-500 text-sm shrink-0 mt-0.5"
                         aria-hidden="true"
                       />
                       <p className="text-sm text-gray-600 dark:text-gray-300">{step}</p>
@@ -393,16 +393,16 @@ export default function WeeklyReviewPage() {
 
       {/* No reviews + not editing */}
       {reviews.length === 0 && activeId === null && (
-        <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-10 text-center">
-          <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center mx-auto mb-3">
-            <i className="ti ti-calendar-week text-gray-400 dark:text-gray-500 text-xl" aria-hidden="true" />
+        <div className="surface p-10 text-center">
+          <div className="w-10 h-10 rounded-full glow-gradient flex items-center justify-center mx-auto mb-3">
+            <i className="ti ti-calendar-week text-gray-700 dark:text-gray-100 text-xl" aria-hidden="true" />
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
             No weekly reviews yet. Start your first one above.
           </p>
           <button
             onClick={startNewReview}
-            className="inline-flex items-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
+            className="inline-flex items-center gap-2 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-primary-700 transition-colors"
           >
             <i className="ti ti-plus text-sm" aria-hidden="true" />
             Start this week&apos;s review
@@ -412,9 +412,9 @@ export default function WeeklyReviewPage() {
 
       {/* Past reviews */}
       {reviews.filter((r) => r.id !== activeId).length > 0 && (
-        <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl">
+        <div className="surface">
           <div className="px-4 py-3 border-b border-gray-50 dark:border-gray-800">
-            <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+            <p className="section-label">
               Past reviews
             </p>
           </div>
@@ -439,14 +439,14 @@ export default function WeeklyReviewPage() {
                         {review.applicationsSent} sent · {review.interviewsBooked} interviews ·{" "}
                         {review.responsesReceived} responses
                         {review.aiSummary && (
-                          <span className="ml-1.5 text-emerald-600">· AI summary</span>
+                          <span className="ml-1.5 text-primary-600">· AI summary</span>
                         )}
                       </p>
                     </button>
                     <div className="flex items-center gap-2 shrink-0">
                       <button
                         onClick={() => loadReview(review)}
-                        className="text-xs font-medium text-gray-400 hover:text-emerald-600 transition-colors"
+                        className="text-xs font-medium text-gray-400 hover:text-primary-600 transition-colors"
                       >
                         Edit
                       </button>
@@ -491,7 +491,7 @@ export default function WeeklyReviewPage() {
                         const parsed = parseAiSummary(review.aiSummary);
                         return (
                           <div className="pt-2 border-t border-gray-50 dark:border-gray-800 space-y-2">
-                            <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+                            <p className="section-label">
                               AI summary
                             </p>
                             <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
@@ -500,7 +500,7 @@ export default function WeeklyReviewPage() {
                             {parsed.steps.map((step, i) => (
                               <div key={i} className="flex gap-2">
                                 <i
-                                  className="ti ti-arrow-right text-emerald-500 text-sm shrink-0 mt-0.5"
+                                  className="ti ti-arrow-right text-primary-500 text-sm shrink-0 mt-0.5"
                                   aria-hidden="true"
                                 />
                                 <p className="text-sm text-gray-600 dark:text-gray-300">{step}</p>

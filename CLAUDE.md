@@ -20,8 +20,8 @@ Per-user Anthropic keys (bring-your-own) — no shared key pool; rate-limit per-
   via `checkRateLimit` (`lib/rate-limit.ts`).
 - **API keys:** Anthropic keys are AES-256-GCM encrypted (`lib/encryption.ts`,
   `ENCRYPTION_SECRET`), decrypted only server-side in `lib/ai.ts`. Never sent to client.
-- **AI calls:** all go through `lib/ai.ts` (model `claude-haiku-4-5-20251001`,
-  `max_tokens: 1024`). Returns `{ content } | { error }`; branch with `"error" in result`.
+- **AI calls:** all go through `lib/ai.ts` (default model `claude-haiku-4-5-20251001`,
+  `max_tokens: 1024`; voice-matched writing passes `WRITING_MODEL`). Returns `{ content } | { error }`; branch with `"error" in result`.
 - **Client → API fetch:** use `authedFetch` (`lib/api-client.ts`), not raw `fetch` —
   it attaches the Firebase ID token as a Bearer header.
 
@@ -32,8 +32,15 @@ Per-user Anthropic keys (bring-your-own) — no shared key pool; rate-limit per-
 - One `lib/<entity>.ts` CRUD module + one `types/<entity>.ts` per domain entity.
 - API route shape: `requireAuth → checkRateLimit → callAI`.
 - Changing an API route signature? Update both the route and its client caller.
-- Tailwind palette: primary `emerald-{50,100,500,700}`; text `gray-{900,500,400}`;
-  errors `red-{400,500}`; surfaces `white`/`gray-{50,100}`.
+- Calm theme (`app/globals.css`): `primary-*` (soft iris) for actions and links; `gray-*` is a
+  lavender neutral that deepens to night indigo in dark mode; `emerald` = good, `amber` = check
+  this, `red` = error. Cards use `surface`, headings `page-title` / `section-label`, warm accents
+  `glow-gradient` / `sun-orb`. Buttons are pills (`rounded-full`). Fonts: Figtree body, Nunito
+  (`font-display`) for headings.
+- Navigation lives in `components/navigation.ts`: Today, Jobs, Me, Settings, each with tabs
+  rendered by `SectionTabs` in `<AppShell>`. Letter, prep and debrief live inside a job
+  (`components/job/*`, steps in `lib/next-steps.ts`); `/cover-letters` and `/interview-prep`
+  only redirect.
 
 ## Next.js note
 

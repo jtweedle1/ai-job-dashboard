@@ -2,8 +2,19 @@ import { NextResponse } from "next/server";
 // Must load before pdf-parse so its worker resolves on Vercel serverless.
 import "pdf-parse/worker";
 import { PDFParse } from "pdf-parse";
+import { requireAuth } from "@/lib/auth-server";
+import { checkRateLimit } from "@/lib/rate-limit";
+
+const MAX_BYTES = 5 * 1024 * 1024;
 
 export async function POST(request: Request) {
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+  const { uid } = authResult;
+
+  const { limited } = await checkRateLimit(uid);
+  if (limited) return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+
   const formData = await request.formData();
   const file = formData.get("file") as File | null;
 
@@ -13,6 +24,10 @@ export async function POST(request: Request) {
 
   if (file.type !== "application/pdf") {
     return NextResponse.json({ error: "File must be a PDF" }, { status: 400 });
+  }
+
+  if (file.size > MAX_BYTES) {
+    return NextResponse.json({ error: "File exceeds the 5 MB limit" }, { status: 413 });
   }
 
   try {

@@ -1,284 +1,282 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
-import { getJobs } from "@/lib/jobs";
 import { authedFetch } from "@/lib/api-client";
+import { getJobs } from "@/lib/jobs";
+import { getResumes } from "@/lib/resumes";
+import { getCoverLetters } from "@/lib/coverLetters";
+import { getInterviewPreps } from "@/lib/interviewPreps";
+import { getDebriefs } from "@/lib/debriefs";
+import { getWritingSamples } from "@/lib/writingSamples";
+import { nextActions, JOB_STEPS, type JobActivity } from "@/lib/next-steps";
 import AddJobModal from "@/components/AddJobModal";
-import { STAGE_META, SOURCE_LABELS, type Job, type JobStage } from "@/types/job";
-import { getSourceStats } from "@/lib/analytics";
+import type { Job } from "@/types/job";
 
-function StageBadge({ stage }: { stage: JobStage }) {
-  const meta = STAGE_META[stage];
-  return (
-    <span className={`inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full ${meta.badge}`}>
-      {meta.label}
-    </span>
-  );
+function greeting(now: Date) {
+  const h = now.getHours();
+  return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
 }
 
-function formatDate(d: Date) {
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+function countBy(ids: string[]): Map<string, number> {
+  const m = new Map<string, number>();
+  for (const id of ids) m.set(id, (m.get(id) ?? 0) + 1);
+  return m;
 }
 
-function SourceBreakdown({ jobs, totalApplied }: { jobs: Job[]; totalApplied: number }) {
-  const stats = getSourceStats(jobs);
-  if (stats.length === 0) return null;
-
-  return (
-    <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl mb-4">
-      <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100 dark:border-gray-800">
-        <h2 className="text-sm font-medium text-gray-900 dark:text-gray-50">By source</h2>
-        <a href="/analytics" className="text-xs text-emerald-600 hover:underline">
-          Full analytics
-        </a>
-      </div>
-      <div className="px-5 py-4 space-y-3">
-        {stats.map((s) => (
-          <div key={s.source}>
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs text-gray-600 dark:text-gray-300">{s.source}</span>
-              <span className="text-xs text-gray-400 dark:text-gray-500">
-                {s.applications} app{s.applications !== 1 ? "s" : ""}
-                {s.interviews > 0 && ` · ${s.responseRate}% response`}
-              </span>
-            </div>
-            <div className="h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-emerald-500 rounded-full"
-                style={{ width: `${Math.round((s.applications / totalApplied) * 100)}%` }}
-              />
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+interface SetupState {
+  resume: boolean;
+  voice: boolean;
+  job: boolean;
+  key: boolean;
 }
 
-export default function DashboardPage() {
+export default function TodayPage() {
   const { user } = useAuth();
   const router = useRouter();
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [activity, setActivity] = useState<Map<string, JobActivity>>(new Map());
+  const [setup, setSetup] = useState<SetupState | null>(null);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
-  const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
 
   useEffect(() => {
-    if (user) {
-      getJobs(user.uid).then((data) => {
-        setJobs(data);
-        setLoading(false);
-      });
+    if (!user) return;
+    Promise.all([
+      getJobs(user.uid),
+      getResumes(user.uid),
+      getCoverLetters(user.uid),
+      getInterviewPreps(user.uid),
+      getDebriefs(user.uid),
+      getWritingSamples(user.uid),
       authedFetch("/api/settings/api-key")
         .then((r) => r.json())
-        .then((d) => setHasApiKey(!!d.hasKey))
-        .catch(() => setHasApiKey(false));
-    }
+        .then((d) => !!d.hasKey)
+        .catch(() => false),
+    ]).then(([j, r, letters, preps, debriefs, samples, hasKey]) => {
+      const l = countBy(letters.map((x) => x.jobId));
+      const p = countBy(preps.map((x) => x.jobId));
+      const d = countBy(debriefs.map((x) => x.jobId));
+      const map = new Map<string, JobActivity>();
+      for (const job of j) map.set(job.id, { letters: l.get(job.id) ?? 0, preps: p.get(job.id) ?? 0, debriefs: d.get(job.id) ?? 0 });
+      setJobs(j);
+      setActivity(map);
+      setSetup({
+        resume: r.length > 0,
+        voice: samples.length > 0 || letters.some((x) => x.useAsVoiceSample),
+        job: j.length > 0,
+        key: hasKey,
+      });
+      setLoading(false);
+    });
   }, [user]);
 
-  const totalApplied = jobs.filter((j) => j.stage !== "saved").length;
-  const interviews = jobs.filter((j) => j.stage === "interview").length;
-  const offers = jobs.filter((j) => j.stage === "offer").length;
-  const scored = jobs.filter((j) => j.fitScore != null);
-  const avgFitScore =
-    scored.length > 0
-      ? Math.round(scored.reduce((sum, j) => sum + j.fitScore!, 0) / scored.length)
-      : null;
+  const now = useMemo(() => new Date(), []);
+  const actions = useMemo(
+    () => nextActions(jobs, (id) => activity.get(id) ?? { letters: 0, preps: 0, debriefs: 0 }, now),
+    [jobs, activity, now]
+  );
 
-  const recent = jobs.slice(0, 5);
-
-  const stats = [
-    {
-      label: "Total applied",
-      value: loading ? "—" : String(totalApplied),
-      sub: totalApplied === 0 ? "No applications yet" : "",
-      icon: "ti-send",
-      color: "text-blue-500",
-    },
-    {
-      label: "Interviews",
-      value: loading ? "—" : String(interviews),
-      sub: totalApplied > 0
-        ? `${Math.round((interviews / totalApplied) * 100)}% response rate`
-        : "0% response rate",
-      icon: "ti-microphone",
-      color: "text-purple-500",
-    },
-    {
-      label: "Offers",
-      value: loading ? "—" : String(offers),
-      sub: offers === 0 ? "—" : `${offers} offer${offers !== 1 ? "s" : ""}`,
-      icon: "ti-trophy",
-      color: "text-emerald-600",
-    },
-    {
-      label: "Avg fit score",
-      value: loading ? "—" : avgFitScore != null ? String(avgFitScore) : "—",
-      sub: avgFitScore == null ? "Add a resume in Settings" : `Across ${scored.length} scored jobs`,
-      icon: "ti-target",
-      color: "text-amber-500",
-    },
+  const firstName = user?.isAnonymous ? "" : user?.displayName?.split(" ")[0] ?? "";
+  const weekAgo = now.getTime() - 7 * 86_400_000;
+  const appliedThisWeek = jobs.filter((j) => j.appliedAt && j.appliedAt.getTime() >= weekAgo).length;
+  const pipeline = [
+    { label: "Saved", count: jobs.filter((j) => j.stage === "saved").length },
+    { label: "Applied", count: jobs.filter((j) => j.stage === "applied").length },
+    { label: "Interviewing", count: jobs.filter((j) => j.stage === "phone_screen" || j.stage === "interview").length },
+    { label: "Offers", count: jobs.filter((j) => j.stage === "offer").length },
   ];
+  const reviewDay = [5, 6, 0].includes(now.getDay());
+
+  const setupSteps = setup
+    ? [
+        { done: setup.resume, label: "Add your resume", detail: "Letters and fit scores start here.", href: "/resumes" },
+        { done: setup.voice, label: "Share something you wrote", detail: "So letters sound like you.", href: "/voice" },
+        { done: setup.job, label: "Add your first job", detail: "Paste a link or a description.", onClick: () => setModalOpen(true) },
+        { done: setup.key, label: "Connect your Anthropic key", detail: "Switches on the writing help.", href: "/settings" },
+      ]
+    : [];
+  const setupLeft = setupSteps.filter((s) => !s.done).length;
 
   function handleSaved(job: Job) {
-    setJobs((prev) => [job, ...prev]);
     setModalOpen(false);
+    router.push(`/applications/${job.id}`);
+  }
+
+  if (loading) {
+    return (
+      <div className="p-6 max-w-4xl mx-auto animate-pulse space-y-4">
+        <div className="h-40 bg-white/60 dark:bg-gray-800 rounded-4xl" />
+        <div className="h-64 bg-white/60 dark:bg-gray-800 rounded-3xl" />
+      </div>
+    );
   }
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-50">Dashboard</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            {user?.displayName ? `Welcome back, ${user.displayName.split(" ")[0]}` : "Welcome to HuntDesk"}
+    <div className="p-6 max-w-4xl mx-auto">
+      {modalOpen && <AddJobModal onClose={() => setModalOpen(false)} onSaved={handleSaved} />}
+
+      {/* Hello */}
+      <section className="relative overflow-hidden rounded-4xl glow-gradient px-6 py-8 sm:px-8 mb-6">
+        <div className="absolute -right-10 -top-12 w-48 h-48 rounded-full sun-orb opacity-70 blur-[2px]" aria-hidden="true" />
+        <div className="absolute right-24 bottom-[-4.5rem] w-40 h-40 rounded-full bg-white/40 dark:bg-white/10" aria-hidden="true" />
+        <div className="relative max-w-lg">
+          <h1 className="font-display font-extrabold text-3xl tracking-tight text-gray-900 dark:text-white">
+            {greeting(now)}{firstName ? `, ${firstName}` : ""}
+          </h1>
+          <p className="mt-2 text-gray-700 dark:text-gray-200">
+            {actions.length === 0
+              ? jobs.length === 0
+                ? "Let's set things up. It takes about five minutes."
+                : "You're all caught up. Nice work."
+              : `${actions.length} small thing${actions.length !== 1 ? "s" : ""} to move your search forward.`}
           </p>
+          <button
+            onClick={() => setModalOpen(true)}
+            className="mt-5 inline-flex items-center gap-1.5 bg-white/90 dark:bg-white/15 text-gray-900 dark:text-white text-sm font-medium px-5 py-2.5 rounded-full shadow-sm hover:bg-white dark:hover:bg-white/25 transition-colors"
+          >
+            <i className="ti ti-plus text-sm" aria-hidden="true" />
+            Add a job
+          </button>
         </div>
-        <button
-          onClick={() => setModalOpen(true)}
-          className="flex items-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
-        >
-          <i className="ti ti-plus text-sm" aria-hidden="true" />
-          Add job
-        </button>
-      </div>
+      </section>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-        {stats.map((s) => (
-          <div key={s.label} className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-4">
-            <i className={`ti ${s.icon} text-lg ${s.color} mb-2 block`} aria-hidden="true" />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{s.label}</p>
-            <p className="text-2xl font-semibold text-gray-900 dark:text-gray-50">{s.value}</p>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{s.sub}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Recent applications */}
-      <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl mb-4">
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100 dark:border-gray-800">
-          <h2 className="text-sm font-medium text-gray-900 dark:text-gray-50">Recent applications</h2>
-          {jobs.length > 0 && (
-            <button
-              onClick={() => router.push("/applications")}
-              className="text-xs text-emerald-600 hover:underline"
-            >
-              View all
-            </button>
-          )}
-        </div>
-
-        {loading ? (
-          <div className="divide-y divide-gray-50 dark:divide-gray-800">
-            {[1, 2, 3].map((n) => (
-              <div key={n} className="flex items-center gap-4 px-5 py-3 animate-pulse">
-                <div className="h-4 bg-gray-100 dark:bg-gray-800 rounded w-36" />
-                <div className="h-4 bg-gray-100 dark:bg-gray-800 rounded w-24" />
-                <div className="h-5 bg-gray-100 dark:bg-gray-800 rounded-full w-16 ml-auto" />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2 space-y-4">
+          {/* First run */}
+          {setupLeft > 0 && (
+            <section className="surface p-5">
+              <div className="flex items-baseline justify-between gap-3 mb-3">
+                <h2 className="section-label">Get set up</h2>
+                <span className="text-xs text-gray-400 dark:text-gray-500">
+                  {setupSteps.length - setupLeft} of {setupSteps.length} done
+                </span>
               </div>
-            ))}
-          </div>
-        ) : recent.length === 0 ? (
-          <div className="px-5 py-10 text-center">
-            <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center mx-auto mb-3">
-              <i className="ti ti-briefcase text-gray-300 dark:text-gray-600 text-xl" aria-hidden="true" />
-            </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-              Add your first job to get started.
-            </p>
-            <button
-              onClick={() => setModalOpen(true)}
-              className="inline-flex items-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
-            >
-              <i className="ti ti-plus text-sm" aria-hidden="true" />
-              Add job
-            </button>
-          </div>
-        ) : (
-          <div className="divide-y divide-gray-50 dark:divide-gray-800">
-            {recent.map((job) => (
-              <button
-                key={job.id}
-                onClick={() => router.push(`/applications/${job.id}`)}
-                className="w-full flex items-center justify-between px-5 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left"
-              >
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-50 truncate">{job.title}</p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{job.company}</p>
-                </div>
-                <div className="flex items-center gap-3 shrink-0 ml-4">
-                  <StageBadge stage={job.stage} />
-                  <span className="text-xs text-gray-400 dark:text-gray-500 hidden sm:block">{formatDate(job.createdAt)}</span>
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Source breakdown */}
-      {!loading && totalApplied > 0 && (
-        <SourceBreakdown jobs={jobs} totalApplied={totalApplied} />
-      )}
-
-      {/* AI features panel */}
-      <div className={`bg-white dark:bg-gray-900 border rounded-xl p-5 ${hasApiKey ? "border-emerald-200 dark:border-emerald-800" : "border-gray-100 dark:border-gray-800"}`}>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-medium text-gray-900 dark:text-gray-50">AI features</h2>
-          {hasApiKey ? (
-            <span className="flex items-center gap-1 text-xs text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-2 py-1 rounded-md">
-              <i className="ti ti-check text-xs" aria-hidden="true" />
-              Active
-            </span>
-          ) : (
-            <span className="flex items-center gap-1 text-xs text-amber-600 bg-amber-50 dark:bg-amber-950 px-2 py-1 rounded-md">
-              <i className="ti ti-lock text-xs" aria-hidden="true" />
-              Requires API key
-            </span>
+              <ol className="space-y-1">
+                {setupSteps.map((s, i) => {
+                  const body = (
+                    <>
+                      <span
+                        className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+                          s.done ? "bg-primary-100 dark:bg-primary-950 text-primary-700 dark:text-primary-300" : "glow-gradient text-gray-700 dark:text-gray-100"
+                        }`}
+                      >
+                        {s.done ? <i className="ti ti-check" aria-hidden="true" /> : i + 1}
+                      </span>
+                      <span className="flex-1 min-w-0">
+                        <span className={`block text-sm font-medium ${s.done ? "text-gray-400 dark:text-gray-500 line-through" : "text-gray-900 dark:text-gray-50"}`}>
+                          {s.label}
+                        </span>
+                        {!s.done && <span className="block text-xs text-gray-500 dark:text-gray-400">{s.detail}</span>}
+                      </span>
+                      {!s.done && <i className="ti ti-arrow-right text-gray-300 dark:text-gray-600" aria-hidden="true" />}
+                    </>
+                  );
+                  const cls = "w-full flex items-center gap-3 px-2 py-2 rounded-2xl text-left hover:bg-white/70 dark:hover:bg-white/5 transition-colors";
+                  return (
+                    <li key={s.label}>
+                      {s.done ? (
+                        <div className="flex items-center gap-3 px-2 py-2">{body}</div>
+                      ) : s.href ? (
+                        <Link href={s.href} className={cls}>{body}</Link>
+                      ) : (
+                        <button onClick={s.onClick} className={cls}>{body}</button>
+                      )}
+                    </li>
+                  );
+                })}
+              </ol>
+            </section>
           )}
+
+          {/* Next steps */}
+          <section className="surface p-5">
+            <h2 className="section-label mb-3">Up next</h2>
+            {actions.length === 0 ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {jobs.length === 0
+                  ? "Add a job and HuntDesk will walk you through it, one step at a time."
+                  : "Nothing waiting on you. Add another role when you find one you like."}
+              </p>
+            ) : (
+              <ul className="space-y-1">
+                {actions.slice(0, 6).map((a) => {
+                  const step = JOB_STEPS.find((s) => s.id === a.step)!;
+                  return (
+                    <li key={a.jobId}>
+                      <Link
+                        href={`/applications/${a.jobId}?step=${a.step}`}
+                        className="flex items-center gap-3 px-2 py-2.5 rounded-2xl hover:bg-white/70 dark:hover:bg-white/5 transition-colors group"
+                      >
+                        <span className="w-10 h-10 rounded-2xl glow-gradient flex items-center justify-center shrink-0">
+                          <i className={`ti ${step.icon} text-lg text-gray-700 dark:text-gray-100`} aria-hidden="true" />
+                        </span>
+                        <span className="flex-1 min-w-0">
+                          <span className="block text-sm font-medium text-gray-900 dark:text-gray-50">{a.action}</span>
+                          <span className="block text-xs text-gray-500 dark:text-gray-400 line-clamp-2 sm:line-clamp-1">
+                            {a.title} · {a.company} · {a.detail}
+                          </span>
+                        </span>
+                        <i className="ti ti-arrow-right text-gray-300 dark:text-gray-600 group-hover:text-primary-500 transition-colors" aria-hidden="true" />
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+            {actions.length > 6 && (
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-2 px-2">
+                And {actions.length - 6} more in <Link href="/applications" className="text-primary-600 hover:underline">your jobs</Link>.
+              </p>
+            )}
+          </section>
         </div>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-          {hasApiKey ? (
-            <>Your Anthropic API key is connected. AI tools are available on job and company detail pages.</>
-          ) : (
-            <>
-              Add your Anthropic API key in{" "}
-              <a href="/settings" className="text-emerald-600 hover:underline">Settings</a>{" "}
-              to unlock JD extraction, cover letter generation, fit scoring, and more.
-            </>
-          )}
-        </p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {[
-            { icon: "ti-wand", label: "Extract JD" },
-            { icon: "ti-mail", label: "Cover letter" },
-            { icon: "ti-target", label: "Fit score" },
-            { icon: "ti-microphone", label: "Interview prep" },
-            { icon: "ti-building-store", label: "Company research" },
-            { icon: "ti-calendar-stats", label: "Weekly summary" },
-          ].map((f) => (
-            <div
-              key={f.label}
-              className={`flex items-center gap-2 rounded-lg px-3 py-2.5 ${
-                hasApiKey
-                  ? "bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400"
-                  : "bg-gray-50 dark:bg-gray-800 opacity-60"
+
+        <div className="space-y-4">
+          {/* This week */}
+          <section className={`p-5 rounded-3xl ${reviewDay ? "glow-gradient" : "surface"}`}>
+            <h2 className="section-label mb-1">This week</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              {appliedThisWeek === 0
+                ? "No applications sent yet this week."
+                : `${appliedThisWeek} application${appliedThisWeek !== 1 ? "s" : ""} sent. That's real progress.`}
+            </p>
+            <Link
+              href="/weekly-review"
+              className={`mt-4 inline-flex items-center gap-1.5 text-sm font-medium px-4 py-2 rounded-full transition-colors ${
+                reviewDay
+                  ? "bg-white/90 dark:bg-white/15 text-gray-900 dark:text-white hover:bg-white"
+                  : "text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-950 hover:bg-primary-100 dark:hover:bg-primary-900"
               }`}
             >
-              <i className={`ti ${f.icon} text-sm ${hasApiKey ? "text-emerald-600 dark:text-emerald-400" : "text-gray-500 dark:text-gray-400"}`} aria-hidden="true" />
-              <span className={`text-xs ${hasApiKey ? "text-emerald-700 dark:text-emerald-400" : "text-gray-600 dark:text-gray-400"}`}>{f.label}</span>
+              <i className="ti ti-calendar-heart text-sm" aria-hidden="true" />
+              {reviewDay ? "Time for your weekly review" : "Weekly review"}
+            </Link>
+          </section>
+
+          {/* Pipeline */}
+          <section className="surface p-5">
+            <div className="flex items-baseline justify-between mb-3">
+              <h2 className="section-label">Your pipeline</h2>
+              <Link href="/analytics" className="text-xs text-primary-600 hover:underline">Progress</Link>
             </div>
-          ))}
+            <div className="grid grid-cols-2 gap-2">
+              {pipeline.map((p) => (
+                <Link
+                  key={p.label}
+                  href="/applications"
+                  className="rounded-2xl bg-white/70 dark:bg-white/5 px-3 py-3 hover:bg-white dark:hover:bg-white/10 transition-colors"
+                >
+                  <span className="block text-2xl font-display font-extrabold text-gray-900 dark:text-gray-50">{p.count}</span>
+                  <span className="block text-xs text-gray-500 dark:text-gray-400">{p.label}</span>
+                </Link>
+              ))}
+            </div>
+          </section>
         </div>
       </div>
-
-      {modalOpen && (
-        <AddJobModal onClose={() => setModalOpen(false)} onSaved={handleSaved} />
-      )}
     </div>
   );
 }

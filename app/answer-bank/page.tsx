@@ -3,9 +3,11 @@
 import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { getJobs } from "@/lib/jobs";
+import { authedFetch, noKeyMessage } from "@/lib/api-client";
 import { createAnswer, getAnswers, updateAnswer, deleteAnswer } from "@/lib/answerBank";
 import type { Job } from "@/types/job";
 import type { AnswerEntry } from "@/types/answerBank";
+import StoryTabs from "@/components/StoryTabs";
 
 function parseTags(s: string): string[] {
   return s
@@ -36,6 +38,9 @@ export default function AnswerBankPage() {
   const [editSaving, setEditSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [toast, setToast] = useState("");
+  // "new" for the add form, otherwise the id of the answer being drafted.
+  const [draftingFor, setDraftingFor] = useState<string | null>(null);
+  const [draftError, setDraftError] = useState<{ for: string; message: string } | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -62,16 +67,60 @@ export default function AnswerBankPage() {
         jobId: selectedJobId || null,
       };
       const id = await createAnswer(user.uid, data);
-      const newEntry: AnswerEntry = { id, ...data, createdAt: new Date(), updatedAt: new Date() };
+      const newEntry: AnswerEntry = { id, ...data, useAsVoiceSample: false, createdAt: new Date(), updatedAt: new Date() };
       setAnswers((prev) => [newEntry, ...prev]);
       setQuestion("");
       setAnswer("");
       setTagsInput("");
       setSelectedJobId("");
-      showToast("Saved to answer bank");
+      showToast("Saved to your answers");
     } finally {
       setSaving(false);
     }
+  }
+
+  // Writes an answer from the user's background stories. Returns null (and shows why) on failure.
+  async function draftAnswer(target: string, q: string, jobId: string | null): Promise<string | null> {
+    setDraftingFor(target);
+    setDraftError(null);
+    try {
+      const res = await authedFetch("/api/draft-answer", {
+        method: "POST",
+        body: JSON.stringify({ question: q, jobId }),
+      });
+      const data = await res.json();
+      if (res.status === 401 || data.error === "no_key") {
+        setDraftError({ for: target, message: noKeyMessage("draft answers") });
+        return null;
+      }
+      if (data.error === "no_stories") {
+        setDraftError({ for: target, message: "Add a past position in Experience first, so there are stories to draw from." });
+        return null;
+      }
+      if (data.error) {
+        setDraftError({ for: target, message: "Drafting failed. Try again." });
+        return null;
+      }
+      return data.answer as string;
+    } catch {
+      setDraftError({ for: target, message: "Something went wrong. Try again." });
+      return null;
+    } finally {
+      setDraftingFor(null);
+    }
+  }
+
+  async function handleDraftNew() {
+    if (!question.trim()) return;
+    const text = await draftAnswer("new", question.trim(), selectedJobId || null);
+    if (text) setAnswer(text);
+  }
+
+  async function handleDraftExisting(entry: AnswerEntry) {
+    if (editingId !== entry.id) startEdit(entry);
+    const q = editingId === entry.id ? editFields.question : entry.question;
+    const text = await draftAnswer(entry.id, q.trim(), entry.jobId);
+    if (text) setEditFields((p) => ({ ...p, answer: text }));
   }
 
   function startEdit(entry: AnswerEntry) {
@@ -142,7 +191,7 @@ export default function AnswerBankPage() {
     return (
       <div className="p-6 max-w-3xl mx-auto animate-pulse space-y-4">
         <div className="h-7 bg-gray-100 dark:bg-gray-800 rounded w-36" />
-        <div className="h-56 bg-gray-100 dark:bg-gray-800 rounded-xl" />
+        <div className="h-56 bg-gray-100 dark:bg-gray-800 rounded-2xl" />
       </div>
     );
   }
@@ -150,24 +199,26 @@ export default function AnswerBankPage() {
   return (
     <div className="p-6 max-w-3xl mx-auto">
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-lg">
-          <i className="ti ti-circle-check text-emerald-400 text-base" aria-hidden="true" />
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-full shadow-lg shadow-gray-900/20">
+          <i className="ti ti-circle-check text-primary-400 text-base" aria-hidden="true" />
           {toast}
         </div>
       )}
 
+      <StoryTabs />
+
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-50">Answer bank</h1>
+        <h1 className="page-title">Answers</h1>
         <p className="text-sm text-gray-500 dark:text-gray-400">
           {answers.length} answer{answers.length !== 1 ? "s" : ""}
         </p>
       </div>
 
       {/* Add form */}
-      <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl mb-4">
+      <div className="surface mb-4">
         <div className="px-4 py-3 border-b border-gray-50 dark:border-gray-800">
-          <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest">Add answer</p>
+          <p className="section-label">Add answer</p>
         </div>
         <div className="px-4 py-4 space-y-3">
           <div>
@@ -177,17 +228,25 @@ export default function AnswerBankPage() {
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               placeholder="e.g. Tell me about a time you led a project under pressure"
-              className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent dark:bg-gray-800"
+              className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800"
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Answer</label>
+            <div className="flex items-center justify-between gap-3 mb-1.5">
+              <label className="block text-xs text-gray-500 dark:text-gray-400">Answer</label>
+              <DraftButton
+                onClick={handleDraftNew}
+                drafting={draftingFor === "new"}
+                disabled={!question.trim() || draftingFor !== null}
+              />
+            </div>
+            {draftError?.for === "new" && <p className="text-xs text-amber-600 mb-1.5">{draftError.message}</p>}
             <textarea
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
               placeholder="Your prepared answer…"
               rows={4}
-              className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none dark:bg-gray-800"
+              className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none dark:bg-gray-800"
             />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -200,7 +259,7 @@ export default function AnswerBankPage() {
                 value={tagsInput}
                 onChange={(e) => setTagsInput(e.target.value)}
                 placeholder="behavioral, leadership, STAR"
-                className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent dark:bg-gray-800"
+                className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800"
               />
             </div>
             <div>
@@ -210,7 +269,7 @@ export default function AnswerBankPage() {
               <select
                 value={selectedJobId}
                 onChange={(e) => setSelectedJobId(e.target.value)}
-                className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
                 <option value="">No job linked</option>
                 {jobs.map((j) => (
@@ -224,7 +283,7 @@ export default function AnswerBankPage() {
           <button
             onClick={handleSave}
             disabled={!question.trim() || !answer.trim() || saving}
-            className="flex items-center gap-1.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {saving ? (
               <i className="ti ti-loader-2 animate-spin text-sm" aria-hidden="true" />
@@ -247,7 +306,7 @@ export default function AnswerBankPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search questions and answers…"
-              className="w-full border border-gray-200 dark:border-gray-700 rounded-lg pl-8 pr-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white dark:bg-gray-800"
+              className="w-full border border-gray-200 dark:border-gray-700 rounded-xl pl-8 pr-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-800"
             />
           </div>
           {allTags.map((tag) => (
@@ -256,7 +315,7 @@ export default function AnswerBankPage() {
               onClick={() => setActiveTag(activeTag === tag ? "" : tag)}
               className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
                 activeTag === tag
-                  ? "bg-emerald-600 text-white border-emerald-600"
+                  ? "bg-primary-600 text-white border-primary-600"
                   : "bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500"
               }`}
             >
@@ -268,7 +327,7 @@ export default function AnswerBankPage() {
 
       {/* Answer cards */}
       {filtered.length > 0 && (
-        <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl divide-y divide-gray-50 dark:divide-gray-800">
+        <div className="surface divide-y divide-gray-50 dark:divide-gray-800">
           {filtered.map((entry) => (
             <div key={entry.id} className="px-4 py-3">
               {editingId === entry.id ? (
@@ -281,18 +340,28 @@ export default function AnswerBankPage() {
                       onChange={(e) =>
                         setEditFields((p) => ({ ...p, question: e.target.value }))
                       }
-                      className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent dark:bg-gray-800"
+                      className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Answer</label>
+                    <div className="flex items-center justify-between gap-3 mb-1">
+                      <label className="block text-xs text-gray-500 dark:text-gray-400">Answer</label>
+                      <DraftButton
+                        onClick={() => handleDraftExisting(entry)}
+                        drafting={draftingFor === entry.id}
+                        disabled={!editFields.question.trim() || draftingFor !== null}
+                      />
+                    </div>
+                    {draftError?.for === entry.id && (
+                      <p className="text-xs text-amber-600 mb-1">{draftError.message}</p>
+                    )}
                     <textarea
                       value={editFields.answer}
                       onChange={(e) =>
                         setEditFields((p) => ({ ...p, answer: e.target.value }))
                       }
                       rows={5}
-                      className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none dark:bg-gray-800"
+                      className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none dark:bg-gray-800"
                     />
                   </div>
                   <div>
@@ -304,7 +373,7 @@ export default function AnswerBankPage() {
                         setEditFields((p) => ({ ...p, tags: e.target.value }))
                       }
                       placeholder="behavioral, leadership"
-                      className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent dark:bg-gray-800"
+                      className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800"
                     />
                   </div>
                   <div className="flex items-center gap-2">
@@ -315,7 +384,7 @@ export default function AnswerBankPage() {
                         !editFields.question.trim() ||
                         !editFields.answer.trim()
                       }
-                      className="flex items-center gap-1.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-xs font-medium px-3 py-1.5 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors disabled:opacity-50"
+                      className="flex items-center gap-1.5 bg-primary-600 text-white text-xs font-medium px-3 py-1.5 rounded-full hover:bg-primary-700 transition-colors disabled:opacity-50"
                     >
                       {editSaving ? (
                         <i className="ti ti-loader-2 animate-spin text-xs" aria-hidden="true" />
@@ -393,10 +462,19 @@ export default function AnswerBankPage() {
                     </div>
                   )}
 
-                  {expandedId === entry.id && (
+                  {expandedId === entry.id && entry.answer.trim() && (
                     <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed mt-3 pt-3 border-t border-gray-50 dark:border-gray-800">
                       {entry.answer}
                     </p>
+                  )}
+                  {!entry.answer.trim() && (
+                    <div className="mt-2">
+                      <DraftButton
+                        onClick={() => handleDraftExisting(entry)}
+                        drafting={draftingFor === entry.id}
+                        disabled={draftingFor !== null}
+                      />
+                    </div>
                   )}
                 </>
               )}
@@ -406,9 +484,9 @@ export default function AnswerBankPage() {
       )}
 
       {answers.length === 0 && (
-        <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-10 text-center">
-          <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center mx-auto mb-3">
-            <i className="ti ti-bookmarks text-gray-400 dark:text-gray-500 text-xl" aria-hidden="true" />
+        <div className="surface p-10 text-center">
+          <div className="w-10 h-10 rounded-full glow-gradient flex items-center justify-center mx-auto mb-3">
+            <i className="ti ti-bookmarks text-gray-700 dark:text-gray-100 text-xl" aria-hidden="true" />
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400">
             No answers saved yet. Add your first one above.
@@ -417,10 +495,23 @@ export default function AnswerBankPage() {
       )}
 
       {answers.length > 0 && filtered.length === 0 && (
-        <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-8 text-center">
+        <div className="surface p-8 text-center">
           <p className="text-sm text-gray-400 dark:text-gray-500">No answers match your search.</p>
         </div>
       )}
     </div>
+  );
+}
+
+function DraftButton({ onClick, drafting, disabled }: { onClick: () => void; drafting: boolean; disabled: boolean }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 hover:text-primary-600 transition-colors disabled:opacity-50 disabled:hover:text-gray-400"
+    >
+      <i className={`ti ${drafting ? "ti-loader-2 animate-spin" : "ti-wand"} text-xs`} aria-hidden="true" />
+      {drafting ? "Drafting…" : "Draft from my stories"}
+    </button>
   );
 }
