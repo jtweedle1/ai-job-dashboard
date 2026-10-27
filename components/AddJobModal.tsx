@@ -149,7 +149,7 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
   const canSave = title.trim().length > 0 && company.trim().length > 0;
 
   const inputClass =
-    "w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent dark:bg-gray-800";
+    "w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -171,7 +171,7 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
           {/* JD section */}
           <div className="px-5 pt-4 pb-2">
             <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Job description</p>
-            <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1 mb-3 w-fit">
+            <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-xl p-1 mb-3 w-fit">
               {(["paste", "url"] as JdTab[]).map((t) => (
                 <button
                   key={t}
@@ -209,7 +209,7 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
                   <button
                     onClick={handleFetch}
                     disabled={fetching || !urlInput.trim()}
-                    className="flex items-center gap-1.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                    className="flex items-center gap-1.5 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
                   >
                     {fetching ? (
                       <i className="ti ti-loader-2 animate-spin text-sm" aria-hidden="true" />
@@ -234,7 +234,7 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
                 <button
                   onClick={handleExtract}
                   disabled={extracting}
-                  className="flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 hover:bg-emerald-100 dark:hover:bg-emerald-900 border border-emerald-200 dark:border-emerald-800 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-1.5 text-xs font-medium text-primary-700 dark:text-primary-400 bg-primary-50 dark:bg-primary-950 hover:bg-primary-100 dark:hover:bg-primary-900 border border-primary-200 dark:border-primary-800 px-3 py-1.5 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {extracting ? (
                     <i className="ti ti-loader-2 animate-spin text-xs" aria-hidden="true" />
@@ -354,14 +354,14 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
           <div className="flex items-center gap-2 ml-auto">
             <button
               onClick={onClose}
-              className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 px-4 py-2 rounded-lg transition-colors"
+              className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 px-4 py-2 rounded-xl transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
               disabled={!canSave || saving}
-              className="flex items-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving ? (
                 <>

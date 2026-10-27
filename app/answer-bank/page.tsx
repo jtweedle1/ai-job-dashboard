@@ -73,7 +73,7 @@ export default function AnswerBankPage() {
       setAnswer("");
       setTagsInput("");
       setSelectedJobId("");
-      showToast("Saved to answer bank");
+      showToast("Saved to your answers");
     } finally {
       setSaving(false);
     }
@@ -191,7 +191,7 @@ export default function AnswerBankPage() {
     return (
       <div className="p-6 max-w-3xl mx-auto animate-pulse space-y-4">
         <div className="h-7 bg-gray-100 dark:bg-gray-800 rounded w-36" />
-        <div className="h-56 bg-gray-100 dark:bg-gray-800 rounded-xl" />
+        <div className="h-56 bg-gray-100 dark:bg-gray-800 rounded-2xl" />
       </div>
     );
   }
@@ -199,8 +199,8 @@ export default function AnswerBankPage() {
   return (
     <div className="p-6 max-w-3xl mx-auto">
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-lg">
-          <i className="ti ti-circle-check text-emerald-400 text-base" aria-hidden="true" />
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-full shadow-lg shadow-gray-900/20">
+          <i className="ti ti-circle-check text-primary-400 text-base" aria-hidden="true" />
           {toast}
         </div>
       )}
@@ -209,16 +209,16 @@ export default function AnswerBankPage() {
 
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-50">Answer bank</h1>
+        <h1 className="page-title">Answers</h1>
         <p className="text-sm text-gray-500 dark:text-gray-400">
           {answers.length} answer{answers.length !== 1 ? "s" : ""}
         </p>
       </div>
 
       {/* Add form */}
-      <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl mb-4">
+      <div className="surface mb-4">
         <div className="px-4 py-3 border-b border-gray-50 dark:border-gray-800">
-          <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest">Add answer</p>
+          <p className="section-label">Add answer</p>
         </div>
         <div className="px-4 py-4 space-y-3">
           <div>
@@ -228,7 +228,7 @@ export default function AnswerBankPage() {
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               placeholder="e.g. Tell me about a time you led a project under pressure"
-              className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent dark:bg-gray-800"
+              className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800"
             />
           </div>
           <div>
@@ -246,7 +246,7 @@ export default function AnswerBankPage() {
               onChange={(e) => setAnswer(e.target.value)}
               placeholder="Your prepared answer…"
               rows={4}
-              className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none dark:bg-gray-800"
+              className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none dark:bg-gray-800"
             />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -259,7 +259,7 @@ export default function AnswerBankPage() {
                 value={tagsInput}
                 onChange={(e) => setTagsInput(e.target.value)}
                 placeholder="behavioral, leadership, STAR"
-                className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent dark:bg-gray-800"
+                className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800"
               />
             </div>
             <div>
@@ -269,7 +269,7 @@ export default function AnswerBankPage() {
               <select
                 value={selectedJobId}
                 onChange={(e) => setSelectedJobId(e.target.value)}
-                className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
                 <option value="">No job linked</option>
                 {jobs.map((j) => (
@@ -283,7 +283,7 @@ export default function AnswerBankPage() {
           <button
             onClick={handleSave}
             disabled={!question.trim() || !answer.trim() || saving}
-            className="flex items-center gap-1.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {saving ? (
               <i className="ti ti-loader-2 animate-spin text-sm" aria-hidden="true" />
@@ -306,7 +306,7 @@ export default function AnswerBankPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search questions and answers…"
-              className="w-full border border-gray-200 dark:border-gray-700 rounded-lg pl-8 pr-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white dark:bg-gray-800"
+              className="w-full border border-gray-200 dark:border-gray-700 rounded-xl pl-8 pr-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-800"
             />
           </div>
           {allTags.map((tag) => (
@@ -315,7 +315,7 @@ export default function AnswerBankPage() {
               onClick={() => setActiveTag(activeTag === tag ? "" : tag)}
               className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
                 activeTag === tag
-                  ? "bg-emerald-600 text-white border-emerald-600"
+                  ? "bg-primary-600 text-white border-primary-600"
                   : "bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500"
               }`}
             >
@@ -327,7 +327,7 @@ export default function AnswerBankPage() {
 
       {/* Answer cards */}
       {filtered.length > 0 && (
-        <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl divide-y divide-gray-50 dark:divide-gray-800">
+        <div className="surface divide-y divide-gray-50 dark:divide-gray-800">
           {filtered.map((entry) => (
             <div key={entry.id} className="px-4 py-3">
               {editingId === entry.id ? (
@@ -340,7 +340,7 @@ export default function AnswerBankPage() {
                       onChange={(e) =>
                         setEditFields((p) => ({ ...p, question: e.target.value }))
                       }
-                      className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent dark:bg-gray-800"
+                      className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800"
                     />
                   </div>
                   <div>
@@ -361,7 +361,7 @@ export default function AnswerBankPage() {
                         setEditFields((p) => ({ ...p, answer: e.target.value }))
                       }
                       rows={5}
-                      className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none dark:bg-gray-800"
+                      className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none dark:bg-gray-800"
                     />
                   </div>
                   <div>
@@ -373,7 +373,7 @@ export default function AnswerBankPage() {
                         setEditFields((p) => ({ ...p, tags: e.target.value }))
                       }
                       placeholder="behavioral, leadership"
-                      className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent dark:bg-gray-800"
+                      className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800"
                     />
                   </div>
                   <div className="flex items-center gap-2">
@@ -384,7 +384,7 @@ export default function AnswerBankPage() {
                         !editFields.question.trim() ||
                         !editFields.answer.trim()
                       }
-                      className="flex items-center gap-1.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-xs font-medium px-3 py-1.5 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors disabled:opacity-50"
+                      className="flex items-center gap-1.5 bg-primary-600 text-white text-xs font-medium px-3 py-1.5 rounded-full hover:bg-primary-700 transition-colors disabled:opacity-50"
                     >
                       {editSaving ? (
                         <i className="ti ti-loader-2 animate-spin text-xs" aria-hidden="true" />
@@ -484,9 +484,9 @@ export default function AnswerBankPage() {
       )}
 
       {answers.length === 0 && (
-        <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-10 text-center">
-          <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center mx-auto mb-3">
-            <i className="ti ti-bookmarks text-gray-400 dark:text-gray-500 text-xl" aria-hidden="true" />
+        <div className="surface p-10 text-center">
+          <div className="w-10 h-10 rounded-full glow-gradient flex items-center justify-center mx-auto mb-3">
+            <i className="ti ti-bookmarks text-gray-700 dark:text-gray-100 text-xl" aria-hidden="true" />
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400">
             No answers saved yet. Add your first one above.
@@ -495,7 +495,7 @@ export default function AnswerBankPage() {
       )}
 
       {answers.length > 0 && filtered.length === 0 && (
-        <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-8 text-center">
+        <div className="surface p-8 text-center">
           <p className="text-sm text-gray-400 dark:text-gray-500">No answers match your search.</p>
         </div>
       )}
@@ -508,7 +508,7 @@ function DraftButton({ onClick, drafting, disabled }: { onClick: () => void; dra
     <button
       onClick={onClick}
       disabled={disabled}
-      className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 hover:text-emerald-600 transition-colors disabled:opacity-50 disabled:hover:text-gray-400"
+      className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 hover:text-primary-600 transition-colors disabled:opacity-50 disabled:hover:text-gray-400"
     >
       <i className={`ti ${drafting ? "ti-loader-2 animate-spin" : "ti-wand"} text-xs`} aria-hidden="true" />
       {drafting ? "Drafting…" : "Draft from my stories"}
