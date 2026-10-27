@@ -5,9 +5,17 @@ import { adminDb } from "@/lib/firebase-admin";
 import { callAI, WRITING_MODEL } from "@/lib/ai";
 import { requireAuth } from "@/lib/auth-server";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { getVoiceSamples, pickExamples, truncate, type VoiceSample } from "@/lib/voice-server";
+import {
+  enforceBannedPhrases,
+  getVoiceSamples,
+  pickExamples,
+  truncate,
+  type VoiceSample,
+} from "@/lib/voice-server";
 import { computeVoiceStats, describeVoiceStats } from "@/lib/voice-stats";
-import { findBannedPhrases, parseBannedPhrases } from "@/lib/banned-phrases";
+import { parseBannedPhrases } from "@/lib/banned-phrases";
+import { AI_CLICHES } from "@/lib/letter-quality";
+import { checkClaims, loadClaimSources } from "@/lib/letter-sources";
 import { toVoiceSettings, type VoiceSettings } from "@/types/writingSample";
 import { BACKGROUND_QUESTIONS, backgroundHeading, toBackgroundAnswers } from "@/types/background";
 
@@ -65,20 +73,6 @@ I'm a quick learner and can pick up new technologies quickly to support the full
 Don't hesitate to reach out if you have any questions about my application,
 Grace”`;
 
-// Phrases that read as AI-generated. Any the user writes themselves are allowed back in.
-const AI_CLICHES = [
-  "I am writing to express my interest",
-  "I am excited to apply",
-  "I believe my skills align",
-  "My background has equipped me",
-  "I would be a valuable asset",
-  "Thank you for your time and consideration",
-  "I am confident that",
-  "dynamic team",
-  "fast-paced environment",
-  "passionate about leveraging",
-];
-
 const EXAMPLE_CHARS = 6000;
 const FALLBACK_WORDS = 300;
 
@@ -105,38 +99,6 @@ ${truncate(guidelines, MAX_RULES_CHARS)}
 ${truncate(avoid, MAX_RULES_CHARS)}
 """`);
   return sections.length ? sections.join("\n\n") : null;
-}
-
-// One rewrite pass when the draft still contains banned phrases. Returns whatever is left after it.
-async function enforceBannedPhrases(
-  uid: string,
-  messages: Anthropic.MessageParam[],
-  system: string,
-  draft: string,
-  phrases: string[],
-  maxTokens: number,
-  model?: string
-): Promise<{ content: string; remaining: string[] }> {
-  const found = findBannedPhrases(draft, phrases);
-  if (found.length === 0) return { content: draft, remaining: [] };
-
-  const revision = await callAI(
-    uid,
-    [
-      ...messages,
-      { role: "assistant", content: draft },
-      {
-        role: "user",
-        content: `This letter uses words or phrases I banned: ${found.map((f) => `"${f}"`).join(", ")}.
-Rewrite only the sentences that contain them, in my voice, without using any other banned phrase. Keep everything else exactly the same. Output only the full letter.`,
-      },
-    ],
-    system,
-    maxTokens,
-    model
-  );
-  if ("error" in revision) return { content: draft, remaining: found };
-  return { content: revision.content, remaining: findBannedPhrases(revision.content, phrases) };
 }
 
 const MAX_BACKGROUNDS = 20;
@@ -318,6 +280,11 @@ ${resume.content}`;
       model
     );
 
+    // A failed check leaves claims unchecked rather than failing the letter; the user can re-run it.
+    const sources = await loadClaimSources(uid, resume.content ?? "", letterNotes);
+    const checked = await checkClaims(uid, result.content, sources);
+    const claims = "error" in checked ? null : checked.claims;
+
     const ref = await adminDb
       .collection("users")
       .doc(uid)
@@ -326,6 +293,8 @@ ${resume.content}`;
         jobId,
         resumeId,
         content: result.content,
+        notes: letterNotes,
+        claims,
         edited: false,
         useAsVoiceSample: false,
         createdAt: FieldValue.serverTimestamp(),
@@ -334,6 +303,7 @@ ${resume.content}`;
     return NextResponse.json({
       id: ref.id,
       content: result.content,
+      claims,
       usedVoice: voiceMode,
       bannedPhrasesLeft: result.remaining,
     });

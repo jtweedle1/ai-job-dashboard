@@ -183,7 +183,7 @@ export default function SettingsPage() {
         </div>
         <div className="px-4 py-4 space-y-3">
           <p className="text-xs text-gray-400 dark:text-gray-500">
-            Used by the role-fit scorer to personalise scores. Describe what you're looking for: income needs, growth path, interests, deal-breakers.
+            Used by the role-fit scorer to personalise scores. Describe what you&apos;re looking for: income needs, growth path, interests, deal-breakers.
           </p>
           {goalsLoading ? (
             <div className="h-20 bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse" />

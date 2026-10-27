@@ -12,6 +12,7 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { db } from "./firebase";
+import { toLetterClaims } from "./claims";
 import type { CoverLetter } from "@/types/coverLetter";
 
 function toCoverLetter(id: string, d: Record<string, unknown>): CoverLetter {
@@ -22,6 +23,7 @@ function toCoverLetter(id: string, d: Record<string, unknown>): CoverLetter {
     content: d.content as string,
     edited: d.edited === true,
     useAsVoiceSample: d.useAsVoiceSample === true,
+    claims: toLetterClaims(d.claims),
     createdAt: d.createdAt instanceof Timestamp ? d.createdAt.toDate() : new Date(),
   };
 }
@@ -57,6 +59,8 @@ export async function updateCoverLetterContent(
   await updateDoc(doc(db, "users", uid, "coverLetters", letterId), {
     content,
     edited: true,
+    // The old trace no longer matches the text.
+    claims: null,
     updatedAt: serverTimestamp(),
   });
 }

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { authedFetch } from "@/lib/api-client";
+import { authedFetch, noKeyMessage } from "@/lib/api-client";
 import { createJob } from "@/lib/jobs";
 import { getCompanyByName, createCompany } from "@/lib/companies";
 import {
@@ -87,7 +87,7 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
       });
       const data = await res.json();
       if (res.status === 401 || data.error === "no_key") {
-        setExtractError("Add your Anthropic API key in Settings to use AI extraction.");
+        setExtractError(noKeyMessage("use AI extraction"));
         return;
       }
       if (data.error) {

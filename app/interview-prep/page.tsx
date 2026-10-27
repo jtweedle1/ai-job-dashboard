@@ -3,7 +3,7 @@
 import { Suspense, useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
-import { authedFetch } from "@/lib/api-client";
+import { authedFetch, noKeyMessage } from "@/lib/api-client";
 import { getJobs } from "@/lib/jobs";
 import { getInterviewPreps, deleteInterviewPrep } from "@/lib/interviewPreps";
 import { createAnswer } from "@/lib/answerBank";
@@ -64,7 +64,7 @@ function InterviewPrepContent() {
       });
       const data = await res.json();
       if (res.status === 401 || data.error === "no_key") {
-        setGenerateError("Add your Anthropic API key in Settings to generate interview prep.");
+        setGenerateError(noKeyMessage("generate interview prep"));
         return;
       }
       if (data.error) {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { authedFetch } from "@/lib/api-client";
+import { authedFetch, noKeyMessage } from "@/lib/api-client";
 import {
   createReview,
   getReviews,
@@ -154,7 +154,7 @@ export default function WeeklyReviewPage() {
       });
       const data = await res.json();
       if (res.status === 401 || data.error === "no_key") {
-        setSummaryError("Add your Anthropic API key in Settings to generate summaries.");
+        setSummaryError(noKeyMessage("generate summaries"));
         return;
       }
       if (data.error) {

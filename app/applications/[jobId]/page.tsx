@@ -3,7 +3,7 @@
 import { use, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
-import { authedFetch } from "@/lib/api-client";
+import { authedFetch, noKeyMessage } from "@/lib/api-client";
 import { getJob, updateJob, deleteJob } from "@/lib/jobs";
 import { getCompanyByJobId, createCompany } from "@/lib/companies";
 import { getResumes } from "@/lib/resumes";
@@ -111,7 +111,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ jobId: str
         body: JSON.stringify({ jobId }),
       });
       const data = await res.json();
-      if (res.status === 401 || data.error === "no_key") { setScoreError("Add your Anthropic API key in Settings to score roles."); return; }
+      if (res.status === 401 || data.error === "no_key") { setScoreError(noKeyMessage("score roles")); return; }
       if (data.error === "no_resume") { setScoreError("Add a resume in the Resumes section first."); return; }
       if (data.error) { setScoreError("Scoring failed. Try again."); return; }
       setJob((prev) => prev ? { ...prev, fitScore: data.score, fitReasoning: data.reasoning } : prev);
