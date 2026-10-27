@@ -82,6 +82,18 @@ function normalize(text: string): string {
   return text.toLowerCase().replace(/[’‘]/g, "'").replace(/\s+/g, " ");
 }
 
+// Users paste these in any shape (comma lists, headings, bullet rules), so pass them through as written.
+const MAX_RULES_CHARS = 12000;
+
+function writingRulesSection(settings: VoiceSettings): string | null {
+  const rules = settings.neverSay.trim();
+  if (!rules) return null;
+  return `WRITING RULES FROM THE CANDIDATE (follow strictly; never use any word or phrase they list, in any form)
+"""
+${truncate(rules, MAX_RULES_CHARS)}
+"""`;
+}
+
 function buildVoiceSystem(
   profile: string,
   samples: VoiceSample[],
@@ -95,11 +107,6 @@ function buildVoiceSystem(
 
   const sampleText = normalize(samples.map((s) => s.content).join("\n"));
   const cliches = AI_CLICHES.filter((p) => !sampleText.includes(normalize(p)));
-  const userNeverSay = settings.neverSay
-    .split(/\n|;/)
-    .map((l) => l.replace(/^[-*•]\s*/, "").trim())
-    .filter(Boolean);
-  const neverSay = [...cliches.map((c) => `"${c}"`), ...userNeverSay];
 
   const format =
     settings.format === "full"
@@ -113,7 +120,8 @@ function buildVoiceSystem(
 - Study the EXAMPLES below closely. Mirror their structure, paragraph count, rhythm, warmth, and how they explain why a role matters to them.
 - Keep their personality: the asides, the value statements, the memorable closing lines, the small stories about how they got into their work. These are what make the letter theirs. Don't sand them down into generic professional prose.
 - Reusing their signature lines and recurring phrases word for word is good (for example a line about who they are or a closing they always use). Never reuse company-specific details from the examples.
-- Follow the VOICE PROFILE. Where it disagrees with the examples, the examples win.`,
+- Follow the VOICE PROFILE. Where it disagrees with the examples, the examples win.
+- The candidate's own WRITING RULES (if given) override everything else, including phrases that appear in their examples.`,
 
     `LENGTH AND FORMAT
 - About ${targetWords} words (stay within 15%).
@@ -125,8 +133,11 @@ function buildVoiceSystem(
 - If something is missing, make a reasonable choice. Never leave placeholders like [TIME].`,
 
     `NEVER USE
-${neverSay.map((n) => `- ${n}`).join("\n")}`,
+${cliches.map((c) => `- "${c}"`).join("\n")}`,
   ];
+
+  const rules = writingRulesSection(settings);
+  if (rules) sections.push(rules);
 
   if (stats.sampleCount > 0)
     sections.push(`MEASUREMENTS OF THEIR WRITING (facts, not suggestions)\n${describeVoiceStats(stats)}`);
@@ -196,7 +207,9 @@ ${resume.content}`;
       : await callAI(
           uid,
           [{ role: "user", content: userMessage }],
-          SYSTEM_TEMPLATE.replace("{{VOICE}}", DEFAULT_REFERENCE)
+          [SYSTEM_TEMPLATE.replace("{{VOICE}}", DEFAULT_REFERENCE), writingRulesSection(settings)]
+            .filter(Boolean)
+            .join("\n\n")
         );
 
     if ("error" in result)
