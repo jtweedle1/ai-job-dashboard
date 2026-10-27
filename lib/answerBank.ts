@@ -13,7 +13,7 @@ import {
 import { db } from "./firebase";
 import type { AnswerEntry } from "@/types/answerBank";
 
-type CreateAnswerData = Omit<AnswerEntry, "id" | "createdAt" | "updatedAt">;
+type CreateAnswerData = Omit<AnswerEntry, "id" | "createdAt" | "updatedAt" | "useAsVoiceSample">;
 
 function toAnswerEntry(id: string, d: Record<string, unknown>): AnswerEntry {
   return {
@@ -22,6 +22,7 @@ function toAnswerEntry(id: string, d: Record<string, unknown>): AnswerEntry {
     answer: (d.answer as string) ?? "",
     tags: (d.tags as string[]) ?? [],
     jobId: (d.jobId as string | null) ?? null,
+    useAsVoiceSample: d.useAsVoiceSample === true,
     createdAt: d.createdAt instanceof Timestamp ? d.createdAt.toDate() : new Date(),
     updatedAt: d.updatedAt instanceof Timestamp ? d.updatedAt.toDate() : new Date(),
   };
@@ -31,6 +32,7 @@ export async function createAnswer(uid: string, data: CreateAnswerData): Promise
   const ref = collection(db, "users", uid, "answerBank");
   const docRef = await addDoc(ref, {
     ...data,
+    useAsVoiceSample: false,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });

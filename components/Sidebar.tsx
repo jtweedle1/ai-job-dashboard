@@ -20,6 +20,7 @@ const trackingNav: NavItem[] = [
 
 const aiNav: NavItem[] = [
   { label: "Cover Letters", href: "/cover-letters", icon: "ti-mail" },
+  { label: "My Voice", href: "/voice", icon: "ti-feather" },
   { label: "Interview Prep", href: "/interview-prep", icon: "ti-microphone" },
   { label: "Answer Bank", href: "/answer-bank", icon: "ti-bookmarks" },
   { label: "Debrief", href: "/debrief", icon: "ti-clipboard-list" },

@@ -6,7 +6,12 @@ import { useAuth } from "@/lib/auth-context";
 import { authedFetch } from "@/lib/api-client";
 import { getJobs } from "@/lib/jobs";
 import { getResumes } from "@/lib/resumes";
-import { getCoverLetters, deleteCoverLetter } from "@/lib/coverLetters";
+import {
+  getCoverLetters,
+  deleteCoverLetter,
+  updateCoverLetterContent,
+  setCoverLetterVoiceSample,
+} from "@/lib/coverLetters";
 import { createAnswer } from "@/lib/answerBank";
 import type { Job } from "@/types/job";
 import type { Resume } from "@/types/resume";
@@ -35,6 +40,9 @@ function CoverLettersContent() {
   const [copied, setCopied] = useState(false);
   const [savingToBank, setSavingToBank] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
   const [toast, setToast] = useState("");
 
   useEffect(() => {
@@ -83,16 +91,47 @@ function CoverLettersContent() {
         jobId: selectedJobId,
         resumeId: selectedResumeId,
         content: data.content,
+        edited: false,
+        useAsVoiceSample: false,
         createdAt: new Date(),
       };
       setLetters((prev) => [newLetter, ...prev]);
-      setViewingLetter(newLetter);
+      openLetter(newLetter);
       showToast("Cover letter generated");
     } catch {
       setGenerateError("Something went wrong. Try again.");
     } finally {
       setGenerating(false);
     }
+  }
+
+  function openLetter(letter: CoverLetter | null) {
+    setViewingLetter(letter);
+    setEditing(false);
+  }
+
+  function patchLetter(id: string, patch: Partial<CoverLetter>) {
+    setLetters((prev) => prev.map((l) => (l.id === id ? { ...l, ...patch } : l)));
+    setViewingLetter((prev) => (prev?.id === id ? { ...prev, ...patch } : prev));
+  }
+
+  async function handleSaveEdit() {
+    if (!user || !viewingLetter || !draft.trim()) return;
+    setSavingEdit(true);
+    try {
+      await updateCoverLetterContent(user.uid, viewingLetter.id, draft.trim());
+      patchLetter(viewingLetter.id, { content: draft.trim(), edited: true });
+      setEditing(false);
+      showToast("Changes saved");
+    } finally {
+      setSavingEdit(false);
+    }
+  }
+
+  async function handleToggleVoiceSample(useAsVoiceSample: boolean) {
+    if (!user || !viewingLetter) return;
+    patchLetter(viewingLetter.id, { useAsVoiceSample });
+    await setCoverLetterVoiceSample(user.uid, viewingLetter.id, useAsVoiceSample);
   }
 
   async function handleCopy() {
@@ -123,7 +162,7 @@ function CoverLettersContent() {
     setDeletingId(id);
     await deleteCoverLetter(user.uid, id);
     setLetters((prev) => prev.filter((l) => l.id !== id));
-    if (viewingLetter?.id === id) setViewingLetter(null);
+    if (viewingLetter?.id === id) openLetter(null);
     setDeletingId(null);
     showToast("Deleted");
   }
@@ -251,6 +290,13 @@ function CoverLettersContent() {
                 {generateError && (
                   <p className="text-xs text-amber-600 flex-1">{generateError}</p>
                 )}
+                <button
+                  onClick={() => router.push("/voice")}
+                  className="ml-auto flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 hover:text-emerald-600 transition-colors"
+                >
+                  <i className="ti ti-feather text-xs" aria-hidden="true" />
+                  Tune your voice
+                </button>
               </div>
             </div>
           )}
@@ -271,6 +317,18 @@ function CoverLettersContent() {
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
+              {!editing && (
+                <button
+                  onClick={() => {
+                    setDraft(viewingLetter.content);
+                    setEditing(true);
+                  }}
+                  className="flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                >
+                  <i className="ti ti-pencil text-xs" aria-hidden="true" />
+                  Edit
+                </button>
+              )}
               <button
                 onClick={handleSaveToBank}
                 disabled={savingToBank}
@@ -304,9 +362,53 @@ function CoverLettersContent() {
             </div>
           </div>
           <div className="px-4 py-4">
-            <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
-              {viewingLetter.content}
-            </p>
+            {editing ? (
+              <div className="space-y-3">
+                <textarea
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  rows={14}
+                  className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-700 dark:text-gray-200 leading-relaxed focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent dark:bg-gray-800 resize-y"
+                />
+                <div className="flex items-center justify-end gap-2">
+                  <button
+                    onClick={() => setEditing(false)}
+                    className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 px-4 py-2 rounded-lg transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveEdit}
+                    disabled={savingEdit || !draft.trim()}
+                    className="bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors disabled:opacity-50"
+                  >
+                    {savingEdit ? "Saving…" : "Save changes"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
+                {viewingLetter.content}
+              </p>
+            )}
+          </div>
+          <div className="px-4 py-3 border-t border-gray-50 dark:border-gray-800">
+            <label className="flex items-start gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={viewingLetter.useAsVoiceSample}
+                onChange={(e) => handleToggleVoiceSample(e.target.checked)}
+                className="mt-0.5 accent-emerald-500"
+              />
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                Use as a voice sample for future letters
+                {!viewingLetter.edited && (
+                  <span className="block text-amber-600 dark:text-amber-500 mt-0.5">
+                    This is still the AI draft. Edit it into your own words first so your voice doesn&apos;t drift.
+                  </span>
+                )}
+              </span>
+            </label>
           </div>
         </div>
       )}
@@ -335,7 +437,7 @@ function CoverLettersContent() {
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   <button
-                    onClick={() => setViewingLetter(letter)}
+                    onClick={() => openLetter(letter)}
                     className={`text-xs font-medium transition-colors ${
                       viewingLetter?.id === letter.id
                         ? "text-emerald-600"
