@@ -137,10 +137,6 @@ export default function LandingPage() {
         {/* Hero */}
         <section className="relative max-w-3xl mx-auto px-6 pt-20 pb-14 text-center">
           <div className="absolute left-1/2 -translate-x-1/2 top-6 w-72 h-72 rounded-full sun-orb opacity-30 blur-3xl -z-0" aria-hidden="true" />
-          <div className="relative inline-flex items-center gap-2 bg-white/75 text-primary-700 text-xs font-medium px-3 py-1.5 rounded-full mb-6 shadow-sm shadow-gray-900/5">
-            <i className="ti ti-sparkles text-sm" aria-hidden="true" />
-            A job search tracker with honest AI
-          </div>
           <h1 className="relative font-display font-extrabold tracking-tight text-4xl sm:text-6xl text-gray-900 leading-[1.08] mb-5 text-balance">
             Applications that sound
             {/* The designed two-line break only fits from tablet up; phones balance the lines instead. */}
