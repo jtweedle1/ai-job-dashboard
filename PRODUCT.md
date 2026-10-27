@@ -36,7 +36,7 @@ All-in-one: tracking, AI writing, interview prep, and reflection (debriefs, anal
 
 ## Brand Commitments
 
-- **The product is being renamed from HuntDesk to Wayfinder.** The code, README, and landing page still say "HuntDesk"; new work should use "Wayfinder". The existing briefcase mark is not a commitment.
+- **The product is called Wayfinder** (renamed from HuntDesk). Don't reintroduce the old name. The repo, package name, and Vercel URL still use `job-dashboard` / `ai-job-dashboard`; those are infrastructure, not branding. The old briefcase mark is not a commitment.
 - Light and dark mode are both supported and must stay that way (a theme toggle lives in the sidebar).
 
 ## Evidence on Hand

@@ -30,7 +30,7 @@ function formatDate(d: Date) {
 }
 
 const fieldClass =
-  "w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent";
+  "w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent";
 const ghostButton =
   "flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 px-3 py-1.5 rounded-full hover:bg-white dark:hover:bg-gray-800 transition-colors disabled:opacity-50";
 
@@ -273,7 +273,7 @@ export default function CoverLetterPanel({
           <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800 flex items-start justify-between gap-4 flex-wrap">
             <div className="min-w-0">
               <p className="section-label">Your letter</p>
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                 {resumeLabel(viewingLetter.resumeId)} · {formatDate(viewingLetter.createdAt)}
                 {viewingLetter.edited ? " · edited by you" : " · AI draft"}
               </p>
@@ -306,7 +306,7 @@ export default function CoverLetterPanel({
               <button
                 onClick={() => handleDelete(viewingLetter.id)}
                 disabled={deletingId === viewingLetter.id}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-gray-300 dark:text-gray-600 hover:text-red-400 transition-colors disabled:opacity-50"
+                className="w-8 h-8 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-red-400 transition-colors disabled:opacity-50"
                 aria-label="Delete cover letter"
               >
                 <i className="ti ti-trash text-sm" aria-hidden="true" />
@@ -376,7 +376,7 @@ export default function CoverLetterPanel({
       <div className="surface">
         <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
           <p className="section-label">{letters.length ? "Write another version" : "Write your letter"}</p>
-          <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
             Drafted from your resume, your stories and your voice in Me.
           </p>
         </div>
@@ -412,14 +412,14 @@ export default function CoverLetterPanel({
                   <label className="block text-xs text-gray-500 dark:text-gray-400">Stories to draw from</label>
                   <Link
                     href="/background"
-                    className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 hover:text-primary-600 transition-colors"
+                    className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-primary-600 transition-colors"
                   >
                     <i className="ti ti-briefcase text-xs" aria-hidden="true" />
                     {backgrounds.length ? "Edit your experience" : "Add your experience"}
                   </Link>
                 </div>
                 {backgrounds.length === 0 ? (
-                  <p className="text-xs text-gray-400 dark:text-gray-500">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
                     Write up the stories behind your past jobs once, and every letter will draw from them.
                   </p>
                 ) : (
@@ -447,7 +447,7 @@ export default function CoverLetterPanel({
               </div>
               <div>
                 <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">
-                  Notes for this letter <span className="text-gray-400 dark:text-gray-500">(optional)</span>
+                  Notes for this letter <span className="text-gray-500 dark:text-gray-400">(optional)</span>
                 </label>
                 <textarea
                   value={letterNotes}
@@ -474,7 +474,7 @@ export default function CoverLetterPanel({
                 {generateError && <p className="text-xs text-amber-600 flex-1">{generateError}</p>}
                 <Link
                   href="/voice"
-                  className="ml-auto flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 hover:text-primary-600 transition-colors"
+                  className="ml-auto flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-primary-600 transition-colors"
                 >
                   <i className="ti ti-feather text-xs" aria-hidden="true" />
                   Tune your voice
@@ -501,7 +501,7 @@ export default function CoverLetterPanel({
                 <button
                   onClick={() => openLetter(letter)}
                   className={`text-xs font-medium transition-colors ${
-                    viewingLetter?.id === letter.id ? "text-primary-600" : "text-gray-400 hover:text-primary-600"
+                    viewingLetter?.id === letter.id ? "text-primary-600" : "text-gray-500 hover:text-primary-600"
                   }`}
                 >
                   {viewingLetter?.id === letter.id ? "Viewing" : "View"}

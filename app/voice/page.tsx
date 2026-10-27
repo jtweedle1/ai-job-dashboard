@@ -46,7 +46,7 @@ const cardClass = "surface mb-4";
 const cardHeaderClass = "px-4 py-3 border-b border-gray-50 dark:border-gray-800";
 const cardTitleClass = "section-label";
 const inputClass =
-  "w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800";
+  "w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800";
 const primaryButtonClass =
   "flex items-center gap-1.5 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-xl hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
 const secondaryButtonClass =
@@ -294,7 +294,7 @@ export default function VoicePage() {
       <div className={cardClass}>
         <div className={`${cardHeaderClass} flex items-center justify-between gap-4`}>
           <p className={cardTitleClass}>Voice profile</p>
-          <p className="text-xs text-gray-400 dark:text-gray-500">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
             {includedCount} sample{includedCount !== 1 ? "s" : ""} included
             {profileUpdatedAt && ` · updated ${formatDate(profileUpdatedAt)}`}
           </p>
@@ -327,7 +327,7 @@ export default function VoicePage() {
             {profileError && <p className="text-xs text-amber-600 flex-1">{profileError}</p>}
           </div>
           {savedProfile && (
-            <p className="text-xs text-gray-400 dark:text-gray-500">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               Rebuilding replaces your edits. Rebuild after you change which samples are included.
             </p>
           )}
@@ -339,7 +339,7 @@ export default function VoicePage() {
         <div className={`${cardHeaderClass} flex items-center justify-between gap-4`}>
           <p className={cardTitleClass}>Preferences</p>
           {stats && (
-            <p className="text-xs text-gray-400 dark:text-gray-500">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               Your letters: ~{stats.medianWords} words · {stats.medianParagraphs} paragraphs ·{" "}
               {stats.contractionsPer100Words >= 1 ? "uses contractions" : "few contractions"}
             </p>
@@ -399,7 +399,7 @@ export default function VoicePage() {
             <div className="flex items-baseline justify-between gap-2 mb-1.5">
               <label className="block text-xs text-gray-500 dark:text-gray-400">Words to avoid</label>
               {bannedCount > 0 && (
-                <span className="text-xs text-gray-400 dark:text-gray-500">
+                <span className="text-xs text-gray-500 dark:text-gray-400">
                   {bannedCount} phrase{bannedCount !== 1 ? "s" : ""} checked after every letter
                 </span>
               )}
@@ -411,7 +411,7 @@ export default function VoicePage() {
               placeholder={"Comma lists, one per line, or under headings. For example:\nOverused words:\nleverage, synergy, passionate, thrilled"}
               className={`${inputClass} resize-y`}
             />
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               If a letter still uses one, it&apos;s automatically rewritten once without it.
             </p>
           </div>
@@ -490,7 +490,7 @@ export default function VoicePage() {
                     if (file) handlePdfSelect(file);
                   }}
                 />
-                <i className="ti ti-upload text-2xl text-gray-300 dark:text-gray-600 mb-2 block" aria-hidden="true" />
+                <i className="ti ti-upload text-2xl text-gray-400 dark:text-gray-500 mb-2 block" aria-hidden="true" />
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   {parsing ? "Extracting text…" : pdfName || "Click to select a PDF"}
                 </p>
@@ -525,7 +525,7 @@ export default function VoicePage() {
         )}
 
         {samples.length === 0 && !adding ? (
-          <p className="px-4 py-4 text-sm text-gray-400 dark:text-gray-500">
+          <p className="px-4 py-4 text-sm text-gray-500 dark:text-gray-400">
             No samples yet. Add two or three things you&apos;ve written to get started.
           </p>
         ) : (
@@ -533,10 +533,10 @@ export default function VoicePage() {
             {samples.map((s) => (
               <div key={s.id} className="px-4 py-3 flex items-center justify-between gap-4">
                 <div className="min-w-0 flex-1">
-                  <p className={`text-sm font-medium truncate ${s.included ? "text-gray-900 dark:text-gray-50" : "text-gray-400 dark:text-gray-500"}`}>
+                  <p className={`text-sm font-medium truncate ${s.included ? "text-gray-900 dark:text-gray-50" : "text-gray-500 dark:text-gray-400"}`}>
                     {s.label}
                   </p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500 truncate">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                     {s.kind === "cover_letter" ? "Cover letter" : "Other writing"} · {formatDate(s.createdAt)}
                   </p>
                 </div>
@@ -547,14 +547,14 @@ export default function VoicePage() {
                       <button onClick={() => handleDeleteSample(s.id)} className="text-xs font-medium text-red-500 hover:text-red-600">
                         Yes
                       </button>
-                      <button onClick={() => setDeleteConfirm(null)} className="text-xs text-gray-400 hover:text-gray-600">
+                      <button onClick={() => setDeleteConfirm(null)} className="text-xs text-gray-500 hover:text-gray-600">
                         No
                       </button>
                     </div>
                   ) : (
                     <button
                       onClick={() => setDeleteConfirm(s.id)}
-                      className="text-gray-300 dark:text-gray-600 hover:text-red-400 transition-colors"
+                      className="text-gray-500 dark:text-gray-400 hover:text-red-400 transition-colors"
                       aria-label="Delete sample"
                     >
                       <i className="ti ti-trash text-sm" aria-hidden="true" />
@@ -572,12 +572,12 @@ export default function VoicePage() {
       <div className={cardClass}>
         <div className={cardHeaderClass}>
           <p className={cardTitleClass}>Past cover letters</p>
-          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 normal-case">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 normal-case">
             Off by default. Only include letters you&apos;ve edited into your own words, so AI drafts don&apos;t drift your voice.
           </p>
         </div>
         {letters.length === 0 ? (
-          <p className="px-4 py-4 text-sm text-gray-400 dark:text-gray-500">No cover letters yet.</p>
+          <p className="px-4 py-4 text-sm text-gray-500 dark:text-gray-400">No cover letters yet.</p>
         ) : (
           <div className="divide-y divide-gray-50 dark:divide-gray-800">
             {letters.map((l) => (
@@ -587,7 +587,7 @@ export default function VoicePage() {
                     <p className="text-sm font-medium text-gray-900 dark:text-gray-50 truncate">{jobLabel(l.jobId)}</p>
                     {l.edited ? <Badge tone="emerald">Edited by you</Badge> : <Badge tone="amber">AI draft</Badge>}
                   </div>
-                  <p className="text-xs text-gray-400 dark:text-gray-500">{formatDate(l.createdAt)}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{formatDate(l.createdAt)}</p>
                 </div>
                 <Toggle checked={l.useAsVoiceSample} onChange={(v) => toggleLetter(l, v)} label="Use as voice sample" />
               </div>
@@ -600,12 +600,12 @@ export default function VoicePage() {
       <div className={cardClass}>
         <div className={cardHeaderClass}>
           <p className={cardTitleClass}>Saved answers</p>
-          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 normal-case">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 normal-case">
             Off by default. Turn on answers you wrote yourself.
           </p>
         </div>
         {answers.length === 0 ? (
-          <p className="px-4 py-4 text-sm text-gray-400 dark:text-gray-500">No saved answers yet.</p>
+          <p className="px-4 py-4 text-sm text-gray-500 dark:text-gray-400">No saved answers yet.</p>
         ) : (
           <div className="divide-y divide-gray-50 dark:divide-gray-800">
             {answers.map((a) => (
@@ -615,7 +615,7 @@ export default function VoicePage() {
                     <p className="text-sm font-medium text-gray-900 dark:text-gray-50 truncate">{a.question}</p>
                     {a.tags.includes("cover-letter") && <Badge tone="amber">AI draft</Badge>}
                   </div>
-                  <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{a.answer}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{a.answer}</p>
                 </div>
                 <Toggle checked={a.useAsVoiceSample} onChange={(v) => toggleAnswer(a, v)} label="Use as voice sample" />
               </div>

@@ -75,7 +75,7 @@ export default function StoriesPage() {
       <div className="mb-6">
         <h1 className="page-title">Your stories</h1>
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          Everything you&apos;ve told HuntDesk about your work, in one place. Write a story once and use it everywhere.
+          Everything you&apos;ve told Wayfinder about your work, in one place. Write a story once and use it everywhere.
         </p>
       </div>
 
@@ -109,7 +109,7 @@ export default function StoriesPage() {
           <div className="flex flex-wrap items-center gap-2 mb-4">
             <div className="relative flex-1 min-w-48">
               <i
-                className="ti ti-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 dark:text-gray-600 text-sm"
+                className="ti ti-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm"
                 aria-hidden="true"
               />
               <input
@@ -117,7 +117,7 @@ export default function StoriesPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search every story, e.g. onboarding, conflict, Figma…"
-                className="w-full border border-gray-200 dark:border-gray-700 rounded-xl pl-8 pr-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-800"
+                className="w-full border border-gray-200 dark:border-gray-700 rounded-xl pl-8 pr-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-800"
               />
             </div>
             {KINDS.map((k) => (
@@ -138,7 +138,7 @@ export default function StoriesPage() {
 
           {filtered.length === 0 ? (
             <div className="surface p-8 text-center">
-              <p className="text-sm text-gray-400 dark:text-gray-500">No stories match your search.</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">No stories match your search.</p>
             </div>
           ) : (
             <div className="surface divide-y divide-gray-50 dark:divide-gray-800">
@@ -148,7 +148,7 @@ export default function StoriesPage() {
                   <div key={item.id} className="px-4 py-3">
                     <div className="flex items-start justify-between gap-4">
                       <button onClick={() => setExpandedId(open ? null : item.id)} className="flex-1 min-w-0 text-left">
-                        <p className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500 mb-0.5">
+                        <p className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 mb-0.5">
                           <i className={`ti ${STORY_KIND_META[item.kind].icon} text-xs`} aria-hidden="true" />
                           <span className="truncate">{item.context || STORY_KIND_META[item.kind].label}</span>
                         </p>
@@ -158,12 +158,12 @@ export default function StoriesPage() {
                             open ? "" : "line-clamp-2"
                           }`}
                         >
-                          {item.text || <span className="italic text-gray-400 dark:text-gray-500">No answer yet</span>}
+                          {item.text || <span className="italic text-gray-500 dark:text-gray-400">No answer yet</span>}
                         </p>
                       </button>
                       <Link
                         href={item.href}
-                        className="shrink-0 text-xs text-gray-400 dark:text-gray-500 hover:text-primary-600 transition-colors"
+                        className="shrink-0 text-xs text-gray-500 dark:text-gray-400 hover:text-primary-600 transition-colors"
                       >
                         Open
                       </Link>

@@ -19,7 +19,7 @@ const cardClass = "surface mb-4";
 const cardHeaderClass = "px-4 py-3 border-b border-gray-50 dark:border-gray-800";
 const cardTitleClass = "section-label";
 const inputClass =
-  "w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800";
+  "w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800";
 const primaryButtonClass =
   "flex items-center gap-1.5 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-xl hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
 const secondaryButtonClass =
@@ -207,7 +207,7 @@ export default function BackgroundPage() {
               </div>
             </div>
 
-            <p className="text-xs text-gray-400 dark:text-gray-500">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               Answer as many as you like, in bullets or paragraphs. Skip anything that doesn&apos;t apply. Only
               write what&apos;s true; the AI treats this as fact.
             </p>
@@ -215,7 +215,7 @@ export default function BackgroundPage() {
             {BACKGROUND_QUESTIONS.map((q) => (
               <div key={q.id}>
                 <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">{q.label}</label>
-                <p className="text-xs text-gray-400 dark:text-gray-500 mb-1.5">{q.hint}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1.5">{q.hint}</p>
                 <textarea
                   value={form.answers[q.id] ?? ""}
                   onChange={(e) => setAnswer(q.id, e.target.value)}
@@ -237,7 +237,7 @@ export default function BackgroundPage() {
               </button>
             </div>
             {!canSave && (
-              <p className="text-xs text-gray-400 dark:text-gray-500 text-right">
+              <p className="text-xs text-gray-500 dark:text-gray-400 text-right">
                 Add a title or company and answer at least one question to save.
               </p>
             )}
@@ -250,7 +250,7 @@ export default function BackgroundPage() {
         <div className={cardClass}>
           <div className={`${cardHeaderClass} flex items-center justify-between gap-4`}>
             <p className={cardTitleClass}>Positions</p>
-            <p className="text-xs text-gray-400 dark:text-gray-500">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               {includedCount} of {backgrounds.length} used in cover letters
             </p>
           </div>
@@ -265,7 +265,7 @@ export default function BackgroundPage() {
                     <p className="text-sm font-medium text-gray-900 dark:text-gray-50 truncate">
                       {backgroundHeading(b)}
                     </p>
-                    <p className="text-xs text-gray-400 dark:text-gray-500">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
                       {answeredCount(b)} of {BACKGROUND_QUESTIONS.length} questions answered
                     </p>
                   </button>
@@ -279,14 +279,14 @@ export default function BackgroundPage() {
                         <button onClick={() => handleDelete(b.id)} className="text-red-500 font-medium">
                           Delete
                         </button>
-                        <button onClick={() => setDeleteConfirm(null)} className="text-gray-400">
+                        <button onClick={() => setDeleteConfirm(null)} className="text-gray-500">
                           Cancel
                         </button>
                       </span>
                     ) : (
                       <button
                         onClick={() => setDeleteConfirm(b.id)}
-                        className="text-gray-300 dark:text-gray-600 hover:text-red-400 transition-colors"
+                        className="text-gray-500 dark:text-gray-400 hover:text-red-400 transition-colors"
                         aria-label="Delete position"
                       >
                         <i className="ti ti-trash text-sm" aria-hidden="true" />

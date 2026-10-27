@@ -32,7 +32,7 @@ function formatDate(d: Date) {
 }
 
 function SortIcon({ active, dir }: { active: boolean; dir: SortDir }) {
-  if (!active) return <i className="ti ti-selector text-gray-300 dark:text-gray-600 text-xs ml-1" aria-hidden="true" />;
+  if (!active) return <i className="ti ti-selector text-gray-400 dark:text-gray-500 text-xs ml-1" aria-hidden="true" />;
   return dir === "asc"
     ? <i className="ti ti-sort-ascending text-gray-600 dark:text-gray-300 text-xs ml-1" aria-hidden="true" />
     : <i className="ti ti-sort-descending text-gray-600 dark:text-gray-300 text-xs ml-1" aria-hidden="true" />;
@@ -216,7 +216,7 @@ export default function ApplicationsPage() {
           {hasFilters && (
             <button
               onClick={() => { setStageFilter("all"); setSourceFilter("all"); }}
-              className="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+              className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
             >
               Clear filters
             </button>
@@ -326,10 +326,10 @@ export default function ApplicationsPage() {
                     <StageBadge stage={job.stage} />
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell">
-                    <span className="text-sm text-gray-400 dark:text-gray-500">{formatDate(job.createdAt)}</span>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">{formatDate(job.createdAt)}</span>
                   </td>
                   <td className="px-4 py-3 hidden lg:table-cell">
-                    <span className="text-sm text-gray-400 dark:text-gray-500">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
                       {job.fitScore != null ? `${job.fitScore}` : "—"}
                     </span>
                   </td>

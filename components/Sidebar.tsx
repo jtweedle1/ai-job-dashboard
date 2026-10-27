@@ -17,7 +17,7 @@ export function Logo({ small }: { small?: boolean }) {
     <div className="flex items-center gap-2.5">
       <div className={`${small ? "w-6 h-6" : "w-8 h-8"} rounded-full sun-orb shadow-sm shadow-peach-400/40`} aria-hidden="true" />
       <span className={`${small ? "text-base" : "text-lg"} font-display font-extrabold tracking-tight text-gray-900 dark:text-gray-50`}>
-        HuntDesk
+        Wayfinder
       </span>
     </div>
   );
@@ -76,7 +76,7 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps) {
                 >
                   {s.label}
                 </span>
-                <span className="block text-xs text-gray-400 dark:text-gray-500 truncate">{s.hint}</span>
+                <span className="block text-xs text-gray-500 dark:text-gray-400 truncate">{s.hint}</span>
               </span>
             </Link>
           );
@@ -92,14 +92,14 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps) {
         </span>
         <button
           onClick={toggleTheme}
-          className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 dark:text-gray-500 hover:bg-white dark:hover:bg-white/10 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+          className="w-8 h-8 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-white dark:hover:bg-white/10 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
           aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
         >
           <i className={`ti ${theme === "dark" ? "ti-sun" : "ti-moon"} text-base`} aria-hidden="true" />
         </button>
         <button
           onClick={() => signOutUser()}
-          className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 dark:text-gray-500 hover:bg-white dark:hover:bg-white/10 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+          className="w-8 h-8 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-white dark:hover:bg-white/10 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
           aria-label="Sign out"
         >
           <i className="ti ti-logout text-base" aria-hidden="true" />

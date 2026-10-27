@@ -1,8 +1,8 @@
-# HuntDesk
+# Wayfinder
 
 [![CI](https://github.com/jtweedle1/ai-job-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/jtweedle1/ai-job-dashboard/actions/workflows/ci.yml)
 
-**Job applications that sound like you, not like AI.** HuntDesk is a job search tracker whose AI writes in your own voice, draws on the real stories behind your work, and checks every claim before you send it.
+**Job applications that sound like you, not like AI.** Wayfinder is a job search tracker whose AI writes in your own voice, draws on the real stories behind your work, and checks every claim before you send it.
 
 **Live:** [ai-job-dashboard-sable.vercel.app](https://ai-job-dashboard-sable.vercel.app/) · click **Try the demo** to look around a sample job search with no sign-up.
 
@@ -12,11 +12,11 @@
 
 ## Why it's different
 
-Most job trackers (Huntr, Teal, Simplify) compete on volume: clip more jobs, autofill more forms, generate more letters. Their letters all sound the same, and nobody checks whether what they say about you is true. HuntDesk goes the other way:
+Most job trackers (Huntr, Teal, Simplify) compete on volume: clip more jobs, autofill more forms, generate more letters. Their letters all sound the same, and nobody checks whether what they say about you is true. Wayfinder goes the other way:
 
 | | What it does |
 |---|---|
-| **Your voice** | Add things you've written. HuntDesk *measures* your writing (length, sentence rhythm, contractions, greetings, sign-offs) and builds a voice profile that can't contradict those numbers. Letters are drafted to match it. |
+| **Your voice** | Add things you've written. Wayfinder *measures* your writing (length, sentence rhythm, contractions, greetings, sign-offs) and builds a voice profile that can't contradict those numbers. Letters are drafted to match it. |
 | **Your real stories** | The **Story Library** holds your experience write-ups, prepared answers, and interview notes in one searchable place. Cover letters and application answers ("Why us?", "Tell me about a conflict") are drafted from those stories, not from rewording your resume. |
 | **Every claim traced** | Each letter is fact-checked against your resume and stories. Every claim is highlighted with the exact line it came from, and anything you never said is flagged. |
 | **Rules enforced in code** | Your banned words are checked in code after generation, with an automatic rewrite pass. A pre-send checklist also catches AI clichés, leftover placeholders, length, and repetitive "I…" openings. |

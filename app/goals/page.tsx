@@ -65,7 +65,7 @@ export default function GoalsPage() {
             onChange={(e) => setGoals(e.target.value)}
             placeholder="e.g. Looking for a senior IC role at a Series B–D startup. Interested in developer tools or data infrastructure. Targeting $180k–$220k. Remote-first preferred."
             rows={7}
-            className="w-full border border-gray-200 dark:border-gray-700 rounded-2xl px-4 py-3 text-sm bg-white/80 dark:bg-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-y"
+            className="w-full border border-gray-200 dark:border-gray-700 rounded-2xl px-4 py-3 text-sm bg-white/80 dark:bg-gray-800 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-y"
           />
         )}
         <div className="flex justify-end">

@@ -1,6 +1,6 @@
 @AGENTS.md
 
-# HuntDesk (job-dashboard)
+# Wayfinder (job-dashboard)
 
 AI job-application tracker. Next.js 16 App Router · TypeScript · Firebase
 (Auth/Firestore/Storage) · Anthropic API · Tailwind v4 · Vercel.
@@ -46,9 +46,3 @@ Per-user Anthropic keys (bring-your-own) — no shared key pool; rate-limit per-
 
 This is Next.js 16 with breaking changes vs. training data — check
 `node_modules/next/dist/docs/` before non-trivial framework work (see AGENTS.md).
-
-## GSD workflow
-
-This repo uses GSD. For traceability, route work through a GSD entry point:
-`/gsd-quick` (small fixes/docs), `/gsd-debug` (investigation), `/gsd-execute-phase`
-(planned work). Skip only when explicitly bypassing.

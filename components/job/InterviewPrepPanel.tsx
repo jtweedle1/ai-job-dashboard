@@ -124,12 +124,12 @@ export default function InterviewPrepPanel({
           <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800 flex items-start justify-between gap-4">
             <div className="min-w-0">
               <p className="section-label">Your prep</p>
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{formatDate(viewingPrep.createdAt)}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{formatDate(viewingPrep.createdAt)}</p>
             </div>
             <button
               onClick={() => handleDelete(viewingPrep.id)}
               disabled={deletingId === viewingPrep.id}
-              className="w-8 h-8 rounded-full flex items-center justify-center text-gray-300 dark:text-gray-600 hover:text-red-400 transition-colors disabled:opacity-50 shrink-0"
+              className="w-8 h-8 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-red-400 transition-colors disabled:opacity-50 shrink-0"
               aria-label="Delete prep"
             >
               <i className="ti ti-trash text-sm" aria-hidden="true" />
@@ -137,12 +137,12 @@ export default function InterviewPrepPanel({
           </div>
 
           <div className="px-5 pt-4">
-            <p className="text-xs font-medium text-gray-400 dark:text-gray-500 mb-1">The process</p>
+            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">The process</p>
             <p className="text-sm text-gray-600 dark:text-gray-300 italic">{viewingPrep.interviewProcess}</p>
           </div>
 
           <div className="px-5 pt-4">
-            <p className="text-xs font-medium text-gray-400 dark:text-gray-500 mb-2">Practice questions</p>
+            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Practice questions</p>
             <ol className="space-y-2.5">
               {viewingPrep.mockQuestions.map((q, i) => (
                 <li key={i} className="flex gap-3 group">
@@ -153,7 +153,7 @@ export default function InterviewPrepPanel({
                   <button
                     onClick={() => handleSaveQuestion(q, i)}
                     disabled={savingQuestionIndex === i}
-                    className="text-gray-300 dark:text-gray-600 hover:text-primary-500 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 shrink-0 mt-0.5 disabled:opacity-50"
+                    className="text-gray-500 dark:text-gray-400 hover:text-primary-500 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 shrink-0 mt-0.5 disabled:opacity-50"
                     aria-label="Save to your stories"
                     title="Save to your stories"
                   >
@@ -170,7 +170,7 @@ export default function InterviewPrepPanel({
 
           {viewingPrep.studyTips && (
             <div className="px-5 pt-4 pb-5">
-              <p className="text-xs font-medium text-gray-400 dark:text-gray-500 mb-2">Study tips</p>
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Study tips</p>
               <div className="space-y-1.5">
                 {viewingPrep.studyTips.split("\n").filter(Boolean).map((tip, i) => (
                   <div key={i} className="flex gap-2">
@@ -187,7 +187,7 @@ export default function InterviewPrepPanel({
       <div className="surface">
         <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
           <p className="section-label">{preps.length ? "Prep for another round" : "Prep for the interview"}</p>
-          <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
             Describe the round and get practice questions built from this job description.
           </p>
         </div>
@@ -197,7 +197,7 @@ export default function InterviewPrepPanel({
             onChange={(e) => setInterviewProcess(e.target.value)}
             placeholder="e.g. 2 rounds: first a 30-min recruiter screen, then a 60-min panel with the hiring manager and two engineers — mostly behavioral with some system design questions"
             rows={3}
-            className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none bg-white dark:bg-gray-800"
+            className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none bg-white dark:bg-gray-800"
           />
           <div className="flex items-center gap-3 flex-wrap">
             <button
@@ -231,7 +231,7 @@ export default function InterviewPrepPanel({
                 <button
                   onClick={() => setViewingPrep(prep)}
                   className={`text-xs font-medium transition-colors ${
-                    viewingPrep?.id === prep.id ? "text-primary-600" : "text-gray-400 hover:text-primary-600"
+                    viewingPrep?.id === prep.id ? "text-primary-600" : "text-gray-500 hover:text-primary-600"
                   }`}
                 >
                   {viewingPrep?.id === prep.id ? "Viewing" : "View"}

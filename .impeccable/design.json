@@ -1,51 +1,210 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-27T00:00:00Z",
+  "generatedAt": "2026-10-27T21:16:19.564Z",
   "title": "Design System: Wayfinder",
   "extensions": {
     "colorMeta": {
-      "iris": { "role": "primary", "displayName": "Iris", "canonical": "#5f57d2", "tonalRamp": ["#1f1c46", "#332f73", "#3e3891", "#4d45b5", "#5f57d2", "#948df0", "#d3d0fc", "#f3f2ff"] },
-      "iris-deep": { "role": "primary", "displayName": "Iris Deep", "canonical": "#4d45b5" },
-      "iris-soft": { "role": "primary", "displayName": "Iris Soft", "canonical": "#766fe4" },
-      "iris-mist": { "role": "primary", "displayName": "Iris Mist", "canonical": "#e8e6fe" },
-      "iris-wash": { "role": "primary", "displayName": "Iris Wash", "canonical": "#f3f2ff" },
-      "morning-paper": { "role": "neutral", "displayName": "Morning Paper", "canonical": "#fbf9fe" },
-      "lavender-50": { "role": "neutral", "displayName": "Lavender 50", "canonical": "#f8f6fc", "tonalRamp": ["#17142b", "#221f3a", "#2f2b48", "#474260", "#7b7494", "#a39cb8", "#e4dff0", "#f8f6fc"] },
-      "lavender-100": { "role": "neutral", "displayName": "Lavender 100", "canonical": "#f1eef8" },
-      "lavender-200": { "role": "neutral", "displayName": "Lavender 200", "canonical": "#e4dff0" },
-      "lavender-400": { "role": "neutral", "displayName": "Lavender 400 (icons only)", "canonical": "#a39cb8" },
-      "lavender-500": { "role": "neutral", "displayName": "Lavender 500", "canonical": "#7b7494" },
-      "lavender-600": { "role": "neutral", "displayName": "Lavender 600", "canonical": "#5e5878" },
-      "lavender-700": { "role": "neutral", "displayName": "Lavender 700", "canonical": "#474260" },
-      "night-indigo": { "role": "neutral", "displayName": "Night Indigo", "canonical": "#221f3a" },
-      "night-sky": { "role": "neutral", "displayName": "Night Sky", "canonical": "#17142b" },
-      "peach-glow": { "role": "tertiary", "displayName": "Peach Glow", "canonical": "#ffd9c2", "tonalRamp": ["#7a3d1c", "#a8552a", "#d06e3c", "#ff8f52", "#ffab7a", "#ffc4a0", "#ffd9c2", "#fff1e8"] },
-      "peach-ember": { "role": "tertiary", "displayName": "Peach Ember", "canonical": "#ffab7a" },
-      "rose-glow": { "role": "tertiary", "displayName": "Rose Glow", "canonical": "#fbd3e4" },
-      "sky-glow": { "role": "tertiary", "displayName": "Sky Glow", "canonical": "#cfe4fb" }
+      "iris": {
+        "role": "primary",
+        "displayName": "Iris",
+        "canonical": "#5f57d2",
+        "tonalRamp": [
+          "#1f1c46",
+          "#332f73",
+          "#3e3891",
+          "#4d45b5",
+          "#5f57d2",
+          "#948df0",
+          "#d3d0fc",
+          "#f3f2ff"
+        ]
+      },
+      "iris-deep": {
+        "role": "primary",
+        "displayName": "Iris Deep",
+        "canonical": "#4d45b5"
+      },
+      "iris-soft": {
+        "role": "primary",
+        "displayName": "Iris Soft",
+        "canonical": "#766fe4"
+      },
+      "iris-mist": {
+        "role": "primary",
+        "displayName": "Iris Mist",
+        "canonical": "#e8e6fe"
+      },
+      "iris-wash": {
+        "role": "primary",
+        "displayName": "Iris Wash",
+        "canonical": "#f3f2ff"
+      },
+      "morning-paper": {
+        "role": "neutral",
+        "displayName": "Morning Paper",
+        "canonical": "#fbf9fe"
+      },
+      "lavender-50": {
+        "role": "neutral",
+        "displayName": "Lavender 50",
+        "canonical": "#f8f6fc",
+        "tonalRamp": [
+          "#17142b",
+          "#221f3a",
+          "#2f2b48",
+          "#474260",
+          "#6f6889",
+          "#8f88a8",
+          "#e4dff0",
+          "#f8f6fc"
+        ]
+      },
+      "lavender-100": {
+        "role": "neutral",
+        "displayName": "Lavender 100",
+        "canonical": "#f1eef8"
+      },
+      "lavender-200": {
+        "role": "neutral",
+        "displayName": "Lavender 200",
+        "canonical": "#e4dff0"
+      },
+      "lavender-400": {
+        "role": "neutral",
+        "displayName": "Lavender 400",
+        "canonical": "#8f88a8"
+      },
+      "lavender-500": {
+        "role": "neutral",
+        "displayName": "Lavender 500",
+        "canonical": "#6f6889"
+      },
+      "lavender-600": {
+        "role": "neutral",
+        "displayName": "Lavender 600",
+        "canonical": "#5e5878"
+      },
+      "lavender-700": {
+        "role": "neutral",
+        "displayName": "Lavender 700",
+        "canonical": "#474260"
+      },
+      "night-indigo": {
+        "role": "neutral",
+        "displayName": "Night Indigo",
+        "canonical": "#221f3a"
+      },
+      "night-sky": {
+        "role": "neutral",
+        "displayName": "Night Sky",
+        "canonical": "#17142b"
+      },
+      "peach-glow": {
+        "role": "tertiary",
+        "displayName": "Peach Glow",
+        "canonical": "#ffd9c2",
+        "tonalRamp": [
+          "#7a3d1c",
+          "#a8552a",
+          "#d06e3c",
+          "#ff8f52",
+          "#ffab7a",
+          "#ffc4a0",
+          "#ffd9c2",
+          "#fff1e8"
+        ]
+      },
+      "peach-ember": {
+        "role": "tertiary",
+        "displayName": "Peach Ember",
+        "canonical": "#ffab7a"
+      },
+      "rose-glow": {
+        "role": "tertiary",
+        "displayName": "Rose Glow",
+        "canonical": "#fbd3e4"
+      },
+      "sky-glow": {
+        "role": "tertiary",
+        "displayName": "Sky Glow",
+        "canonical": "#cfe4fb"
+      }
     },
     "typographyMeta": {
-      "display": { "displayName": "Display", "purpose": "Landing hero only (2.25rem, 3.75rem at sm)." },
-      "headline": { "displayName": "Headline", "purpose": "Today hero greeting." },
-      "title": { "displayName": "Page title", "purpose": "page-title utility; one per page." },
-      "section": { "displayName": "Section label", "purpose": "section-label utility; card headings, nav and tab labels (Nunito Bold)." },
-      "body": { "displayName": "Body", "purpose": "Lists, forms, descriptions (Figtree)." },
-      "label": { "displayName": "Label", "purpose": "Hints, metadata, chips, timestamps." }
+      "display": {
+        "displayName": "Display",
+        "purpose": "Landing hero only (2.25rem, 3.75rem at sm)."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Today hero greeting."
+      },
+      "title": {
+        "displayName": "Page title",
+        "purpose": "page-title utility; one per page."
+      },
+      "section": {
+        "displayName": "Section label",
+        "purpose": "section-label utility; card headings, nav and tab labels (Nunito Bold)."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Lists, forms, descriptions (Figtree)."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Hints, metadata, chips, timestamps."
+      }
     },
     "shadows": [
-      { "name": "card-whisper", "value": "0 1px 2px rgb(47 43 72 / 0.04), 0 8px 24px -12px rgb(47 43 72 / 0.12)", "purpose": "Every surface card (dark: 0 8px 24px -12px rgb(0 0 0 / 0.5))." },
-      { "name": "active-pill", "value": "0 1px 2px 0 rgb(34 31 58 / 0.05)", "purpose": "Active nav row, tab, or step." },
-      { "name": "primary-halo", "value": "0 1px 2px 0 rgb(95 87 210 / 0.2)", "purpose": "A page's main call to action." },
-      { "name": "toast", "value": "0 10px 15px -3px rgb(34 31 58 / 0.2), 0 4px 6px -4px rgb(34 31 58 / 0.2)", "purpose": "Night Indigo toasts; the only strongly lifted element." }
+      {
+        "name": "card-whisper",
+        "value": "0 1px 2px rgb(47 43 72 / 0.04), 0 8px 24px -12px rgb(47 43 72 / 0.12)",
+        "purpose": "Every surface card (dark: 0 8px 24px -12px rgb(0 0 0 / 0.5))."
+      },
+      {
+        "name": "active-pill",
+        "value": "0 1px 2px 0 rgb(34 31 58 / 0.05)",
+        "purpose": "Active nav row, tab, or step."
+      },
+      {
+        "name": "primary-halo",
+        "value": "0 1px 2px 0 rgb(95 87 210 / 0.2)",
+        "purpose": "A page's main call to action."
+      },
+      {
+        "name": "toast",
+        "value": "0 10px 15px -3px rgb(34 31 58 / 0.2), 0 4px 6px -4px rgb(34 31 58 / 0.2)",
+        "purpose": "Night Indigo toasts; the only strongly lifted element."
+      }
     ],
     "motion": [
-      { "name": "state-transition", "value": "150ms cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "Tailwind transition-colors / transition-all on hover and active states." },
-      { "name": "loading", "value": "animate-spin (ti-loader-2), animate-pulse skeletons", "purpose": "AI and data loading states." }
+      {
+        "name": "state-transition",
+        "value": "150ms cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Tailwind transition-colors / transition-all on hover and active states."
+      },
+      {
+        "name": "loading",
+        "value": "animate-spin (ti-loader-2), animate-pulse skeletons",
+        "purpose": "AI and data loading states."
+      }
     ],
     "breakpoints": [
-      { "name": "sm", "value": "640px" },
-      { "name": "md", "value": "768px", "purpose": "Sidebar appears; mobile top bar hides." },
-      { "name": "lg", "value": "1024px", "purpose": "Today switches to 3-column grid." }
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px",
+        "purpose": "Sidebar appears; mobile top bar hides."
+      },
+      {
+        "name": "lg",
+        "value": "1024px",
+        "purpose": "Today switches to 3-column grid."
+      }
     ]
   },
   "components": [
@@ -79,7 +238,7 @@
       "refersTo": "input-text",
       "description": "12px-radius field with an Iris focus ring.",
       "html": "<input class=\"ds-input\" placeholder=\"Company name\" />",
-      "css": ".ds-input { width: 100%; max-width: 320px; background: #fff; color: #221f3a; font-family: Figtree, ui-sans-serif, system-ui, sans-serif; font-size: 14px; padding: 8px 12px; border: 1px solid #e4dff0; border-radius: 12px; outline: none; transition: box-shadow 150ms, border-color 150ms; } .ds-input::placeholder { color: #a39cb8; } .ds-input:focus { border-color: transparent; box-shadow: 0 0 0 2px #766fe4; }"
+      "css": ".ds-input { width: 100%; max-width: 320px; background: #fff; color: #221f3a; font-family: Figtree, ui-sans-serif, system-ui, sans-serif; font-size: 14px; padding: 8px 12px; border: 1px solid #e4dff0; border-radius: 12px; outline: none; transition: box-shadow 150ms, border-color 150ms; } .ds-input::placeholder { color: #8f88a8; } .ds-input:focus { border-color: transparent; box-shadow: 0 0 0 2px #766fe4; }"
     },
     {
       "name": "Surface Card",
@@ -95,14 +254,14 @@
       "refersTo": "nav-tab-active",
       "description": "Frosted pill track; the active tab is a white pill.",
       "html": "<nav class=\"ds-tabs\" aria-label=\"Jobs\"><a class=\"ds-tab ds-tab-active\" href=\"#\" aria-current=\"page\">Applications</a><a class=\"ds-tab\" href=\"#\">Companies</a><a class=\"ds-tab\" href=\"#\">Analytics</a></nav>",
-      "css": ".ds-tabs { display: inline-flex; gap: 4px; padding: 4px; border-radius: 9999px; background: rgb(255 255 255 / 0.6); border: 1px solid rgb(255 255 255 / 0.8); backdrop-filter: blur(8px); } .ds-tab { padding: 6px 16px; border-radius: 9999px; font-family: Nunito, ui-sans-serif, system-ui, sans-serif; font-size: 14px; font-weight: 700; color: #7b7494; text-decoration: none; transition: all 150ms; } .ds-tab:hover { color: #2f2b48; } .ds-tab-active { background: #fff; color: #221f3a; box-shadow: 0 1px 2px 0 rgb(34 31 58 / 0.05); } .ds-tab:focus-visible { outline: 2px solid #766fe4; outline-offset: 2px; }"
+      "css": ".ds-tabs { display: inline-flex; gap: 4px; padding: 4px; border-radius: 9999px; background: rgb(255 255 255 / 0.6); border: 1px solid rgb(255 255 255 / 0.8); backdrop-filter: blur(8px); } .ds-tab { padding: 6px 16px; border-radius: 9999px; font-family: Nunito, ui-sans-serif, system-ui, sans-serif; font-size: 14px; font-weight: 700; color: #6f6889; text-decoration: none; transition: all 150ms; } .ds-tab:hover { color: #2f2b48; } .ds-tab-active { background: #fff; color: #221f3a; box-shadow: 0 1px 2px 0 rgb(34 31 58 / 0.05); } .ds-tab:focus-visible { outline: 2px solid #766fe4; outline-offset: 2px; }"
     },
     {
       "name": "Step Rail",
       "kind": "custom",
       "description": "Signature per-job workflow rail; the current step glows, done steps show an Iris Mist check.",
       "html": "<ol class=\"ds-rail\"><li><button class=\"ds-step\"><span class=\"ds-step-dot ds-step-done\">✓</span>Fit</button></li><li class=\"ds-rail-line\" aria-hidden=\"true\"></li><li><button class=\"ds-step ds-step-active\" aria-current=\"step\"><span class=\"ds-step-dot ds-step-dot-active\">✉</span>Letter</button></li><li class=\"ds-rail-line\" aria-hidden=\"true\"></li><li><button class=\"ds-step\"><span class=\"ds-step-dot\">?</span>Prep</button></li></ol>",
-      "css": ".ds-rail { display: flex; align-items: center; gap: 4px; margin: 0; padding: 0; list-style: none; } .ds-rail-line { width: 24px; height: 1px; background: #e4dff0; } .ds-step { display: flex; align-items: center; gap: 8px; padding: 6px 14px 6px 6px; border: none; border-radius: 9999px; background: transparent; font-family: Nunito, ui-sans-serif, system-ui, sans-serif; font-size: 14px; font-weight: 700; color: #7b7494; cursor: pointer; transition: all 150ms; } .ds-step:hover { background: rgb(255 255 255 / 0.7); } .ds-step:focus-visible { outline: 2px solid #766fe4; outline-offset: 2px; } .ds-step-active { color: #221f3a; background-image: linear-gradient(135deg, #ffd9c2, #fbd3e4 45%, #d3d0fc); box-shadow: 0 1px 2px 0 rgb(34 31 58 / 0.05); } .ds-step-dot { width: 28px; height: 28px; border-radius: 9999px; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; background: rgb(255 255 255 / 0.7); } .ds-step-dot-active { background: rgb(255 255 255 / 0.8); } .ds-step-done { background: #e8e6fe; color: #4d45b5; }"
+      "css": ".ds-rail { display: flex; align-items: center; gap: 4px; margin: 0; padding: 0; list-style: none; } .ds-rail-line { width: 24px; height: 1px; background: #e4dff0; } .ds-step { display: flex; align-items: center; gap: 8px; padding: 6px 14px 6px 6px; border: none; border-radius: 9999px; background: transparent; font-family: Nunito, ui-sans-serif, system-ui, sans-serif; font-size: 14px; font-weight: 700; color: #6f6889; cursor: pointer; transition: all 150ms; } .ds-step:hover { background: rgb(255 255 255 / 0.7); } .ds-step:focus-visible { outline: 2px solid #766fe4; outline-offset: 2px; } .ds-step-active { color: #221f3a; background-image: linear-gradient(135deg, #ffd9c2, #fbd3e4 45%, #d3d0fc); box-shadow: 0 1px 2px 0 rgb(34 31 58 / 0.05); } .ds-step-dot { width: 28px; height: 28px; border-radius: 9999px; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; background: rgb(255 255 255 / 0.7); } .ds-step-dot-active { background: rgb(255 255 255 / 0.8); } .ds-step-done { background: #e8e6fe; color: #4d45b5; }"
     },
     {
       "name": "Badge",
@@ -125,11 +284,31 @@
       "Lavender-tinted neutrals and no pure gray; dark mode is night indigo, not black."
     ],
     "rules": [
-      { "name": "The One Accent Rule", "body": "Iris is the only color that means \"you can act on this.\" The warm glow never marks a clickable thing as clickable; it marks a thing as current or important.", "section": "colors" },
-      { "name": "The Glow Is Earned Rule", "body": "glow-gradient is for the active item (nav section, current step, active stage), the Today hero, nudges and empty-state medallions. If two glowing things compete in one viewport, one of them is wrong.", "section": "colors" },
-      { "name": "The No Pure Gray Rule", "body": "Every neutral is lavender-tinted. Never introduce Tailwind's stock slate, zinc or neutral grays.", "section": "colors" },
-      { "name": "The Two Voices Rule", "body": "Nunito is for naming things (pages, sections, nav, steps, tabs). Figtree is for everything the user reads or types. Never set paragraphs or inputs in Nunito.", "section": "typography" },
-      { "name": "The Whisper Shadow Rule", "body": "No shadow is darker than 12% opacity in light mode, except toasts. If you can clearly see a shadow, it is too strong.", "section": "elevation" }
+      {
+        "name": "The One Accent Rule",
+        "body": "Iris is the only color that means \"you can act on this.\" The warm glow never marks a clickable thing as clickable; it marks a thing as current or important.",
+        "section": "colors"
+      },
+      {
+        "name": "The Glow Is Earned Rule",
+        "body": "glow-gradient is for the active item (nav section, current step, active stage), the Today hero, nudges and empty-state medallions. If two glowing things compete in one viewport, one of them is wrong.",
+        "section": "colors"
+      },
+      {
+        "name": "The No Pure Gray Rule",
+        "body": "Every neutral is lavender-tinted. Never introduce Tailwind's stock slate, zinc or neutral grays.",
+        "section": "colors"
+      },
+      {
+        "name": "The Two Voices Rule",
+        "body": "Nunito is for naming things (pages, sections, nav, steps, tabs). Figtree is for everything the user reads or types. Never set paragraphs or inputs in Nunito.",
+        "section": "typography"
+      },
+      {
+        "name": "The Whisper Shadow Rule",
+        "body": "No shadow is darker than 12% opacity in light mode, except toasts. If you can clearly see a shadow, it is too strong.",
+        "section": "elevation"
+      }
     ],
     "dos": [
       "Do put every card on the surface utility and every page on app-backdrop. Don't hand-roll near-copies.",
@@ -137,13 +316,18 @@
       "Do use glow-gradient only for the current or active item, nudges, the Today hero and empty-state medallions.",
       "Do use page-title once per page and section-label for card headings.",
       "Do keep everything clickable pill-shaped, and keep containers between 12px and 32px radius by size.",
-      "Do add a visible focus-visible ring (2px Iris Soft with offset) to every button and link. WCAG 2.2 AA is required.",
-      "Do use Lavender 600 or darker for any text that must be read. Lavender 400 is for icons only.",
+      "Do keep the global :focus-visible outline working: never add outline-none to buttons or links. WCAG 2.2 AA is required.",
+      "Do use text-gray-500 dark:text-gray-400 (or darker) for muted text, and text-gray-400 dark:text-gray-500 for icons only. Never put text-gray-300 or dark:text-gray-600 on text or icons.",
       "Do design dark mode alongside light: night-indigo glass, dimmed dawn washes, primary-950 badge fills.",
-      "Do say \"Wayfinder\" in new UI, copy and metadata."
+      "Don't reintroduce the old name \"HuntDesk\". The product is Wayfinder.",
+      "Don't introduce stock Tailwind slate, zinc or neutral grays, or pure black. Neutrals are lavender, and dark is night indigo.",
+      "Don't use the warm glow or peach/rose as status colors. Status is emerald, amber or red only.",
+      "Don't use shadows darker than about 12% opacity, except on toasts.",
+      "Don't use square or sharp corners, or small radii (rounded-sm, rounded-md) on new components.",
+      "Don't set body copy or form input text in Nunito."
     ],
     "donts": [
-      "Don't use \"HuntDesk\" in any new work.",
+      "Don't reintroduce the old name \"HuntDesk\". The product is Wayfinder.",
       "Don't introduce stock Tailwind slate, zinc or neutral grays, or pure black. Neutrals are lavender, and dark is night indigo.",
       "Don't use the warm glow or peach/rose as status colors. Status is emerald, amber or red only.",
       "Don't use shadows darker than about 12% opacity, except on toasts.",

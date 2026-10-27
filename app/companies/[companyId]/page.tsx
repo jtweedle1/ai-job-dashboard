@@ -184,7 +184,7 @@ export default function CompanyProfilePage({
       {/* Back */}
       <button
         onClick={() => router.push("/companies")}
-        className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors mb-5"
+        className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors mb-5"
       >
         <i className="ti ti-arrow-left text-sm" aria-hidden="true" />
         Companies
@@ -260,7 +260,7 @@ export default function CompanyProfilePage({
               </button>
               <button
                 onClick={() => setDeleteConfirm(false)}
-                className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-xs text-gray-500 hover:text-gray-600 transition-colors"
               >
                 No
               </button>
@@ -268,7 +268,7 @@ export default function CompanyProfilePage({
           ) : (
             <button
               onClick={() => setDeleteConfirm(true)}
-              className="text-gray-300 hover:text-red-400 transition-colors"
+              className="text-gray-500 hover:text-red-400 transition-colors"
               aria-label="Delete company"
             >
               <i className="ti ti-trash text-sm" aria-hidden="true" />
@@ -276,7 +276,7 @@ export default function CompanyProfilePage({
           )}
         </div>
       </div>
-      <p className="text-xs text-gray-400 dark:text-gray-500 mb-1 px-3">Updated {formatDate(company.updatedAt)}</p>
+      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 px-3">Updated {formatDate(company.updatedAt)}</p>
       {fillError && (
         <p className="text-xs text-amber-600 mb-5 px-3">{fillError}</p>
       )}
@@ -291,7 +291,7 @@ export default function CompanyProfilePage({
           <div className="px-4 py-3 flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-900 dark:text-gray-50">{linkedJob.title}</p>
-              <p className="text-xs text-gray-400 dark:text-gray-500">{linkedJob.company}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{linkedJob.company}</p>
             </div>
             <button
               onClick={() => router.push(`/applications/${linkedJob.id}`)}
@@ -302,7 +302,7 @@ export default function CompanyProfilePage({
           </div>
         ) : (
           <div className="px-4 py-3">
-            <p className="text-sm text-gray-400 dark:text-gray-500">No role linked to this company.</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">No role linked to this company.</p>
           </div>
         )}
       </div>

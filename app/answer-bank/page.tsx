@@ -228,7 +228,7 @@ export default function AnswerBankPage() {
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               placeholder="e.g. Tell me about a time you led a project under pressure"
-              className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800"
+              className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800"
             />
           </div>
           <div>
@@ -246,25 +246,25 @@ export default function AnswerBankPage() {
               onChange={(e) => setAnswer(e.target.value)}
               placeholder="Your prepared answer…"
               rows={4}
-              className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none dark:bg-gray-800"
+              className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none dark:bg-gray-800"
             />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">
-                Tags <span className="text-gray-300 dark:text-gray-600">(comma-separated)</span>
+                Tags <span className="text-gray-500 dark:text-gray-400">(comma-separated)</span>
               </label>
               <input
                 type="text"
                 value={tagsInput}
                 onChange={(e) => setTagsInput(e.target.value)}
                 placeholder="behavioral, leadership, STAR"
-                className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800"
+                className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800"
               />
             </div>
             <div>
               <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">
-                Link to job <span className="text-gray-300 dark:text-gray-600">(optional)</span>
+                Link to job <span className="text-gray-500 dark:text-gray-400">(optional)</span>
               </label>
               <select
                 value={selectedJobId}
@@ -298,7 +298,7 @@ export default function AnswerBankPage() {
         <div className="flex flex-wrap items-center gap-2 mb-4">
           <div className="relative flex-1 min-w-48">
             <i
-              className="ti ti-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 dark:text-gray-600 text-sm"
+              className="ti ti-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm"
               aria-hidden="true"
             />
             <input
@@ -306,7 +306,7 @@ export default function AnswerBankPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search questions and answers…"
-              className="w-full border border-gray-200 dark:border-gray-700 rounded-xl pl-8 pr-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-800"
+              className="w-full border border-gray-200 dark:border-gray-700 rounded-xl pl-8 pr-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-800"
             />
           </div>
           {allTags.map((tag) => (
@@ -373,7 +373,7 @@ export default function AnswerBankPage() {
                         setEditFields((p) => ({ ...p, tags: e.target.value }))
                       }
                       placeholder="behavioral, leadership"
-                      className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800"
+                      className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800"
                     />
                   </div>
                   <div className="flex items-center gap-2">
@@ -393,7 +393,7 @@ export default function AnswerBankPage() {
                     </button>
                     <button
                       onClick={() => setEditingId(null)}
-                      className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                      className="text-xs text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                     >
                       Cancel
                     </button>
@@ -410,7 +410,7 @@ export default function AnswerBankPage() {
                     >
                       <p className="text-sm font-medium text-gray-900 dark:text-gray-50">{entry.question}</p>
                       {expandedId !== entry.id && (
-                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 line-clamp-2">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
                           {entry.answer}
                         </p>
                       )}
@@ -418,7 +418,7 @@ export default function AnswerBankPage() {
                     <div className="flex items-center gap-2 shrink-0">
                       <button
                         onClick={() => startEdit(entry)}
-                        className="text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors"
+                        className="text-gray-500 dark:text-gray-400 hover:text-gray-500 dark:hover:text-gray-400 transition-colors"
                         aria-label="Edit"
                       >
                         <i className="ti ti-pencil text-xs" aria-hidden="true" />
@@ -434,7 +434,7 @@ export default function AnswerBankPage() {
                       <i
                         className={`ti ${
                           expandedId === entry.id ? "ti-chevron-up" : "ti-chevron-down"
-                        } text-gray-300 dark:text-gray-600 text-sm`}
+                        } text-gray-500 dark:text-gray-400 text-sm`}
                         aria-hidden="true"
                       />
                     </div>
@@ -453,8 +453,8 @@ export default function AnswerBankPage() {
                       ))}
                       {entry.jobId && jobTitle(entry.jobId) && (
                         <>
-                          <span className="text-xs text-gray-300 dark:text-gray-600">·</span>
-                          <span className="text-xs text-gray-400 dark:text-gray-500">
+                          <span className="text-xs text-gray-500 dark:text-gray-400">·</span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
                             {jobTitle(entry.jobId)}
                           </span>
                         </>
@@ -496,7 +496,7 @@ export default function AnswerBankPage() {
 
       {answers.length > 0 && filtered.length === 0 && (
         <div className="surface p-8 text-center">
-          <p className="text-sm text-gray-400 dark:text-gray-500">No answers match your search.</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">No answers match your search.</p>
         </div>
       )}
     </div>
@@ -508,7 +508,7 @@ function DraftButton({ onClick, drafting, disabled }: { onClick: () => void; dra
     <button
       onClick={onClick}
       disabled={disabled}
-      className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 hover:text-primary-600 transition-colors disabled:opacity-50 disabled:hover:text-gray-400"
+      className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-primary-600 transition-colors disabled:opacity-50 disabled:hover:text-gray-400"
     >
       <i className={`ti ${drafting ? "ti-loader-2 animate-spin" : "ti-wand"} text-xs`} aria-hidden="true" />
       {drafting ? "Drafting…" : "Draft from my stories"}
