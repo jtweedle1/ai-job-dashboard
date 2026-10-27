@@ -3,6 +3,7 @@ import {
   addDoc,
   getDocs,
   deleteDoc,
+  updateDoc,
   doc,
   query,
   orderBy,
@@ -19,6 +20,8 @@ function toCoverLetter(id: string, d: Record<string, unknown>): CoverLetter {
     jobId: d.jobId as string,
     resumeId: d.resumeId as string,
     content: d.content as string,
+    edited: d.edited === true,
+    useAsVoiceSample: d.useAsVoiceSample === true,
     createdAt: d.createdAt instanceof Timestamp ? d.createdAt.toDate() : new Date(),
   };
 }
@@ -44,4 +47,24 @@ export async function getCoverLettersByJobId(uid: string, jobId: string): Promis
 
 export async function deleteCoverLetter(uid: string, letterId: string): Promise<void> {
   await deleteDoc(doc(db, "users", uid, "coverLetters", letterId));
+}
+
+export async function updateCoverLetterContent(
+  uid: string,
+  letterId: string,
+  content: string
+): Promise<void> {
+  await updateDoc(doc(db, "users", uid, "coverLetters", letterId), {
+    content,
+    edited: true,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function setCoverLetterVoiceSample(
+  uid: string,
+  letterId: string,
+  useAsVoiceSample: boolean
+): Promise<void> {
+  await updateDoc(doc(db, "users", uid, "coverLetters", letterId), { useAsVoiceSample });
 }

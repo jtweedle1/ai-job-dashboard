@@ -62,7 +62,7 @@ export default function AnswerBankPage() {
         jobId: selectedJobId || null,
       };
       const id = await createAnswer(user.uid, data);
-      const newEntry: AnswerEntry = { id, ...data, createdAt: new Date(), updatedAt: new Date() };
+      const newEntry: AnswerEntry = { id, ...data, useAsVoiceSample: false, createdAt: new Date(), updatedAt: new Date() };
       setAnswers((prev) => [newEntry, ...prev]);
       setQuestion("");
       setAnswer("");

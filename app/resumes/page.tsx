@@ -5,6 +5,7 @@ import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useAuth } from "@/lib/auth-context";
 import { db, storage } from "@/lib/firebase";
+import { authedFetch } from "@/lib/api-client";
 import { getResumes, createResume, deleteResume, setActiveResume } from "@/lib/resumes";
 import type { Resume } from "@/types/resume";
 
@@ -64,7 +65,7 @@ export default function ResumesPage() {
     formData.append("file", file);
 
     try {
-      const res = await fetch("/api/parse-pdf", { method: "POST", body: formData });
+      const res = await authedFetch("/api/parse-pdf", { method: "POST", body: formData });
       const data = await res.json();
       if (data.text) {
         setPdfText(data.text);
