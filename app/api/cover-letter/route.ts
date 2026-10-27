@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { FieldValue } from "firebase-admin/firestore";
+import { FieldValue, type DocumentSnapshot } from "firebase-admin/firestore";
 import { adminDb } from "@/lib/firebase-admin";
 import { callAI, WRITING_MODEL } from "@/lib/ai";
 import { requireAuth } from "@/lib/auth-server";
@@ -7,6 +7,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { getVoiceSamples, pickExamples, truncate, type VoiceSample } from "@/lib/voice-server";
 import { computeVoiceStats, describeVoiceStats } from "@/lib/voice-stats";
 import { toVoiceSettings, type VoiceSettings } from "@/types/writingSample";
+import { BACKGROUND_QUESTIONS, backgroundHeading, toBackgroundAnswers } from "@/types/background";
 
 // Default prompt, used until the user has set up their voice.
 const SYSTEM_TEMPLATE = `You are an expert cover letter writer who specializes in natural, human-sounding applications that feel warm, specific, and professional without sounding stiff or AI-generated.
@@ -32,7 +33,8 @@ Style requirements:
   - “I would be a valuable asset”
   - “Thank you for your time and consideration”
 - Do not over-flatter the company.
-- Do not make things up that aren't in the resume.
+- Do not make things up that aren't in the resume or the candidate's BACKGROUND notes.
+- If BACKGROUND notes are given, draw on their specific stories, results, and team details rather than restating resume bullets.
 - Do not just repeat the resume bullet points; incorporate the candidate's experience relevant to the job description.
 - Do not use corporate buzzwords or overly polished language.
 - Use contractions where natural.
@@ -94,6 +96,50 @@ ${truncate(rules, MAX_RULES_CHARS)}
 """`;
 }
 
+const MAX_BACKGROUNDS = 20;
+const BACKGROUND_CHARS = 8000;
+const MAX_BACKGROUND_TOTAL_CHARS = 40000;
+
+// The positions the user picked for this letter, or the ones they have switched on if the client sent none.
+async function getSelectedBackgrounds(uid: string, ids: unknown): Promise<string | null> {
+  const col = adminDb.collection("users").doc(uid).collection("backgrounds");
+  let docs: DocumentSnapshot[];
+  if (Array.isArray(ids)) {
+    const valid = [...new Set(ids.filter((id): id is string => typeof id === "string" && id.length > 0))].slice(
+      0,
+      MAX_BACKGROUNDS
+    );
+    if (valid.length === 0) return null;
+    docs = await adminDb.getAll(...valid.map((id) => col.doc(id)));
+  } else {
+    docs = (await col.where("included", "==", true).limit(MAX_BACKGROUNDS).get()).docs;
+  }
+
+  const blocks: string[] = [];
+  let total = 0;
+  for (const d of docs) {
+    if (!d.exists) continue;
+    const answers = toBackgroundAnswers(d.get("answers"));
+    const known = new Set(BACKGROUND_QUESTIONS.map((q) => q.id));
+    const parts = BACKGROUND_QUESTIONS.filter((q) => answers[q.id]?.trim()).map(
+      (q) => `${q.label}\n${answers[q.id].trim()}`
+    );
+    for (const [k, v] of Object.entries(answers)) if (!known.has(k) && v.trim()) parts.push(v.trim());
+    if (parts.length === 0) continue;
+    const heading = backgroundHeading({
+      title: d.get("title") ?? "",
+      company: d.get("company") ?? "",
+      startDate: d.get("startDate") ?? "",
+      endDate: d.get("endDate") ?? "",
+    });
+    const block = `POSITION: ${heading}\n${truncate(parts.join("\n\n"), BACKGROUND_CHARS)}`;
+    if (total + block.length > MAX_BACKGROUND_TOTAL_CHARS) break;
+    total += block.length;
+    blocks.push(block);
+  }
+  return blocks.length ? blocks.join("\n\n") : null;
+}
+
 function buildVoiceSystem(
   profile: string,
   samples: VoiceSample[],
@@ -128,7 +174,8 @@ function buildVoiceSystem(
 - ${format}`,
 
     `FACTS
-- Only state facts about the candidate that appear in the RESUME, the THINGS TO WEAVE IN notes, or their own hand-written examples. Don't invent numbers, tools, titles, or results.
+- Only state facts about the candidate that appear in the RESUME, the BACKGROUND notes, the THINGS TO WEAVE IN notes, or their own hand-written examples. Don't invent numbers, tools, titles, or results.
+- The BACKGROUND notes are the candidate's own detailed account of past positions. Pick the one or two stories or results that best fit this job and tell them concretely in the candidate's voice. Don't try to cover everything, and don't copy the notes word for word.
 - Use the job description to choose which of their experiences to lead with and to connect them to what this company needs.
 - If something is missing, make a reasonable choice. Never leave placeholders like [TIME].`,
 
@@ -162,16 +209,17 @@ export async function POST(request: Request) {
     const { limited } = await checkRateLimit(uid);
     if (limited) return NextResponse.json({ error: "rate_limited" }, { status: 429 });
 
-    const { jobId, resumeId } = await request.json();
+    const { jobId, resumeId, backgroundIds } = await request.json();
     if (!jobId || !resumeId)
       return NextResponse.json({ error: "missing fields" }, { status: 400 });
 
     const userRef = adminDb.collection("users").doc(uid);
-    const [jobSnap, resumeSnap, userSnap, voiceSamples] = await Promise.all([
+    const [jobSnap, resumeSnap, userSnap, voiceSamples, background] = await Promise.all([
       userRef.collection("jobs").doc(jobId).get(),
       userRef.collection("resumes").doc(resumeId).get(),
       userRef.get(),
       getVoiceSamples(uid),
+      getSelectedBackgrounds(uid, backgroundIds),
     ]);
 
     if (!jobSnap.exists || !resumeSnap.exists)
@@ -193,6 +241,8 @@ ${job.description || "(no description provided)"}
 
 RESUME:
 ${resume.content}`;
+    if (background)
+      userMessage += `\n\n---\n\nBACKGROUND (the candidate's own detailed notes on past positions; true facts):\n${background}`;
     if (voiceMode && settings.alwaysMention.trim())
       userMessage += `\n\n---\n\nTHINGS TO WEAVE IN WHEN RELEVANT (true facts from the candidate):\n${settings.alwaysMention.trim()}`;
 
