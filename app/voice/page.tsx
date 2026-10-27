@@ -13,6 +13,7 @@ import {
   saveVoiceSettings,
 } from "@/lib/writingSamples";
 import { computeVoiceStats } from "@/lib/voice-stats";
+import { parseBannedPhrases } from "@/lib/banned-phrases";
 import { DEFAULT_VOICE_SETTINGS } from "@/types/writingSample";
 import { getCoverLetters, setCoverLetterVoiceSample } from "@/lib/coverLetters";
 import { getAnswers, updateAnswer } from "@/lib/answerBank";
@@ -264,6 +265,7 @@ export default function VoicePage() {
 
   const profileDirty = profile.trim() !== savedProfile;
   const settingsDirty = JSON.stringify(settings) !== JSON.stringify(savedSettings);
+  const bannedCount = parseBannedPhrases(settings.neverSay).length;
 
   // Same measurements the server uses, so users can see what "match my samples" means.
   const includedLetterTexts = [
@@ -384,16 +386,34 @@ export default function VoicePage() {
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">
-              Words to avoid and writing rules
-            </label>
+            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Guidelines</label>
+            <textarea
+              value={settings.guidelines}
+              onChange={(e) => setSettings({ ...settings, guidelines: e.target.value })}
+              rows={settings.guidelines ? 8 : 3}
+              placeholder={"How every letter should be written. For example:\n* Open with how I found the role, not with excitement\n* Back every trait with a concrete example\n* End with a specific ask, not a generic closing"}
+              className={`${inputClass} resize-y`}
+            />
+          </div>
+          <div>
+            <div className="flex items-baseline justify-between gap-2 mb-1.5">
+              <label className="block text-xs text-gray-500 dark:text-gray-400">Words to avoid</label>
+              {bannedCount > 0 && (
+                <span className="text-xs text-gray-400 dark:text-gray-500">
+                  {bannedCount} phrase{bannedCount !== 1 ? "s" : ""} checked after every letter
+                </span>
+              )}
+            </div>
             <textarea
               value={settings.neverSay}
               onChange={(e) => setSettings({ ...settings, neverSay: e.target.value })}
-              rows={settings.neverSay ? 10 : 3}
-              placeholder={"Paste in any format. For example:\nNever use: leverage, synergy, passionate, thrilled\n* Never open with a generic statement of excitement\n* Avoid em dashes"}
+              rows={settings.neverSay ? 8 : 3}
+              placeholder={"Comma lists, one per line, or under headings. For example:\nOverused words:\nleverage, synergy, passionate, thrilled"}
               className={`${inputClass} resize-y`}
             />
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+              If a letter still uses one, it&apos;s automatically rewritten once without it.
+            </p>
           </div>
           {settingsDirty && (
             <div className="flex justify-end">

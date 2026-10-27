@@ -19,7 +19,9 @@ export interface VoiceSettings {
   format: LetterFormat;
   // Stories, projects, or values the user wants woven in when relevant. Treated as true facts.
   alwaysMention: string;
-  // Words or phrases the user never wants in a letter.
+  // How the user wants every letter written (structure, tone, rules). Passed to the model as written.
+  guidelines: string;
+  // Words or phrases the user never wants in a letter. Also checked in code after generation.
   neverSay: string;
 }
 
@@ -27,6 +29,7 @@ export const DEFAULT_VOICE_SETTINGS: VoiceSettings = {
   targetWords: null,
   format: "full",
   alwaysMention: "",
+  guidelines: "",
   neverSay: "",
 };
 
@@ -37,6 +40,7 @@ export function toVoiceSettings(d: unknown): VoiceSettings {
     targetWords: target,
     format: v.format === "body" ? "body" : "full",
     alwaysMention: typeof v.alwaysMention === "string" ? v.alwaysMention : "",
+    guidelines: typeof v.guidelines === "string" ? v.guidelines : "",
     neverSay: typeof v.neverSay === "string" ? v.neverSay : "",
   };
 }

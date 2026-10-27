@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type Anthropic from "@anthropic-ai/sdk";
 import { FieldValue, type DocumentSnapshot } from "firebase-admin/firestore";
 import { adminDb } from "@/lib/firebase-admin";
 import { callAI, WRITING_MODEL } from "@/lib/ai";
@@ -6,6 +7,7 @@ import { requireAuth } from "@/lib/auth-server";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getVoiceSamples, pickExamples, truncate, type VoiceSample } from "@/lib/voice-server";
 import { computeVoiceStats, describeVoiceStats } from "@/lib/voice-stats";
+import { findBannedPhrases, parseBannedPhrases } from "@/lib/banned-phrases";
 import { toVoiceSettings, type VoiceSettings } from "@/types/writingSample";
 import { BACKGROUND_QUESTIONS, backgroundHeading, toBackgroundAnswers } from "@/types/background";
 
@@ -86,14 +88,55 @@ function normalize(text: string): string {
 
 // Users paste these in any shape (comma lists, headings, bullet rules), so pass them through as written.
 const MAX_RULES_CHARS = 12000;
+const MAX_NOTES_CHARS = 2000;
 
 function writingRulesSection(settings: VoiceSettings): string | null {
-  const rules = settings.neverSay.trim();
-  if (!rules) return null;
-  return `WRITING RULES FROM THE CANDIDATE (follow strictly; never use any word or phrase they list, in any form)
+  const sections: string[] = [];
+  const guidelines = settings.guidelines.trim();
+  const avoid = settings.neverSay.trim();
+  if (guidelines)
+    sections.push(`GUIDELINES FROM THE CANDIDATE (follow these for every letter)
 """
-${truncate(rules, MAX_RULES_CHARS)}
-"""`;
+${truncate(guidelines, MAX_RULES_CHARS)}
+"""`);
+  if (avoid)
+    sections.push(`WORDS AND PHRASES THE CANDIDATE BANS (never use any of them, in any form; follow any rules listed here too)
+"""
+${truncate(avoid, MAX_RULES_CHARS)}
+"""`);
+  return sections.length ? sections.join("\n\n") : null;
+}
+
+// One rewrite pass when the draft still contains banned phrases. Returns whatever is left after it.
+async function enforceBannedPhrases(
+  uid: string,
+  messages: Anthropic.MessageParam[],
+  system: string,
+  draft: string,
+  phrases: string[],
+  maxTokens: number,
+  model?: string
+): Promise<{ content: string; remaining: string[] }> {
+  const found = findBannedPhrases(draft, phrases);
+  if (found.length === 0) return { content: draft, remaining: [] };
+
+  const revision = await callAI(
+    uid,
+    [
+      ...messages,
+      { role: "assistant", content: draft },
+      {
+        role: "user",
+        content: `This letter uses words or phrases I banned: ${found.map((f) => `"${f}"`).join(", ")}.
+Rewrite only the sentences that contain them, in my voice, without using any other banned phrase. Keep everything else exactly the same. Output only the full letter.`,
+      },
+    ],
+    system,
+    maxTokens,
+    model
+  );
+  if ("error" in revision) return { content: draft, remaining: found };
+  return { content: revision.content, remaining: findBannedPhrases(revision.content, phrases) };
 }
 
 const MAX_BACKGROUNDS = 20;
@@ -167,7 +210,7 @@ function buildVoiceSystem(
 - Keep their personality: the asides, the value statements, the memorable closing lines, the small stories about how they got into their work. These are what make the letter theirs. Don't sand them down into generic professional prose.
 - Reusing their signature lines and recurring phrases word for word is good (for example a line about who they are or a closing they always use). Never reuse company-specific details from the examples.
 - Follow the VOICE PROFILE. Where it disagrees with the examples, the examples win.
-- The candidate's own WRITING RULES (if given) override everything else, including phrases that appear in their examples.`,
+- The candidate's own GUIDELINES, BANNED PHRASES, and NOTES FOR THIS LETTER (if given) override everything else, including phrases that appear in their examples.`,
 
     `LENGTH AND FORMAT
 - About ${targetWords} words (stay within 15%).
@@ -209,7 +252,7 @@ export async function POST(request: Request) {
     const { limited } = await checkRateLimit(uid);
     if (limited) return NextResponse.json({ error: "rate_limited" }, { status: 429 });
 
-    const { jobId, resumeId, backgroundIds } = await request.json();
+    const { jobId, resumeId, backgroundIds, notes } = await request.json();
     if (!jobId || !resumeId)
       return NextResponse.json({ error: "missing fields" }, { status: 400 });
 
@@ -245,28 +288,35 @@ ${resume.content}`;
       userMessage += `\n\n---\n\nBACKGROUND (the candidate's own detailed notes on past positions; true facts):\n${background}`;
     if (voiceMode && settings.alwaysMention.trim())
       userMessage += `\n\n---\n\nTHINGS TO WEAVE IN WHEN RELEVANT (true facts from the candidate):\n${settings.alwaysMention.trim()}`;
+    const letterNotes = typeof notes === "string" ? notes.trim() : "";
+    if (letterNotes)
+      userMessage += `\n\n---\n\nNOTES FOR THIS LETTER (from the candidate; follow them, and treat facts in them as true):\n${truncate(letterNotes, MAX_NOTES_CHARS)}`;
 
-    const result = voiceMode
-      ? await callAI(
-          uid,
-          [{ role: "user", content: userMessage }],
-          buildVoiceSystem(voiceProfile, voiceSamples, settings),
-          2048,
-          WRITING_MODEL
-        )
-      : await callAI(
-          uid,
-          [{ role: "user", content: userMessage }],
-          [SYSTEM_TEMPLATE.replace("{{VOICE}}", DEFAULT_REFERENCE), writingRulesSection(settings)]
-            .filter(Boolean)
-            .join("\n\n")
-        );
+    const messages: Anthropic.MessageParam[] = [{ role: "user", content: userMessage }];
+    const system = voiceMode
+      ? buildVoiceSystem(voiceProfile, voiceSamples, settings)
+      : [SYSTEM_TEMPLATE.replace("{{VOICE}}", DEFAULT_REFERENCE), writingRulesSection(settings)]
+          .filter(Boolean)
+          .join("\n\n");
+    const maxTokens = voiceMode ? 2048 : 1024;
+    const model = voiceMode ? WRITING_MODEL : undefined;
 
-    if ("error" in result)
+    const draft = await callAI(uid, messages, system, maxTokens, model);
+    if ("error" in draft)
       return NextResponse.json(
-        { error: result.error },
-        { status: result.error === "no_key" ? 401 : 500 }
+        { error: draft.error },
+        { status: draft.error === "no_key" ? 401 : 500 }
       );
+
+    const result = await enforceBannedPhrases(
+      uid,
+      messages,
+      system,
+      draft.content,
+      parseBannedPhrases(settings.neverSay),
+      maxTokens,
+      model
+    );
 
     const ref = await adminDb
       .collection("users")
@@ -285,6 +335,7 @@ ${resume.content}`;
       id: ref.id,
       content: result.content,
       usedVoice: voiceMode,
+      bannedPhrasesLeft: result.remaining,
     });
   } catch (err) {
     console.error("[cover-letter] Error:", err);

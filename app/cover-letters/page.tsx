@@ -39,6 +39,9 @@ function CoverLettersContent() {
   const [selectedResumeId, setSelectedResumeId] = useState("");
   const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState("");
+  const [letterNotes, setLetterNotes] = useState("");
+  // Banned phrases still in a fresh letter after the automatic rewrite.
+  const [flagged, setFlagged] = useState<{ letterId: string; phrases: string[] } | null>(null);
 
   const [viewingLetter, setViewingLetter] = useState<CoverLetter | null>(null);
   const [copied, setCopied] = useState(false);
@@ -85,6 +88,7 @@ function CoverLettersContent() {
           jobId: selectedJobId,
           resumeId: selectedResumeId,
           backgroundIds: backgrounds.filter((b) => b.included).map((b) => b.id),
+          notes: letterNotes,
         }),
       });
       const data = await res.json();
@@ -107,7 +111,9 @@ function CoverLettersContent() {
       };
       setLetters((prev) => [newLetter, ...prev]);
       openLetter(newLetter);
-      showToast("Cover letter generated");
+      const left: string[] = data.bannedPhrasesLeft ?? [];
+      setFlagged(left.length ? { letterId: data.id, phrases: left } : null);
+      showToast(left.length ? "Generated, but check the flagged words" : "Cover letter generated");
     } catch {
       setGenerateError("Something went wrong. Try again.");
     } finally {
@@ -138,6 +144,7 @@ function CoverLettersContent() {
     try {
       await updateCoverLetterContent(user.uid, viewingLetter.id, draft.trim());
       patchLetter(viewingLetter.id, { content: draft.trim(), edited: true });
+      if (flagged?.letterId === viewingLetter.id) setFlagged(null);
       setEditing(false);
       showToast("Changes saved");
     } finally {
@@ -318,6 +325,19 @@ function CoverLettersContent() {
                   </div>
                 )}
               </div>
+              <div>
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">
+                  Notes for this letter <span className="text-gray-400 dark:text-gray-500">(optional)</span>
+                </label>
+                <textarea
+                  value={letterNotes}
+                  onChange={(e) => setLetterNotes(e.target.value)}
+                  rows={2}
+                  maxLength={2000}
+                  placeholder="e.g. Mention I'm open to relocating. Focus on the Python work."
+                  className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-y"
+                />
+              </div>
               <div className="flex items-center gap-3 flex-wrap">
                 <button
                   onClick={handleGenerate}
@@ -410,6 +430,11 @@ function CoverLettersContent() {
             </div>
           </div>
           <div className="px-4 py-4">
+            {flagged?.letterId === viewingLetter.id && !editing && (
+              <p className="text-xs text-amber-600 dark:text-amber-500 mb-3">
+                Still uses words you&apos;ve banned: {flagged.phrases.join(", ")}. Edit them out before sending.
+              </p>
+            )}
             {editing ? (
               <div className="space-y-3">
                 <textarea
