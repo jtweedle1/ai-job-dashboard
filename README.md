@@ -6,6 +6,8 @@
 
 **Live:** [ai-job-dashboard-sable.vercel.app](https://ai-job-dashboard-sable.vercel.app/) · click **Try the demo** to look around a sample job search with no sign-up.
 
+> **Recruiters and hiring managers:** I'm happy to provide a temporary Anthropic API key so you can explore all of the app's AI features. Email me at [jazminrtweedle@gmail.com](mailto:jazminrtweedle@gmail.com).
+
 ---
 
 ## Why it's different

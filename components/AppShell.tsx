@@ -63,7 +63,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <i className="ti ti-eye text-sm" aria-hidden="true" />
             <span className="flex-1 min-w-0">
               You&apos;re exploring a demo job search for Riley, a product designer. Click around and change anything.
-              AI buttons need your own Anthropic key, added in Settings.
+              AI buttons need an Anthropic key, added in Settings. Recruiters and hiring managers: Jazmin is happy
+              to provide a temporary key so you can try every feature. Email{" "}
+              <a href="mailto:jazminrtweedle@gmail.com" className="font-medium underline">
+                jazminrtweedle@gmail.com
+              </a>
+              .
             </span>
             <button
               onClick={async () => {
