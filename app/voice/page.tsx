@@ -411,12 +411,14 @@ export default function VoicePage() {
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Never say</label>
+            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">
+              Words to avoid and writing rules
+            </label>
             <textarea
               value={settings.neverSay}
               onChange={(e) => setSettings({ ...settings, neverSay: e.target.value })}
-              rows={2}
-              placeholder="One phrase per line, e.g. leverage, synergy"
+              rows={settings.neverSay ? 10 : 3}
+              placeholder={"Paste in any format. For example:\nNever use: leverage, synergy, passionate, thrilled\n* Never open with a generic statement of excitement\n* Avoid em dashes"}
               className={`${inputClass} resize-y`}
             />
           </div>
