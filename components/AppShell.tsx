@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { useTheme } from "@/lib/theme-context";
+import { signOutUser } from "@/lib/auth";
 import Sidebar from "./Sidebar";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
@@ -56,6 +57,25 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <i className={`ti ${theme === "dark" ? "ti-sun" : "ti-moon"} text-lg`} aria-hidden="true" />
           </button>
         </header>
+
+        {user.isAnonymous && (
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2 bg-emerald-50 dark:bg-emerald-950 border-b border-emerald-100 dark:border-emerald-900 text-xs text-emerald-700 dark:text-emerald-300 shrink-0">
+            <i className="ti ti-eye text-sm" aria-hidden="true" />
+            <span className="flex-1 min-w-0">
+              You&apos;re exploring a demo job search for Riley, a product designer. Click around and change anything.
+              AI buttons need your own Anthropic key, added in Settings.
+            </span>
+            <button
+              onClick={async () => {
+                await signOutUser();
+                router.replace("/");
+              }}
+              className="font-medium hover:underline"
+            >
+              Leave demo
+            </button>
+          </div>
+        )}
 
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>

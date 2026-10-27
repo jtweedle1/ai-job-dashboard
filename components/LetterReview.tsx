@@ -10,19 +10,35 @@ const backedMark =
 const unbackedMark =
   "rounded-sm bg-amber-50 dark:bg-amber-950 text-amber-900 dark:text-amber-200 underline decoration-amber-500 decoration-wavy decoration-1 underline-offset-4";
 
+const textClass = "text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed";
+
+function withoutDark(classes: string): string {
+  return classes
+    .split(" ")
+    .filter((c) => !c.startsWith("dark:"))
+    .join(" ");
+}
+
 // The letter text, with each traced claim marked: green if backed by the user's material, amber if not.
-export function HighlightedLetter({ content, claims }: { content: string; claims: LetterClaim[] | null }) {
-  if (!claims || claims.length === 0)
-    return (
-      <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">{content}</p>
-    );
+// lightOnly is for pages that never switch to dark mode, like the landing page.
+export function HighlightedLetter({
+  content,
+  claims,
+  lightOnly = false,
+}: {
+  content: string;
+  claims: LetterClaim[] | null;
+  lightOnly?: boolean;
+}) {
+  const cls = (c: string) => (lightOnly ? withoutDark(c) : c);
+  if (!claims || claims.length === 0) return <p className={cls(textClass)}>{content}</p>;
   return (
-    <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
+    <p className={cls(textClass)}>
       {claimSegments(content, claims).map((seg, i) =>
         seg.claim ? (
           <mark
             key={i}
-            className={seg.claim.source ? backedMark : unbackedMark}
+            className={cls(seg.claim.source ? backedMark : unbackedMark)}
             title={seg.claim.source ? `From ${seg.claim.source}: "${seg.claim.evidence}"` : "Not found in your material"}
           >
             {seg.text}
@@ -122,7 +138,8 @@ export default function LetterReview({ claims, checks, checking, checkError, onC
                       <p className="text-gray-700 dark:text-gray-300">&ldquo;{c.quote}&rdquo;</p>
                       {c.source ? (
                         <p className="text-gray-400 dark:text-gray-500 mt-0.5">
-                          {c.source}: <span className="italic">&ldquo;{c.evidence}&rdquo;</span>
+                          {c.source}
+                          <span className="block italic">&ldquo;{c.evidence}&rdquo;</span>
                         </p>
                       ) : (
                         <p className="text-amber-600 dark:text-amber-500 mt-0.5">Not found in your material</p>

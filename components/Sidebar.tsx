@@ -90,7 +90,9 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps) {
   const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
-  const initials = user?.displayName
+  const initials = user?.isAnonymous
+    ? "D"
+    : user?.displayName
     ? user.displayName
         .split(" ")
         .map((n) => n[0])
@@ -145,7 +147,7 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps) {
             {initials}
           </div>
           <span className="text-xs text-gray-500 dark:text-gray-400 flex-1 truncate">
-            {user?.displayName ?? user?.email ?? "Account"}
+            {user?.isAnonymous ? "Demo visitor" : user?.displayName ?? user?.email ?? "Account"}
           </span>
           <button
             onClick={toggleTheme}
