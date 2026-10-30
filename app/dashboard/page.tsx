@@ -281,14 +281,17 @@ export default function TodayPage() {
         <>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
             {rest.length > 0 && (
-              <div className="lg:col-span-2 lg:row-span-2">
+              <div className="lg:col-span-2">
                 <ActionQueue ref={queueHeading} actions={rest} jobs={jobsById} onAct={act} now={now} />
               </div>
             )}
-            <div className="order-first lg:order-none empty:hidden">
-              <ComingUp interviews={upcoming} now={now} />
+            {/* On phones the aside dissolves into the grid so Coming up can sit above the queue. */}
+            <div className="contents lg:block lg:col-start-3 lg:space-y-4">
+              <div className="order-first lg:order-none empty:hidden">
+                <ComingUp interviews={upcoming} now={now} />
+              </div>
+              <WeekCard week={week} />
             </div>
-            <WeekCard week={week} />
           </div>
           <SearchTrail stations={trail.stations} closed={trail.closed} />
         </>
