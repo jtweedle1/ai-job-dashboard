@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { authedFetch, noKeyMessage } from "@/lib/api-client";
+import { useDraft } from "@/lib/use-draft";
 import { aiErrorMessage } from "@/lib/ai-errors";
 import { createJob } from "@/lib/jobs";
 import { getCompanyByName, createCompany } from "@/lib/companies";
@@ -30,22 +31,40 @@ const SCRAPE_ERROR: Record<string, string> = {
   fetch_failed: "Couldn't reach that URL. Check the link or paste the JD text.",
 };
 
+const BLANK_FORM = {
+  jdText: "",
+  urlInput: "",
+  title: "",
+  company: "",
+  location: "",
+  salary: "",
+  source: "linkedin" as JobSource,
+  stage: "saved" as JobStage,
+  notes: "",
+};
+
 export default function AddJobModal({ onClose, onSaved }: Props) {
   const { user } = useAuth();
 
   const [jdTab, setJdTab] = useState<JdTab>("paste");
-  const [jdText, setJdText] = useState("");
-  const [urlInput, setUrlInput] = useState("");
+  // Everything typed or pasted is kept as a draft until the job is saved or discarded.
+  const form = useDraft("add-job", BLANK_FORM, (f) =>
+    [f.jdText, f.urlInput, f.title, f.company, f.location, f.salary, f.notes].every((v) => !v.trim())
+  );
+  const { jdText, urlInput, title, company, location, salary, source, stage, notes } = form.value;
+  const set = (patch: Partial<typeof BLANK_FORM>) => form.setValue((f) => ({ ...f, ...patch }));
+  const setJdText = (jdText: string) => set({ jdText });
+  const setUrlInput = (urlInput: string) => set({ urlInput });
+  const setTitle = (title: string) => set({ title });
+  const setCompany = (company: string) => set({ company });
+  const setLocation = (location: string) => set({ location });
+  const setSalary = (salary: string) => set({ salary });
+  const setSource = (source: JobSource) => set({ source });
+  const setStage = (stage: JobStage) => set({ stage });
+  const setNotes = (notes: string) => set({ notes });
+
   const [fetching, setFetching] = useState(false);
   const [fetchError, setFetchError] = useState("");
-
-  const [title, setTitle] = useState("");
-  const [company, setCompany] = useState("");
-  const [location, setLocation] = useState("");
-  const [salary, setSalary] = useState("");
-  const [source, setSource] = useState<JobSource>("linkedin");
-  const [stage, setStage] = useState<JobStage>("saved");
-  const [notes, setNotes] = useState("");
 
   const [extracting, setExtracting] = useState(false);
   const [extractError, setExtractError] = useState("");
@@ -168,6 +187,7 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
+      form.clear();
       onSaved(newJob);
     } catch {
       setSaveError("Failed to save. Try again.");
@@ -211,6 +231,14 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
         </div>
 
         <div className="flex-1 overflow-y-auto">
+          {form.restored && (
+            <div className="mx-5 mt-4 flex items-center gap-3 flex-wrap text-xs text-gray-700 dark:text-gray-200 px-4 py-2 rounded-full bg-primary-50 dark:bg-primary-950">
+              <span className="flex-1 min-w-0">Picked up where you left off.</span>
+              <button type="button" onClick={form.clear} className="font-medium text-primary-700 dark:text-primary-300 hover:underline">
+                Start over
+              </button>
+            </div>
+          )}
           {/* JD section */}
           <div className="px-5 pt-4 pb-2">
             <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
@@ -426,7 +454,10 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
             </button>
             <button
               type="button"
-              onClick={onClose}
+              onClick={() => {
+                form.clear();
+                onClose();
+              }}
               className="text-sm text-red-700 dark:text-red-300 hover:text-red-800 px-4 py-2 rounded-full transition-colors"
             >
               Discard

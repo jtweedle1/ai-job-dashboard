@@ -8,6 +8,7 @@ import { getInterviewPrepsByJobId, deleteInterviewPrep } from "@/lib/interviewPr
 import { createAnswer } from "@/lib/answerBank";
 import Toast from "@/components/Toast";
 import { useToast } from "@/lib/use-toast";
+import { useDraft } from "@/lib/use-draft";
 import type { Job } from "@/types/job";
 import type { InterviewPrep } from "@/types/interviewPrep";
 
@@ -30,7 +31,7 @@ export default function InterviewPrepPanel({
 
   const [preps, setPreps] = useState<InterviewPrep[]>([]);
   const [loading, setLoading] = useState(true);
-  const [interviewProcess, setInterviewProcess] = useState("");
+  const { value: interviewProcess, setValue: setInterviewProcess } = useDraft(`prep-round:${job.id}`, "", (v) => !v.trim());
   const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState("");
   const [viewingPrep, setViewingPrep] = useState<InterviewPrep | null>(null);

@@ -2,6 +2,7 @@ import { GoogleAuthProvider, signInAnonymously, signInWithPopup, signOut } from 
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "./firebase";
 import { seedDemoAccount } from "./demo";
+import { clearAllDrafts } from "./drafts";
 
 export async function signInWithGoogle() {
   const provider = new GoogleAuthProvider();
@@ -31,4 +32,8 @@ export async function signInAsDemo() {
   return user;
 }
 
-export const signOutUser = () => signOut(auth);
+// Unsaved drafts live in this browser, so they go when the person does.
+export const signOutUser = () => {
+  clearAllDrafts();
+  return signOut(auth);
+};

@@ -129,7 +129,15 @@ export default function TodayPage() {
     [hideToastIn]
   );
 
-  const now = useMemo(() => new Date(), []);
+  // Refreshed whenever the tab comes back into view, so "today" and "tomorrow" stay right overnight.
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") setNow(new Date());
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, []);
   const jobs = useMemo(() => data?.jobs ?? [], [data]);
   const jobsById = useMemo(() => new Map(jobs.map((j) => [j.id, j])), [jobs]);
   const actions = useMemo(

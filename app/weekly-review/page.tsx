@@ -17,6 +17,7 @@ import type { Job } from "@/types/job";
 import type { WeeklyReview } from "@/types/weeklyReview";
 import Toast from "@/components/Toast";
 import { useToast } from "@/lib/use-toast";
+import { useDraft } from "@/lib/use-draft";
 
 function weekStartOf(d: Date): Date {
   const s = new Date(d);
@@ -62,6 +63,7 @@ export default function WeeklyReviewPage() {
   const [loading, setLoading] = useState(true);
 
   const [activeId, setActiveId] = useState<string | null>(null);
+  const draft = useDraft<{ weekOf: number; fields: Fields } | null>("weekly-review-new", null, (v) => v == null);
   // Writing a new review for this week that isn't saved yet.
   const [composing, setComposing] = useState(false);
   // The numbers in the new review came from the tracker, not from memory.
@@ -99,17 +101,21 @@ export default function WeeklyReviewPage() {
 
 
   function setField<K extends keyof Fields>(key: K, value: Fields[K]) {
-    setFields((prev) => ({ ...prev, [key]: value }));
+    const next = { ...fields, [key]: value };
+    setFields(next);
+    // A new review in progress is kept as a draft until it's saved.
+    if (!activeId) draft.setValue({ weekOf: weekStartOf(new Date()).getTime(), fields: next });
     setDirty(true);
   }
 
   // A new review starts with what the tracker already knows; everything stays editable.
   function startNewReview(from = tracked) {
-    const counts = weekCounts(from, weekStartOf(new Date()));
+    const weekOf = weekStartOf(new Date());
+    const kept = draft.value?.weekOf === weekOf.getTime() ? draft.value.fields : null;
     setActiveId(null);
     setComposing(true);
-    setFields({ ...BLANK_FIELDS, ...counts });
-    setPrefilled(true);
+    setFields(kept ?? { ...BLANK_FIELDS, ...weekCounts(from, weekOf) });
+    setPrefilled(!kept);
     setDirty(false);
     setSummaryError("");
   }
@@ -169,6 +175,7 @@ export default function WeeklyReviewPage() {
         setReviews((prev) => [newReview, ...prev]);
         setActiveId(id);
         setComposing(false);
+        draft.clear();
         setPrefilled(false);
         showToast("Review saved");
       }

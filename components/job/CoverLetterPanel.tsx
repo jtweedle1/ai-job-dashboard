@@ -20,6 +20,7 @@ import { letterQualityChecks } from "@/lib/letter-quality";
 import LetterReview, { HighlightedLetter } from "@/components/LetterReview";
 import Toast from "@/components/Toast";
 import { useToast } from "@/lib/use-toast";
+import { useDraft } from "@/lib/use-draft";
 import { backgroundHeading } from "@/types/background";
 import type { Background } from "@/types/background";
 import type { Job } from "@/types/job";
@@ -54,7 +55,7 @@ export default function CoverLetterPanel({
   const [selectedResumeId, setSelectedResumeId] = useState("");
   const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState("");
-  const [letterNotes, setLetterNotes] = useState("");
+  const { value: letterNotes, setValue: setLetterNotes } = useDraft(`letter-notes:${job.id}`, "", (v) => !v.trim());
   const [voiceSettings, setVoiceSettings] = useState<VoiceSettings>(DEFAULT_VOICE_SETTINGS);
   const [checkingSources, setCheckingSources] = useState(false);
   const [sourcesError, setSourcesError] = useState("");
@@ -62,8 +63,8 @@ export default function CoverLetterPanel({
   const [viewingLetter, setViewingLetter] = useState<CoverLetter | null>(null);
   const [copied, setCopied] = useState(false);
   const [savingToBank, setSavingToBank] = useState(false);
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState("");
+  // Unsaved edits to a letter survive switching steps or reloading, until saved or cancelled.
+  const edit = useDraft<{ letterId: string; text: string } | null>(`letter-edit:${job.id}`, null, (v) => v == null);
   const [savingEdit, setSavingEdit] = useState(false);
   const { show: showToast, toastProps } = useToast();
 
@@ -145,7 +146,6 @@ export default function CoverLetterPanel({
 
   function openLetter(letter: CoverLetter | null) {
     setViewingLetter(letter);
-    setEditing(false);
     setSourcesError("");
   }
 
@@ -181,14 +181,19 @@ export default function CoverLetterPanel({
     setViewingLetter((prev) => (prev?.id === id ? { ...prev, ...patch } : prev));
   }
 
+  const editing = edit.value != null && edit.value.letterId === viewingLetter?.id;
+  const draft = editing ? edit.value!.text : "";
+
   async function handleSaveEdit() {
     if (!user || !viewingLetter || !draft.trim()) return;
     setSavingEdit(true);
     try {
       await updateCoverLetterContent(user.uid, viewingLetter.id, draft.trim());
       patchLetter(viewingLetter.id, { content: draft.trim(), edited: true, claims: null });
-      setEditing(false);
+      edit.clear();
       showToast("Changes saved");
+    } catch {
+      showToast("Couldn't save your changes. They're kept here; try again.", { tone: "error" });
     } finally {
       setSavingEdit(false);
     }
@@ -290,10 +295,7 @@ export default function CoverLetterPanel({
             <div className="flex items-center gap-2 shrink-0 flex-wrap">
               {!editing && (
                 <button
-                  onClick={() => {
-                    setDraft(viewingLetter.content);
-                    setEditing(true);
-                  }}
+                  onClick={() => edit.setValue({ letterId: viewingLetter.id, text: viewingLetter.content })}
                   className={ghostButton}
                 >
                   <i className="ti ti-pencil text-xs" aria-hidden="true" />
@@ -324,16 +326,19 @@ export default function CoverLetterPanel({
           <div className="px-5 py-5">
             {editing ? (
               <div className="space-y-3">
+                {edit.restored && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Picked up the edits you hadn&apos;t saved yet.</p>
+                )}
                 <textarea
                   aria-label="Edit your letter"
                   value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
+                  onChange={(e) => edit.setValue({ letterId: viewingLetter.id, text: e.target.value })}
                   rows={14}
                   className={`${fieldClass} leading-relaxed resize-y`}
                 />
                 <div className="flex items-center justify-end gap-2">
                   <button
-                    onClick={() => setEditing(false)}
+                    onClick={edit.clear}
                     className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 px-4 py-2 rounded-full transition-colors"
                   >
                     Cancel

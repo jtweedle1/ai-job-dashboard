@@ -7,6 +7,7 @@ import { getJobs } from "@/lib/jobs";
 import { createDebrief, getDebriefs, getDebriefsByJobId, deleteDebrief } from "@/lib/debriefs";
 import Toast from "@/components/Toast";
 import { useToast } from "@/lib/use-toast";
+import { useDraft } from "@/lib/use-draft";
 import type { Job } from "@/types/job";
 import { DEBRIEF_FIELDS } from "@/types/debrief";
 import type { Debrief } from "@/types/debrief";
@@ -33,8 +34,8 @@ const EMPTY_FIELDS = {
   answersToImprove: "",
 };
 
-// Interview notes. Inside a job it's the Debrief step (log + this job's notes); without a job it's
-// the read-only library under Me → Stories.
+// Interview notes. Inside a job it's the Interview notes step (log + this job's notes); without a job it's
+// the read-only list under Me → Library.
 export default function DebriefPanel({
   job,
   onDebriefsChange,
@@ -48,7 +49,12 @@ export default function DebriefPanel({
   const [debriefs, setDebriefs] = useState<Debrief[]>([]);
   const [loading, setLoading] = useState(true);
   const [interviewDate, setInterviewDate] = useState(todayString());
-  const [fields, setFields] = useState(EMPTY_FIELDS);
+  // Half-written notes survive switching steps or reloading, until they're saved.
+  const { value: fields, setValue: setFields, clear: clearFields } = useDraft(
+    `debrief:${job?.id ?? "library"}`,
+    EMPTY_FIELDS,
+    (v) => Object.values(v).every((x) => !x.trim())
+  );
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -84,7 +90,7 @@ export default function DebriefPanel({
       );
       updateDebriefs(next);
       setExpandedId(id);
-      setFields(EMPTY_FIELDS);
+      clearFields();
       setInterviewDate(todayString());
       showToast("Saved to your interview notes");
     } catch {
