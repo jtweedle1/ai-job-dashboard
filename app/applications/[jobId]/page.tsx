@@ -17,6 +17,7 @@ import Toast from "@/components/Toast";
 import CoverLetterPanel from "@/components/job/CoverLetterPanel";
 import InterviewPrepPanel from "@/components/job/InterviewPrepPanel";
 import DebriefPanel from "@/components/job/DebriefPanel";
+import InterviewDateField from "@/components/job/InterviewDateField";
 import {
   STAGE_META, SOURCE_LABELS, ALL_STAGES, ALL_SOURCES,
   type Job, type JobStage, type JobSource,
@@ -398,6 +399,12 @@ function JobWorkspace({ jobId }: { jobId: string }) {
                   <span className="text-sm text-gray-600 dark:text-gray-300">{formatDate(job.appliedAt)}</span>
                 </div>
               )}
+              {job.lastFollowUpAt && (
+                <div className="flex items-center gap-4 px-5 py-2.5">
+                  <span className="text-xs text-gray-500 dark:text-gray-400 w-20 shrink-0">Followed up</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-300">{formatDate(job.lastFollowUpAt)}</span>
+                </div>
+              )}
               <div className="flex items-center gap-4 px-5 py-2.5">
                 <span className="text-xs text-gray-500 dark:text-gray-400 w-20 shrink-0">Added</span>
                 <span className="text-sm text-gray-500 dark:text-gray-400">{formatDate(job.createdAt)}</span>
@@ -441,6 +448,21 @@ function JobWorkspace({ jobId }: { jobId: string }) {
         <>
           {!interviewing && job.stage !== "offer" && (
             <Nudge text="Got an interview on the calendar?" action="Move to interviewing" onClick={() => handleStageChange("interview")} />
+          )}
+          {interviewing && (
+            <div className="surface px-5 py-4 mb-4">
+              <p className="section-label">When is it?</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 mb-3">
+                Today will remind you to prep beforehand and ask how it went afterwards.
+              </p>
+              <InterviewDateField
+                value={job.nextInterviewAt}
+                onSave={(nextInterviewAt) => {
+                  save({ nextInterviewAt });
+                  showToast(nextInterviewAt ? "Interview date saved" : "Interview date cleared");
+                }}
+              />
+            </div>
           )}
           <InterviewPrepPanel job={job} onPrepsChange={(preps) => setActivity((a) => ({ ...a, preps }))} />
         </>

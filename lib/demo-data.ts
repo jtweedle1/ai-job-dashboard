@@ -193,6 +193,8 @@ interface DemoJob {
   fitScore: number | null;
   fitReasoning: string | null;
   appliedDaysAgo: number | null;
+  // Days from now until a booked interview, so Today's "Coming up" has something to show.
+  interviewInDays?: number;
   description: string;
 }
 
@@ -224,6 +226,7 @@ const JOBS: DemoJob[] = [
     fitReasoning:
       "You built and maintain a Figma design system used by three squads and have paired with engineers on accessible React components. Fieldnote wants token pipelines and documentation experience, which your resume doesn't show yet.",
     appliedDaysAgo: 13,
+    interviewInDays: 2,
     description:
       "Fieldnote is a research notes platform for product teams. Our Design Systems designer owns our component library in Figma and partners with front-end engineers on the coded version. You'll define tokens, write usage docs, and help every squad ship consistent UI faster.",
   },
@@ -388,7 +391,7 @@ export function buildDemoDocs(now: Date): DemoDoc[] {
   }
 
   JOBS.forEach((j, i) => {
-    const { id, appliedDaysAgo, ...rest } = j;
+    const { id, appliedDaysAgo, interviewInDays, ...rest } = j;
     const created = daysAgo(now, (appliedDaysAgo ?? 1) + 1);
     add("jobs", id, {
       ...rest,
@@ -396,6 +399,10 @@ export function buildDemoDocs(now: Date): DemoDoc[] {
       notes: null,
       resumeIdUsed: j.fitScore === null ? null : "demo-resume",
       appliedAt: appliedDaysAgo === null ? null : daysAgo(now, appliedDaysAgo),
+      nextInterviewAt:
+        interviewInDays === undefined ? null : new Date(now.getFullYear(), now.getMonth(), now.getDate() + interviewInDays),
+      lastFollowUpAt: null,
+      snoozedUntil: null,
       createdAt: created,
       updatedAt: daysAgo(now, Math.max(0, (appliedDaysAgo ?? 1) - 2)),
     });
