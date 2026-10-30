@@ -136,6 +136,9 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
         fitScore: null,
         fitReasoning: null,
         resumeIdUsed: null,
+        nextInterviewAt: null,
+        lastFollowUpAt: null,
+        snoozedUntil: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       };

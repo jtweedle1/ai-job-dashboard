@@ -1,18 +1,27 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { authedFetch } from "@/lib/api-client";
-import { getJobs } from "@/lib/jobs";
+import { getJobs, updateJob } from "@/lib/jobs";
 import { getResumes } from "@/lib/resumes";
 import { getCoverLetters } from "@/lib/coverLetters";
 import { getInterviewPreps } from "@/lib/interviewPreps";
 import { getDebriefs } from "@/lib/debriefs";
 import { getWritingSamples } from "@/lib/writingSamples";
-import { nextActions, JOB_STEPS, type JobActivity } from "@/lib/next-steps";
+import { getReviews } from "@/lib/weeklyReviews";
+import { nextActions, type JobActivity } from "@/lib/next-steps";
+import { comingUp, trailStations, weekSummary } from "@/lib/today";
 import AddJobModal from "@/components/AddJobModal";
+import Toast from "@/components/Toast";
+import { NextStepHero, CaughtUpHero, FirstJobHero, SetupHero, type SetupStep } from "@/components/today/TodayHero";
+import ActionQueue from "@/components/today/ActionQueue";
+import ComingUp from "@/components/today/ComingUp";
+import WeekCard from "@/components/today/WeekCard";
+import SearchTrail from "@/components/today/SearchTrail";
+import type { JobPatch } from "@/components/today/QuickActions";
 import type { Job } from "@/types/job";
 
 function greeting(now: Date) {
@@ -26,257 +35,286 @@ function countBy(ids: string[]): Map<string, number> {
   return m;
 }
 
-interface SetupState {
-  resume: boolean;
-  voice: boolean;
-  job: boolean;
-  key: boolean;
+// Settled reads fail soft to an empty list; only the jobs read is allowed to fail the page.
+function orEmpty<T>(r: PromiseSettledResult<T[]>): T[] {
+  return r.status === "fulfilled" ? r.value : [];
 }
+
+interface TodayData {
+  jobs: Job[];
+  activity: Map<string, JobActivity>;
+  letterDates: Date[];
+  interviewDates: Date[];
+  reviewWeeks: Date[];
+  setup: { resume: boolean; voice: boolean; key: boolean };
+}
+
+interface ToastState {
+  message: string;
+  undo?: () => void;
+}
+
+const TOAST_MS = 6000;
 
 export default function TodayPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [activity, setActivity] = useState<Map<string, JobActivity>>(new Map());
-  const [setup, setSetup] = useState<SetupState | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<TodayData | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
+  const [toast, setToast] = useState<ToastState>({ message: "" });
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const queueHeading = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
     if (!user) return;
-    Promise.all([
+    let live = true;
+    Promise.allSettled([
       getJobs(user.uid),
       getResumes(user.uid),
       getCoverLetters(user.uid),
       getInterviewPreps(user.uid),
       getDebriefs(user.uid),
       getWritingSamples(user.uid),
-      authedFetch("/api/settings/api-key")
-        .then((r) => r.json())
-        .then((d) => !!d.hasKey)
-        .catch(() => false),
-    ]).then(([j, r, letters, preps, debriefs, samples, hasKey]) => {
-      const l = countBy(letters.map((x) => x.jobId));
-      const p = countBy(preps.map((x) => x.jobId));
-      const d = countBy(debriefs.map((x) => x.jobId));
-      const map = new Map<string, JobActivity>();
-      for (const job of j) map.set(job.id, { letters: l.get(job.id) ?? 0, preps: p.get(job.id) ?? 0, debriefs: d.get(job.id) ?? 0 });
-      setJobs(j);
-      setActivity(map);
-      setSetup({
-        resume: r.length > 0,
-        voice: samples.length > 0 || letters.some((x) => x.useAsVoiceSample),
-        job: j.length > 0,
-        key: hasKey,
+      getReviews(user.uid),
+      authedFetch("/api/settings/api-key").then((r) => r.json()).then((d) => !!d.hasKey),
+    ]).then(([j, r, l, p, d, s, rv, k]) => {
+      if (!live) return;
+      if (j.status === "rejected") {
+        setFailed(true);
+        return;
+      }
+      const letters = orEmpty(l);
+      const debriefs = orEmpty(d);
+      const lc = countBy(letters.map((x) => x.jobId));
+      const pc = countBy(orEmpty(p).map((x) => x.jobId));
+      const dc = countBy(debriefs.map((x) => x.jobId));
+      const activity = new Map<string, JobActivity>();
+      for (const job of j.value) activity.set(job.id, { letters: lc.get(job.id) ?? 0, preps: pc.get(job.id) ?? 0, debriefs: dc.get(job.id) ?? 0 });
+      setData({
+        jobs: j.value,
+        activity,
+        letterDates: letters.map((x) => x.createdAt),
+        interviewDates: debriefs.map((x) => x.interviewDate),
+        reviewWeeks: orEmpty(rv).map((x) => x.weekOf),
+        setup: {
+          resume: orEmpty(r).length > 0,
+          voice: orEmpty(s).length > 0 || letters.some((x) => x.useAsVoiceSample),
+          // If we can't tell, don't nag about the key.
+          key: k.status === "fulfilled" ? k.value : true,
+        },
       });
-      setLoading(false);
     });
-  }, [user]);
+    return () => {
+      live = false;
+    };
+  }, [user, attempt]);
 
-  const now = useMemo(() => new Date(), []);
-  const actions = useMemo(
-    () => nextActions(jobs, (id) => activity.get(id) ?? { letters: 0, preps: 0, debriefs: 0 }, now),
-    [jobs, activity, now]
+  useEffect(() => () => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+  }, []);
+
+  const hideToastIn = useCallback((ms: number) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast({ message: "" }), ms);
+  }, []);
+
+  const showToast = useCallback(
+    (message: string, undo?: () => void) => {
+      setToast({ message, undo });
+      hideToastIn(TOAST_MS);
+    },
+    [hideToastIn]
   );
 
-  const firstName = user?.isAnonymous ? "" : user?.displayName?.split(" ")[0] ?? "";
-  const weekAgo = now.getTime() - 7 * 86_400_000;
-  const appliedThisWeek = jobs.filter((j) => j.appliedAt && j.appliedAt.getTime() >= weekAgo).length;
-  const pipeline = [
-    { label: "Saved", count: jobs.filter((j) => j.stage === "saved").length },
-    { label: "Applied", count: jobs.filter((j) => j.stage === "applied").length },
-    { label: "Interviewing", count: jobs.filter((j) => j.stage === "phone_screen" || j.stage === "interview").length },
-    { label: "Offers", count: jobs.filter((j) => j.stage === "offer").length },
-  ];
-  const reviewDay = [5, 6, 0].includes(now.getDay());
+  const now = useMemo(() => new Date(), []);
+  const jobs = useMemo(() => data?.jobs ?? [], [data]);
+  const jobsById = useMemo(() => new Map(jobs.map((j) => [j.id, j])), [jobs]);
+  const actions = useMemo(
+    () => nextActions(jobs, (id) => data?.activity.get(id) ?? { letters: 0, preps: 0, debriefs: 0 }, now),
+    [jobs, data, now]
+  );
+  const upcoming = useMemo(() => comingUp(jobs, now), [jobs, now]);
+  const trail = useMemo(() => trailStations(jobs), [jobs]);
+  const week = useMemo(
+    () => (data ? weekSummary({ jobs, letterDates: data.letterDates, interviewDates: data.interviewDates, reviewWeeks: data.reviewWeeks }, now) : null),
+    [data, jobs, now]
+  );
 
-  const setupSteps = setup
-    ? [
-        { done: setup.resume, label: "Add your resume", detail: "Letters and fit scores start here.", href: "/resumes" },
-        { done: setup.voice, label: "Share something you wrote", detail: "So letters sound like you.", href: "/voice" },
-        { done: setup.job, label: "Add your first job", detail: "Paste a link or a description.", onClick: () => setModalOpen(true) },
-        { done: setup.key, label: "Connect your Anthropic key", detail: "Switches on the writing help.", href: "/settings" },
-      ]
-    : [];
-  const setupLeft = setupSteps.filter((s) => !s.done).length;
+  const topId = actions[0]?.jobId;
+
+  // Applies a patch on screen first, saves it, and offers Undo. A failed save puts the job back.
+  const act = useCallback(
+    async (job: Job, patch: JobPatch, message: string) => {
+      if (!user) return;
+      const before = Object.fromEntries(Object.keys(patch).map((k) => [k, job[k as keyof JobPatch]])) as JobPatch;
+      const apply = (p: JobPatch) =>
+        setData((d) => d && { ...d, jobs: d.jobs.map((j) => (j.id === job.id ? { ...j, ...p, updatedAt: new Date() } : j)) });
+
+      apply(patch);
+      // The row (or hero) that was acted on is about to change, so keep keyboard focus nearby.
+      if (job.id === topId) document.getElementById("today-hero")?.focus();
+      else queueHeading.current?.focus();
+      try {
+        await updateJob(user.uid, job.id, patch);
+      } catch {
+        apply(before);
+        showToast("Couldn't save that. Check your connection and try again.");
+        return;
+      }
+      showToast(message, async () => {
+        apply(before);
+        setToast({ message: "" });
+        try {
+          await updateJob(user.uid, job.id, before);
+          showToast("Undone");
+        } catch {
+          apply(patch);
+          showToast("Couldn't undo that. Try again from the job page.");
+        }
+      });
+    },
+    [user, showToast, topId]
+  );
 
   function handleSaved(job: Job) {
     setModalOpen(false);
     router.push(`/applications/${job.id}`);
   }
 
-  if (loading) {
+  if (failed) {
     return (
-      <div className="p-6 max-w-4xl mx-auto animate-pulse space-y-4">
-        <div className="h-40 bg-white/60 dark:bg-gray-800 rounded-4xl" />
-        <div className="h-64 bg-white/60 dark:bg-gray-800 rounded-3xl" />
+      <div className="p-6 max-w-4xl mx-auto">
+        <div className="surface p-8 text-center" role="alert">
+          <div className="w-12 h-12 rounded-full glow-gradient flex items-center justify-center mx-auto mb-4">
+            <i className="ti ti-cloud-off text-2xl text-gray-700 dark:text-gray-100" aria-hidden="true" />
+          </div>
+          <h1 className="page-title mb-1">We couldn&apos;t load your day</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">Your jobs didn&apos;t come through. Check your connection and try again.</p>
+          <button
+            onClick={() => {
+              setFailed(false);
+              setAttempt((n) => n + 1);
+            }}
+            className="inline-flex items-center gap-1.5 bg-primary-600 text-white text-sm font-medium px-5 py-2.5 rounded-full shadow-sm shadow-primary-600/20 hover:bg-primary-700 transition-colors"
+          >
+            <i className="ti ti-refresh text-sm" aria-hidden="true" />
+            Try again
+          </button>
+        </div>
       </div>
     );
   }
 
-  return (
-    <div className="p-6 max-w-4xl mx-auto">
-      {modalOpen && <AddJobModal onClose={() => setModalOpen(false)} onSaved={handleSaved} />}
-
-      {/* Hello */}
-      <section className="relative overflow-hidden rounded-4xl glow-gradient px-6 py-8 sm:px-8 mb-6">
-        <div className="absolute -right-10 -top-12 w-48 h-48 rounded-full sun-orb opacity-70 blur-[2px]" aria-hidden="true" />
-        <div className="absolute right-24 bottom-[-4.5rem] w-40 h-40 rounded-full bg-white/40 dark:bg-white/10" aria-hidden="true" />
-        <div className="relative max-w-lg">
-          <h1 className="font-display font-extrabold text-3xl tracking-tight text-gray-900 dark:text-white">
-            {greeting(now)}{firstName ? `, ${firstName}` : ""}
-          </h1>
-          <p className="mt-2 text-gray-700 dark:text-gray-200">
-            {actions.length === 0
-              ? jobs.length === 0
-                ? "Let's set things up. It takes about five minutes."
-                : "You're all caught up. Nice work."
-              : `${actions.length} small thing${actions.length !== 1 ? "s" : ""} to move your search forward.`}
-          </p>
-          <button
-            onClick={() => setModalOpen(true)}
-            className="mt-5 inline-flex items-center gap-1.5 bg-white/90 dark:bg-white/15 text-gray-900 dark:text-white text-sm font-medium px-5 py-2.5 rounded-full shadow-sm hover:bg-white dark:hover:bg-white/25 transition-colors"
-          >
-            <i className="ti ti-plus text-sm" aria-hidden="true" />
-            Add a job
-          </button>
-        </div>
-      </section>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 space-y-4">
-          {/* First run */}
-          {setupLeft > 0 && (
-            <section className="surface p-5">
-              <div className="flex items-baseline justify-between gap-3 mb-3">
-                <h2 className="section-label">Get set up</h2>
-                <span className="text-xs text-gray-500 dark:text-gray-400">
-                  {setupSteps.length - setupLeft} of {setupSteps.length} done
-                </span>
-              </div>
-              <ol className="space-y-1">
-                {setupSteps.map((s, i) => {
-                  const body = (
-                    <>
-                      <span
-                        className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                          s.done ? "bg-primary-100 dark:bg-primary-950 text-primary-700 dark:text-primary-300" : "glow-gradient text-gray-700 dark:text-gray-100"
-                        }`}
-                      >
-                        {s.done ? <i className="ti ti-check" aria-hidden="true" /> : i + 1}
-                      </span>
-                      <span className="flex-1 min-w-0">
-                        <span className={`block text-sm font-medium ${s.done ? "text-gray-500 dark:text-gray-400 line-through" : "text-gray-900 dark:text-gray-50"}`}>
-                          {s.label}
-                        </span>
-                        {!s.done && <span className="block text-xs text-gray-500 dark:text-gray-400">{s.detail}</span>}
-                      </span>
-                      {!s.done && <i className="ti ti-arrow-right text-gray-400 dark:text-gray-500" aria-hidden="true" />}
-                    </>
-                  );
-                  const cls = "w-full flex items-center gap-3 px-2 py-2 rounded-2xl text-left hover:bg-white/70 dark:hover:bg-white/5 transition-colors";
-                  return (
-                    <li key={s.label}>
-                      {s.done ? (
-                        <div className="flex items-center gap-3 px-2 py-2">{body}</div>
-                      ) : s.href ? (
-                        <Link href={s.href} className={cls}>{body}</Link>
-                      ) : (
-                        <button onClick={s.onClick} className={cls}>{body}</button>
-                      )}
-                    </li>
-                  );
-                })}
-              </ol>
-            </section>
-          )}
-
-          {/* Next steps */}
-          <section className="surface p-5">
-            <h2 className="section-label mb-3">Up next</h2>
-            {actions.length === 0 ? (
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {jobs.length === 0
-                  ? "Add a job and Wayfinder will walk you through it, one step at a time."
-                  : "Nothing waiting on you. Add another role when you find one you like."}
-              </p>
-            ) : (
-              <ul className="space-y-1">
-                {actions.slice(0, 6).map((a) => {
-                  const step = JOB_STEPS.find((s) => s.id === a.step)!;
-                  return (
-                    <li key={a.jobId}>
-                      <Link
-                        href={`/applications/${a.jobId}?step=${a.step}`}
-                        className="flex items-center gap-3 px-2 py-2.5 rounded-2xl hover:bg-white/70 dark:hover:bg-white/5 transition-colors group"
-                      >
-                        <span className="w-10 h-10 rounded-2xl glow-gradient flex items-center justify-center shrink-0">
-                          <i className={`ti ${step.icon} text-lg text-gray-700 dark:text-gray-100`} aria-hidden="true" />
-                        </span>
-                        <span className="flex-1 min-w-0">
-                          <span className="block text-sm font-medium text-gray-900 dark:text-gray-50">{a.action}</span>
-                          <span className="block text-xs text-gray-500 dark:text-gray-400 line-clamp-2 sm:line-clamp-1">
-                            {a.title} · {a.company} · {a.detail}
-                          </span>
-                        </span>
-                        <i className="ti ti-arrow-right text-gray-400 dark:text-gray-500 group-hover:text-primary-500 transition-colors" aria-hidden="true" />
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-            {actions.length > 6 && (
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 px-2">
-                And {actions.length - 6} more in <Link href="/applications" className="text-primary-600 hover:underline">your jobs</Link>.
-              </p>
-            )}
-          </section>
-        </div>
-
-        <div className="space-y-4">
-          {/* This week */}
-          <section className={`p-5 rounded-3xl ${reviewDay ? "glow-gradient" : "surface"}`}>
-            <h2 className="section-label mb-1">This week</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-300">
-              {appliedThisWeek === 0
-                ? "No applications sent yet this week."
-                : `${appliedThisWeek} application${appliedThisWeek !== 1 ? "s" : ""} sent. That's real progress.`}
-            </p>
-            <Link
-              href="/weekly-review"
-              className={`mt-4 inline-flex items-center gap-1.5 text-sm font-medium px-4 py-2 rounded-full transition-colors ${
-                reviewDay
-                  ? "bg-white/90 dark:bg-white/15 text-gray-900 dark:text-white hover:bg-white"
-                  : "text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-950 hover:bg-primary-100 dark:hover:bg-primary-900"
-              }`}
-            >
-              <i className="ti ti-calendar-heart text-sm" aria-hidden="true" />
-              {reviewDay ? "Time for your weekly review" : "Weekly review"}
-            </Link>
-          </section>
-
-          {/* Pipeline */}
-          <section className="surface p-5">
-            <div className="flex items-baseline justify-between mb-3">
-              <h2 className="section-label">Your pipeline</h2>
-              <Link href="/analytics" className="text-xs text-primary-600 hover:underline">Progress</Link>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              {pipeline.map((p) => (
-                <Link
-                  key={p.label}
-                  href="/applications"
-                  className="rounded-2xl bg-white/70 dark:bg-white/5 px-3 py-3 hover:bg-white dark:hover:bg-white/10 transition-colors"
-                >
-                  <span className="block text-2xl font-display font-extrabold text-gray-900 dark:text-gray-50">{p.count}</span>
-                  <span className="block text-xs text-gray-500 dark:text-gray-400">{p.label}</span>
-                </Link>
-              ))}
-            </div>
-          </section>
+  if (!data || !week) {
+    return (
+      <div className="p-6 max-w-4xl mx-auto animate-pulse space-y-4" aria-busy="true">
+        <span className="sr-only">Loading your day</span>
+        <div className="h-6 w-56 bg-white/60 dark:bg-gray-800 rounded-full" />
+        <div className="h-44 bg-white/60 dark:bg-gray-800 rounded-4xl" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="h-56 lg:col-span-2 bg-white/60 dark:bg-gray-800 rounded-3xl" />
+          <div className="h-40 bg-white/60 dark:bg-gray-800 rounded-3xl" />
         </div>
       </div>
+    );
+  }
+
+  const firstName = user?.isAnonymous ? "" : user?.displayName?.split(" ")[0] ?? "";
+  const setupSteps: SetupStep[] = [
+    { done: data.setup.resume, label: "Add your resume", detail: "Letters and fit scores start here.", href: "/resumes" },
+    { done: data.setup.voice, label: "Share something you wrote", detail: "So letters sound like you.", href: "/voice" },
+    { done: jobs.length > 0, label: "Add your first job", detail: "Paste a link or a description.", onClick: () => setModalOpen(true) },
+    { done: data.setup.key, label: "Connect your Anthropic key", detail: "Switches on the writing help.", href: "/settings" },
+  ];
+  const setupDone = setupSteps.filter((s) => s.done).length;
+  const nextSetup = setupSteps.find((s) => !s.done);
+  const setupAsHero = setupDone <= 1;
+  const [top, ...rest] = actions;
+  const topJob = top && jobsById.get(top.jobId);
+
+  return (
+    <div className="p-6 max-w-4xl mx-auto space-y-4">
+      {modalOpen && <AddJobModal onClose={() => setModalOpen(false)} onSaved={handleSaved} />}
+      <Toast
+        message={toast.message}
+        action={toast.undo && { label: "Undo", onClick: toast.undo }}
+        onHold={() => toastTimer.current && clearTimeout(toastTimer.current)}
+        onRelease={() => hideToastIn(3000)}
+      />
+
+      <header className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
+            {now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {greeting(now)}
+            {firstName ? `, ${firstName}` : ""}.
+          </p>
+        </div>
+        <button
+          onClick={() => setModalOpen(true)}
+          className="inline-flex items-center gap-1.5 bg-primary-600 text-white text-sm font-medium px-5 min-h-10 pointer-coarse:min-h-11 rounded-full shadow-sm shadow-primary-600/20 hover:bg-primary-700 transition-colors"
+        >
+          <i className="ti ti-plus text-sm" aria-hidden="true" />
+          Add a job
+        </button>
+      </header>
+
+      {!setupAsHero && nextSetup && (
+        <SetupPill done={setupDone} total={setupSteps.length} step={nextSetup} />
+      )}
+
+      {setupAsHero ? (
+        <SetupHero steps={setupSteps} />
+      ) : top && topJob ? (
+        <NextStepHero action={top} job={topJob} onAct={act} now={now} />
+      ) : jobs.length === 0 ? (
+        <FirstJobHero onAdd={() => setModalOpen(true)} />
+      ) : (
+        <CaughtUpHero next={upcoming[0]} onAdd={() => setModalOpen(true)} now={now} />
+      )}
+
+      {jobs.length > 0 && (
+        <>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+            {rest.length > 0 && (
+              <div className="lg:col-span-2">
+                <ActionQueue ref={queueHeading} actions={rest} jobs={jobsById} onAct={act} now={now} />
+              </div>
+            )}
+            {/* On phones the aside dissolves into the grid so Coming up can sit above the queue. */}
+            <div className="contents lg:block lg:col-start-3 lg:space-y-4">
+              <div className="order-first lg:order-none empty:hidden">
+                <ComingUp interviews={upcoming} now={now} />
+              </div>
+              <WeekCard week={week} />
+            </div>
+          </div>
+          <SearchTrail stations={trail.stations} closed={trail.closed} />
+        </>
+      )}
     </div>
+  );
+}
+
+function SetupPill({ done, total, step }: { done: number; total: number; step: SetupStep }) {
+  const cls =
+    "inline-flex items-center gap-2 max-w-full text-sm px-4 py-2 rounded-full bg-white/70 dark:bg-white/5 border border-white/80 dark:border-white/5 text-gray-700 dark:text-gray-200 hover:bg-white dark:hover:bg-white/10 transition-colors";
+  const body = (
+    <>
+      <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 tabular-nums">
+        Setup {done} of {total}
+      </span>
+      <span className="truncate">{step.label}</span>
+      <i className="ti ti-arrow-right text-sm text-gray-500 dark:text-gray-400" aria-hidden="true" />
+    </>
+  );
+  return step.href ? (
+    <Link href={step.href} className={cls}>{body}</Link>
+  ) : (
+    <button onClick={step.onClick} className={cls}>{body}</button>
   );
 }

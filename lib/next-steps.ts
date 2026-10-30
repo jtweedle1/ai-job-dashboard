@@ -18,6 +18,9 @@ export interface JobActivity {
   debriefs: number;
 }
 
+// What kind of nudge this is, so Today can offer the right quick actions.
+export type ActionKind = "offer" | "prep" | "debrief" | "send" | "letter" | "fit" | "follow_up";
+
 export interface NextAction {
   jobId: string;
   title: string;
@@ -25,12 +28,19 @@ export interface NextAction {
   action: string;
   detail: string;
   step: JobStep;
+  kind: ActionKind;
   priority: number;
+  // A short time cue for the row, e.g. "Thursday" or "16 days". Overdue ones are flagged.
+  chip?: { text: string; overdue?: boolean };
 }
 
 const FINAL_STAGES = new Set(["offer", "rejected", "withdrawn"]);
 const INTERVIEWING = new Set(["phone_screen", "interview"]);
 export const FOLLOW_UP_DAYS = 14;
+// After you chase an application, wait this long before suggesting another nudge.
+export const FOLLOW_UP_AGAIN_DAYS = 7;
+// Interviews this close get their prep nudge raised to the top.
+const PREP_URGENT_DAYS = 2;
 
 export function isStep(value: string | null): value is JobStep {
   return JOB_STEPS.some((s) => s.id === value);
@@ -58,7 +68,37 @@ function daysBetween(from: Date, to: Date): number {
   return Math.floor((to.getTime() - from.getTime()) / 86_400_000);
 }
 
-// At most one action per job, most pressing first.
+export function startOfDay(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+// Calendar days from today to the given day: 0 today, 1 tomorrow, -1 yesterday.
+export function daysUntil(day: Date, now: Date): number {
+  return Math.round((startOfDay(day).getTime() - startOfDay(now).getTime()) / 86_400_000);
+}
+
+// "Today", "Tomorrow", a weekday within the week ahead, otherwise "Nov 12".
+export function dayLabel(day: Date, now: Date): string {
+  const n = daysUntil(day, now);
+  if (n === 0) return "Today";
+  if (n === 1) return "Tomorrow";
+  if (n === -1) return "Yesterday";
+  if (n > 1 && n < 7) return day.toLocaleDateString("en-US", { weekday: "long" });
+  return day.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+// For mid-sentence use: "today", "tomorrow", "on Thursday", "on Nov 12".
+export function dayPhrase(day: Date, now: Date): string {
+  const label = dayLabel(day, now);
+  return ["Today", "Tomorrow", "Yesterday"].includes(label) ? label.toLowerCase() : `on ${label}`;
+}
+
+// An interview dated today hasn't happened yet as far as we know; it's over from tomorrow.
+export function interviewIsPast(job: Job, now: Date): boolean {
+  return job.nextInterviewAt != null && daysUntil(job.nextInterviewAt, now) < 0;
+}
+
+// At most one action per job, most pressing first. Snoozed jobs sit out until their snooze ends.
 export function nextActions(
   jobs: Job[],
   activity: (jobId: string) => JobActivity,
@@ -68,24 +108,39 @@ export function nextActions(
   const updated = new Map(jobs.map((j) => [j.id, j.updatedAt.getTime()]));
 
   for (const job of jobs) {
+    if (job.snoozedUntil && job.snoozedUntil > now) continue;
     const a = activity(job.id);
     const base = { jobId: job.id, title: job.title, company: job.company };
-    const add = (priority: number, step: JobStep, action: string, detail: string) =>
-      actions.push({ ...base, priority, step, action, detail });
+    const add = (priority: number, kind: ActionKind, step: JobStep, action: string, detail: string, chip?: NextAction["chip"]) =>
+      actions.push({ ...base, priority, kind, step, action, detail, ...(chip ? { chip } : {}) });
 
-    if (job.stage === "offer") add(0, "outcome", "Weigh your offer", "Congratulations. Take a breath and compare it to your goals.");
-    else if (INTERVIEWING.has(job.stage) && a.preps === 0)
-      add(1, "interview", `Prep for the ${STAGE_META[job.stage].label.toLowerCase()}`, "Practice questions built from the job description.");
-    else if (INTERVIEWING.has(job.stage) && a.debriefs === 0)
-      add(3, "debrief", "Note how the interview went", "A quick debrief while it's fresh feeds your stories.");
-    else if (job.stage === "saved" && a.letters > 0)
-      add(2, "apply", "Send it and mark as applied", "Your letter is ready.");
-    else if (job.stage === "saved" && job.fitScore != null)
-      add(2, "apply", "Write your letter", `Fit score ${job.fitScore}.`);
-    else if (job.stage === "saved") add(4, "decide", "See if it's a fit", "Score it against your goals before you spend time on it.");
+    if (job.stage === "offer") add(0, "offer", "outcome", "Weigh your offer", "Congratulations. Take a breath and compare it to your goals.");
+    else if (INTERVIEWING.has(job.stage)) {
+      const kind = STAGE_META[job.stage].label.toLowerCase();
+      const date = job.nextInterviewAt;
+      if (date && interviewIsPast(job, now)) {
+        if (a.debriefs === 0)
+          add(daysUntil(date, now) <= -3 ? 1 : 2, "debrief", "debrief", `Note how the ${kind} went`, "A quick debrief while it's fresh feeds your stories.", {
+            text: dayLabel(date, now),
+            overdue: daysUntil(date, now) <= -3,
+          });
+      } else if (date) {
+        const day = dayLabel(date, now);
+        if (a.preps === 0)
+          add(daysUntil(date, now) <= PREP_URGENT_DAYS ? 0 : 1, "prep", "interview", `Prep for ${day === "Today" ? "today" : day === "Tomorrow" ? "tomorrow" : day}'s ${kind}`, "Practice questions built from the job description.", { text: day });
+      } else if (a.preps === 0) add(1, "prep", "interview", `Prep for the ${kind}`, "Practice questions built from the job description.");
+      else if (a.debriefs === 0) add(3, "debrief", "debrief", "Note how the interview went", "A quick debrief while it's fresh feeds your stories.");
+    } else if (job.stage === "saved" && a.letters > 0) add(2, "send", "apply", "Send it and mark as applied", "Your letter is ready.");
+    else if (job.stage === "saved" && job.fitScore != null) add(2, "letter", "apply", "Write your letter", `Fit score ${job.fitScore}.`);
+    else if (job.stage === "saved") add(4, "fit", "decide", "See if it's a fit", "Score it against your goals before you spend time on it.");
     else if (job.stage === "applied") {
-      const days = daysBetween(job.appliedAt ?? job.updatedAt, now);
-      if (days >= FOLLOW_UP_DAYS) add(3, "decide", "Follow up?", `Applied ${days} days ago and no word yet.`);
+      const applied = daysBetween(job.appliedAt ?? job.updatedAt, now);
+      if (job.lastFollowUpAt) {
+        const since = daysBetween(job.lastFollowUpAt, now);
+        if (since >= FOLLOW_UP_AGAIN_DAYS)
+          add(3, "follow_up", "decide", "Follow up again?", `You followed up ${since} days ago and haven't heard back.`, { text: `${applied} days`, overdue: true });
+      } else if (applied >= FOLLOW_UP_DAYS)
+        add(3, "follow_up", "decide", "Follow up?", `Applied ${applied} days ago and no word yet.`, { text: `${applied} days`, overdue: true });
     }
   }
 

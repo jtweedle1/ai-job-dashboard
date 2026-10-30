@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState, useEffect, useMemo, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { getJobs, deleteJob } from "@/lib/jobs";
 import AddJobModal from "@/components/AddJobModal";
@@ -10,9 +10,14 @@ import {
   SOURCE_LABELS,
   ALL_STAGES,
   ALL_SOURCES,
+  STAGE_GROUPS,
+  isStageFilter,
+  matchesStageFilter,
   type Job,
   type JobStage,
   type JobSource,
+  type StageFilter,
+  type StageGroup,
 } from "@/types/job";
 
 type SortKey = "title" | "company" | "source" | "stage" | "createdAt" | "fitScore";
@@ -38,9 +43,11 @@ function SortIcon({ active, dir }: { active: boolean; dir: SortDir }) {
     : <i className="ti ti-sort-descending text-gray-600 dark:text-gray-300 text-xs ml-1" aria-hidden="true" />;
 }
 
-export default function ApplicationsPage() {
+function ApplicationsList() {
   const { user } = useAuth();
   const router = useRouter();
+  // Today's trail links here with ?stage=applied, ?stage=interviewing and so on.
+  const stageParam = useSearchParams().get("stage");
 
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,7 +56,7 @@ export default function ApplicationsPage() {
 
   const [sortKey, setSortKey] = useState<SortKey>("createdAt");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
-  const [stageFilter, setStageFilter] = useState<JobStage | "all">("all");
+  const [stageFilter, setStageFilter] = useState<StageFilter | "all">(isStageFilter(stageParam) ? stageParam : "all");
   const [sourceFilter, setSourceFilter] = useState<JobSource | "all">("all");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [deleting, setDeleting] = useState(false);
@@ -81,7 +88,7 @@ export default function ApplicationsPage() {
 
   const filtered = useMemo(() => {
     let list = [...jobs];
-    if (stageFilter !== "all") list = list.filter((j) => j.stage === stageFilter);
+    if (stageFilter !== "all") list = list.filter((j) => matchesStageFilter(j.stage, stageFilter));
     if (sourceFilter !== "all") list = list.filter((j) => j.source === sourceFilter);
     list.sort((a, b) => {
       let av: string | number | Date | null;
@@ -195,10 +202,14 @@ export default function ApplicationsPage() {
         <div className="flex items-center gap-2 mb-4 flex-wrap">
           <select
             value={stageFilter}
-            onChange={(e) => setStageFilter(e.target.value as JobStage | "all")}
+            onChange={(e) => setStageFilter(e.target.value as StageFilter | "all")}
+            aria-label="Filter by stage"
             className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-1.5 text-xs text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <option value="all">All stages</option>
+            {(Object.keys(STAGE_GROUPS) as StageGroup[]).map((g) => (
+              <option key={g} value={g}>{STAGE_GROUPS[g].label} (all)</option>
+            ))}
             {ALL_STAGES.map((s) => (
               <option key={s} value={s}>{STAGE_META[s].label}</option>
             ))}
@@ -206,6 +217,7 @@ export default function ApplicationsPage() {
           <select
             value={sourceFilter}
             onChange={(e) => setSourceFilter(e.target.value as JobSource | "all")}
+            aria-label="Filter by source"
             className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-1.5 text-xs text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <option value="all">All sources</option>
@@ -344,5 +356,13 @@ export default function ApplicationsPage() {
         <AddJobModal onClose={() => setModalOpen(false)} onSaved={handleSaved} />
       )}
     </div>
+  );
+}
+
+export default function ApplicationsPage() {
+  return (
+    <Suspense>
+      <ApplicationsList />
+    </Suspense>
   );
 }

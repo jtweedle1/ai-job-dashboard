@@ -14,7 +14,14 @@ import {
 import { db } from "./firebase";
 import type { Job, JobStage, JobSource } from "@/types/job";
 
-type CreateJobData = Omit<Job, "id" | "createdAt" | "updatedAt" | "fitScore" | "fitReasoning" | "resumeIdUsed">;
+type CreateJobData = Omit<
+  Job,
+  "id" | "createdAt" | "updatedAt" | "fitScore" | "fitReasoning" | "resumeIdUsed" | "nextInterviewAt" | "lastFollowUpAt" | "snoozedUntil"
+>;
+
+function toDate(v: unknown): Date | null {
+  return v instanceof Timestamp ? v.toDate() : null;
+}
 
 function toJob(id: string, d: Record<string, unknown>): Job {
   return {
@@ -31,7 +38,11 @@ function toJob(id: string, d: Record<string, unknown>): Job {
     fitReasoning: (d.fitReasoning as string | null) ?? null,
     resumeIdUsed: (d.resumeIdUsed as string | null) ?? null,
     notes: (d.notes as string | null) ?? null,
-    appliedAt: d.appliedAt instanceof Timestamp ? d.appliedAt.toDate() : null,
+    appliedAt: toDate(d.appliedAt),
+    // Added later; older jobs simply don't have these fields.
+    nextInterviewAt: toDate(d.nextInterviewAt),
+    lastFollowUpAt: toDate(d.lastFollowUpAt),
+    snoozedUntil: toDate(d.snoozedUntil),
     createdAt: d.createdAt instanceof Timestamp ? d.createdAt.toDate() : new Date(),
     updatedAt: d.updatedAt instanceof Timestamp ? d.updatedAt.toDate() : new Date(),
   };
@@ -44,6 +55,9 @@ export async function createJob(uid: string, data: CreateJobData): Promise<strin
     fitScore: null,
     fitReasoning: null,
     resumeIdUsed: null,
+    nextInterviewAt: null,
+    lastFollowUpAt: null,
+    snoozedUntil: null,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
