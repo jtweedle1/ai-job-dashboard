@@ -10,7 +10,7 @@ import type { Job } from "@/types/job";
 const GO: Record<ActionKind, string> = {
   offer: "Weigh it up",
   prep: "Start prep",
-  debrief: "Write a debrief",
+  debrief: "Write interview notes",
   send: "Open your letter",
   letter: "Write the letter",
   fit: "Check the fit",

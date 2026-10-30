@@ -72,7 +72,7 @@ export const JOURNEY = [
       (prep.mockQuestions as string[] | undefined)?.[0] ?? ""
     }"`,
   },
-  { icon: "ti-notes", label: "Debrief", detail: String(debrief.wentWell ?? "") },
+  { icon: "ti-notes", label: "Interview notes", detail: String(debrief.wentWell ?? "") },
 ];
 
 // Wraps every occurrence of the given phrases, case-insensitively, so the page can highlight them.

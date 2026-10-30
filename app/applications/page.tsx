@@ -5,7 +5,13 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { getJobs, deleteJob } from "@/lib/jobs";
+import { getCoverLetters } from "@/lib/coverLetters";
+import { getInterviewPreps } from "@/lib/interviewPreps";
+import { getDebriefs } from "@/lib/debriefs";
+import { nextActions, type JobActivity, type NextAction } from "@/lib/next-steps";
 import AddJobModal from "@/components/AddJobModal";
+import Toast from "@/components/Toast";
+import { useToast } from "@/lib/use-toast";
 import {
   STAGE_META,
   SOURCE_LABELS,
@@ -21,7 +27,7 @@ import {
   type StageGroup,
 } from "@/types/job";
 
-type SortKey = "title" | "company" | "source" | "stage" | "createdAt" | "fitScore";
+type SortKey = "title" | "company" | "source" | "stage" | "createdAt" | "updatedAt" | "fitScore";
 type SortDir = "asc" | "desc";
 
 function StageBadge({ stage }: { stage: JobStage }) {
@@ -85,9 +91,12 @@ function ApplicationsList() {
   const stageParam = useSearchParams().get("stage");
 
   const [jobs, setJobs] = useState<Job[]>([]);
+  // Each job's next step, by the same rules as Today, so the list and Today always agree.
+  const [next, setNext] = useState<Map<string, NextAction>>(new Map());
+  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
-  const [toast, setToast] = useState("");
+  const { show: showToast, toastProps } = useToast();
 
   const [sortKey, setSortKey] = useState<SortKey>("createdAt");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -102,6 +111,14 @@ function ApplicationsList() {
       getJobs(user.uid).then((data) => {
         setJobs(data);
         setLoading(false);
+        // Next steps are a bonus; if these reads fail the list still works without them.
+        Promise.allSettled([getCoverLetters(user.uid), getInterviewPreps(user.uid), getDebriefs(user.uid)]).then(([l, p, d]) => {
+          const ids = (r: PromiseSettledResult<{ jobId: string }[]>) => (r.status === "fulfilled" ? r.value.map((x) => x.jobId) : []);
+          const count = (list: string[], id: string) => list.filter((x) => x === id).length;
+          const [letters, preps, debriefs] = [ids(l), ids(p), ids(d)];
+          const activity = (id: string): JobActivity => ({ letters: count(letters, id), preps: count(preps, id), debriefs: count(debriefs, id) });
+          setNext(new Map(nextActions(data, activity).map((a) => [a.jobId, a])));
+        });
       });
     }
   }, [user]);
@@ -125,6 +142,8 @@ function ApplicationsList() {
     let list = [...jobs];
     if (stageFilter !== "all") list = list.filter((j) => matchesStageFilter(j.stage, stageFilter));
     if (sourceFilter !== "all") list = list.filter((j) => j.source === sourceFilter);
+    const q = search.trim().toLowerCase();
+    if (q) list = list.filter((j) => j.title.toLowerCase().includes(q) || j.company.toLowerCase().includes(q));
     list.sort((a, b) => {
       let av: string | number | Date | null;
       let bv: string | number | Date | null;
@@ -134,6 +153,7 @@ function ApplicationsList() {
         case "source":       av = a.source;                 bv = b.source;                 break;
         case "stage":        av = a.stage;                  bv = b.stage;                  break;
         case "fitScore":     av = a.fitScore ?? -1;         bv = b.fitScore ?? -1;         break;
+        case "updatedAt":    av = a.updatedAt;              bv = b.updatedAt;              break;
         case "createdAt":
         default:             av = a.createdAt;              bv = b.createdAt;              break;
       }
@@ -143,7 +163,7 @@ function ApplicationsList() {
       return sortDir === "asc" ? cmp : -cmp;
     });
     return list;
-  }, [jobs, stageFilter, sourceFilter, sortKey, sortDir]);
+  }, [jobs, stageFilter, sourceFilter, search, sortKey, sortDir]);
 
   const allFilteredSelected = filtered.length > 0 && filtered.every((j) => selectedIds.has(j.id));
   const someFilteredSelected = filtered.some((j) => selectedIds.has(j.id));
@@ -183,24 +203,26 @@ function ApplicationsList() {
     const count = selectedIds.size;
     if (!confirm(`Delete ${count} job${count !== 1 ? "s" : ""}? This cannot be undone.`)) return;
     setDeleting(true);
-    await Promise.all([...selectedIds].map((id) => deleteJob(user.uid, id)));
-    setJobs((prev) => prev.filter((j) => !selectedIds.has(j.id)));
-    setSelectedIds(new Set());
+    const ids = [...selectedIds];
+    const results = await Promise.allSettled(ids.map((id) => deleteJob(user.uid, id)));
+    const gone = new Set(ids.filter((_, i) => results[i].status === "fulfilled"));
+    setJobs((prev) => prev.filter((j) => !gone.has(j.id)));
+    setSelectedIds(new Set(ids.filter((id) => !gone.has(id))));
     setDeleting(false);
-    setToast(`${count} job${count !== 1 ? "s" : ""} deleted`);
-    setTimeout(() => setToast(""), 3000);
+    if (gone.size === count) showToast(`${count} job${count !== 1 ? "s" : ""} deleted`);
+    else showToast(`Deleted ${gone.size} of ${count}. The rest are still selected; try again.`, { tone: "error" });
   }
 
-  const hasFilters = stageFilter !== "all" || sourceFilter !== "all";
+  const hasFilters = stageFilter !== "all" || sourceFilter !== "all" || search.trim() !== "";
+  const clearFilters = () => {
+    setStageFilter("all");
+    setSourceFilter("all");
+    setSearch("");
+  };
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-full shadow-lg shadow-gray-900/20">
-          <i className="ti ti-circle-check text-primary-400 text-base" aria-hidden="true" />
-          {toast}
-        </div>
-      )}
+      <Toast {...toastProps} />
 
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
@@ -213,7 +235,7 @@ function ApplicationsList() {
             <button
               onClick={handleDeleteSelected}
               disabled={deleting}
-              className="flex items-center gap-2 bg-red-600 text-white text-sm font-medium px-4 py-2 rounded-xl hover:bg-red-700 disabled:opacity-50 transition-colors"
+              className="flex items-center gap-2 bg-red-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-red-700 disabled:opacity-50 transition-colors"
             >
               <i className="ti ti-trash text-sm" aria-hidden="true" />
               {deleting ? "Deleting…" : `Delete ${selectedIds.size}`}
@@ -232,6 +254,17 @@ function ApplicationsList() {
       {/* Filters */}
       {jobs.length > 0 && (
         <div className="flex items-center gap-2 mb-4 flex-wrap">
+          <div className="relative">
+            <i className="ti ti-search absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 dark:text-gray-400" aria-hidden="true" />
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              aria-label="Search by role or company"
+              placeholder="Search role or company"
+              className="border border-gray-200 dark:border-gray-700 rounded-full pl-8 pr-3 py-1.5 text-xs text-gray-700 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500 w-52"
+            />
+          </div>
           <select
             value={stageFilter}
             onChange={(e) => setStageFilter(e.target.value as StageFilter | "all")}
@@ -259,7 +292,7 @@ function ApplicationsList() {
           </select>
           {hasFilters && (
             <button
-              onClick={() => { setStageFilter("all"); setSourceFilter("all"); }}
+              onClick={clearFilters}
               className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
             >
               Clear filters
@@ -300,7 +333,7 @@ function ApplicationsList() {
         <div className="surface p-10 text-center">
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">No jobs match your filters.</p>
           <button
-            onClick={() => { setStageFilter("all"); setSourceFilter("all"); }}
+            onClick={clearFilters}
             className="text-sm text-primary-600 hover:underline"
           >
             Clear filters
@@ -326,6 +359,7 @@ function ApplicationsList() {
                 <SortHeader label="Source" col="source" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="hidden sm:table-cell" />
                 <SortHeader label="Stage" col="stage" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
                 <SortHeader label="Added" col="createdAt" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="hidden md:table-cell" />
+                <SortHeader label="Updated" col="updatedAt" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="hidden lg:table-cell" />
                 <SortHeader label="Fit" col="fitScore" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="hidden lg:table-cell" />
               </tr>
             </thead>
@@ -354,6 +388,14 @@ function ApplicationsList() {
                     >
                       {job.title}
                     </Link>
+                    {next.get(job.id) && (
+                      <span className="flex items-center gap-1.5 mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                        <i className="ti ti-arrow-right text-xs" aria-hidden="true" />
+                        <span className="sr-only">Next step: </span>
+                        {next.get(job.id)!.action}
+                        {next.get(job.id)!.chip && <span className="text-gray-500 dark:text-gray-400">· {next.get(job.id)!.chip!.text}</span>}
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <span className="text-sm text-gray-600 dark:text-gray-300">{job.company}</span>
@@ -366,6 +408,9 @@ function ApplicationsList() {
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell">
                     <span className="text-sm text-gray-500 dark:text-gray-400">{formatDate(job.createdAt)}</span>
+                  </td>
+                  <td className="px-4 py-3 hidden lg:table-cell">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">{formatDate(job.updatedAt)}</span>
                   </td>
                   <td className="px-4 py-3 hidden lg:table-cell">
                     <span className="text-sm text-gray-500 dark:text-gray-400">

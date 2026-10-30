@@ -217,7 +217,7 @@ export default function CoverLetterPanel({
         tags: ["cover-letter"],
         jobId: job.id,
       });
-      showToast("Saved to your stories");
+      showToast("Saved to Answers");
     } finally {
       setSavingToBank(false);
     }
@@ -306,7 +306,7 @@ export default function CoverLetterPanel({
                 ) : (
                   <i className="ti ti-bookmarks text-xs" aria-hidden="true" />
                 )}
-                Save to stories
+                Save to Answers
               </button>
               <button onClick={handleCopy} className={ghostButton}>
                 <i className={`ti ${copied ? "ti-check text-primary-600" : "ti-copy"} text-xs`} aria-hidden="true" />
@@ -386,7 +386,7 @@ export default function CoverLetterPanel({
         <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
           <h2 className="section-label">{letters.length ? "Write another version" : "Write your letter"}</h2>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-            Drafted from your resume, your stories and your voice in Me.
+            Drafted from your resume, your experience and your voice in Me.
           </p>
         </div>
         <div className="px-5 py-4">

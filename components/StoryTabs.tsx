@@ -4,17 +4,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const tabs = [
-  { label: "All stories", href: "/stories", icon: "ti-books" },
+  { label: "Everything", href: "/stories", icon: "ti-books" },
   { label: "Experience", href: "/background", icon: "ti-briefcase" },
   { label: "Answers", href: "/answer-bank", icon: "ti-bookmarks" },
   { label: "Interview notes", href: "/debrief", icon: "ti-clipboard-list" },
 ];
 
-// One library, three kinds of story. Shared header for the pages that hold them.
+// The Library: your experience, answers and interview notes. Shared header for the pages that hold them.
 export default function StoryTabs() {
   const pathname = usePathname();
   return (
-    <nav className="flex gap-2 overflow-x-auto mb-6" aria-label="Story library">
+    <nav className="flex gap-2 overflow-x-auto mb-6" aria-label="Library">
       {tabs.map((t) => {
         const active = pathname === t.href;
         return (

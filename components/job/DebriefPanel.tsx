@@ -86,7 +86,7 @@ export default function DebriefPanel({
       setExpandedId(id);
       setFields(EMPTY_FIELDS);
       setInterviewDate(todayString());
-      showToast("Saved, and added to your stories");
+      showToast("Saved to your interview notes");
     } catch {
       setSaveError("Failed to save. Try again.");
     } finally {
@@ -171,7 +171,7 @@ export default function DebriefPanel({
                 className="flex items-center gap-1.5 bg-primary-600 text-white text-sm font-medium px-5 py-2.5 rounded-full shadow-sm shadow-primary-600/20 hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {saving && <i className="ti ti-loader-2 animate-spin text-sm" aria-hidden="true" />}
-                {saving ? "Saving…" : "Save debrief"}
+                {saving ? "Saving…" : "Save notes"}
               </button>
               {saveError && <p role="alert" className="text-xs text-red-700 dark:text-red-300">{saveError}</p>}
             </div>
@@ -222,7 +222,7 @@ export default function DebriefPanel({
                     <button
                       onClick={() => handleDelete(debrief.id)}
                       className="w-8 h-8 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-red-400 transition-colors disabled:opacity-50 shrink-0"
-                      aria-label="Delete debrief"
+                      aria-label="Delete interview notes"
                     >
                       <i className="ti ti-trash text-xs" aria-hidden="true" />
                     </button>

@@ -8,7 +8,7 @@ export const JOB_STEPS: { id: JobStep; label: string; icon: string }[] = [
   { id: "decide", label: "Decide", icon: "ti-compass" },
   { id: "apply", label: "Apply", icon: "ti-mail" },
   { id: "interview", label: "Interview", icon: "ti-microphone" },
-  { id: "debrief", label: "Debrief", icon: "ti-notes" },
+  { id: "debrief", label: "Interview notes", icon: "ti-notes" },
   { id: "outcome", label: "Outcome", icon: "ti-flag" },
 ];
 
@@ -137,7 +137,7 @@ export function nextActions(
       const date = job.nextInterviewAt;
       if (date && interviewIsPast(job, now)) {
         if (a.debriefs === 0)
-          add(daysUntil(date, now) <= -3 ? 1 : 2, "debrief", "debrief", `Note how the ${kind} went`, "A quick debrief while it's fresh feeds your stories.", {
+          add(daysUntil(date, now) <= -3 ? 1 : 2, "debrief", "debrief", `Note how the ${kind} went`, "A few quick notes while it's fresh. They feed your stories.", {
             text: dayLabel(date, now),
             overdue: daysUntil(date, now) <= -3,
           });
@@ -146,7 +146,7 @@ export function nextActions(
         if (a.preps === 0)
           add(daysUntil(date, now) <= PREP_URGENT_DAYS ? 0 : 1, "prep", "interview", `Prep for ${day === "Today" ? "today" : day === "Tomorrow" ? "tomorrow" : day}'s ${kind}`, "Practice questions built from the job description.", { text: day });
       } else if (a.preps === 0) add(1, "prep", "interview", `Prep for the ${kind}`, "Practice questions built from the job description.");
-      else if (a.debriefs === 0) add(3, "debrief", "debrief", "Note how the interview went", "A quick debrief while it's fresh feeds your stories.");
+      else if (a.debriefs === 0) add(3, "debrief", "debrief", "Note how the interview went", "A few quick notes while it's fresh. They feed your stories.");
     } else if (job.stage === "saved") {
       const deadline = applyByCue(job, now);
       const p = (base: number) => Math.min(base, deadline?.priority ?? base);

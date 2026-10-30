@@ -150,7 +150,7 @@ export default function SettingsPage() {
       >
         <div>
           <h2 className="section-label">Career goals</h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Now live in Me, next to your resume, stories and voice.</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Now live in Me, next to your resume, library and voice.</p>
         </div>
         <i className="ti ti-arrow-right text-gray-400" aria-hidden="true" />
       </Link>

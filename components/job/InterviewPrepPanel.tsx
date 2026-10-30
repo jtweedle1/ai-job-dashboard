@@ -117,7 +117,7 @@ export default function InterviewPrepPanel({
     setSavingQuestionIndex(index);
     try {
       await createAnswer(user.uid, { question, answer: "", tags: ["interview-prep"], jobId: job.id });
-      showToast("Question saved to your stories");
+      showToast("Question saved to Answers");
     } finally {
       setSavingQuestionIndex(null);
     }
@@ -165,8 +165,8 @@ export default function InterviewPrepPanel({
                     onClick={() => handleSaveQuestion(q, i)}
                     disabled={savingQuestionIndex === i}
                     className="w-8 h-8 -mt-1 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-primary-500 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 pointer-coarse:opacity-100 shrink-0 disabled:opacity-50"
-                    aria-label="Save to your stories"
-                    title="Save to your stories"
+                    aria-label="Save to Answers"
+                    title="Save to Answers"
                   >
                     {savingQuestionIndex === i ? (
                       <i className="ti ti-loader-2 animate-spin text-xs" aria-hidden="true" />
