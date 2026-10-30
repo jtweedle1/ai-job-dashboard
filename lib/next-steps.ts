@@ -39,6 +39,12 @@ const INTERVIEWING = new Set(["phone_screen", "interview"]);
 export const FOLLOW_UP_DAYS = 14;
 // After you chase an application, wait this long before suggesting another nudge.
 export const FOLLOW_UP_AGAIN_DAYS = 7;
+// Today suggests chasing a quiet application at most this many times, then lets it rest.
+// Most quiet applications never answer, and an endless list of chases is just guilt.
+export const FOLLOW_UP_NUDGES = 2;
+// A saved role's "apply by" day starts showing this many days ahead, and is raised to the top this close.
+const APPLY_BY_SOON_DAYS = 7;
+const APPLY_BY_URGENT_DAYS = 2;
 // Interviews this close get their prep nudge raised to the top.
 const PREP_URGENT_DAYS = 2;
 
@@ -98,6 +104,17 @@ export function interviewIsPast(job: Job, now: Date): boolean {
   return job.nextInterviewAt != null && daysUntil(job.nextInterviewAt, now) < 0;
 }
 
+// A saved role's deadline, if it has one coming up: a chip, and a raised priority when it's close.
+function applyByCue(job: Job, now: Date): { chip: NonNullable<NextAction["chip"]>; priority?: number } | null {
+  if (!job.applyBy) return null;
+  const n = daysUntil(job.applyBy, now);
+  if (n < 0) return { chip: { text: "Deadline passed" } };
+  if (n > APPLY_BY_SOON_DAYS) return null;
+  const day = dayLabel(job.applyBy, now);
+  const when = day === "Today" || day === "Tomorrow" ? day.toLowerCase() : day;
+  return { chip: { text: `Apply by ${when}` }, priority: n <= APPLY_BY_URGENT_DAYS ? 1 : undefined };
+}
+
 // At most one action per job, most pressing first. Snoozed jobs sit out until their snooze ends.
 export function nextActions(
   jobs: Job[],
@@ -130,17 +147,21 @@ export function nextActions(
           add(daysUntil(date, now) <= PREP_URGENT_DAYS ? 0 : 1, "prep", "interview", `Prep for ${day === "Today" ? "today" : day === "Tomorrow" ? "tomorrow" : day}'s ${kind}`, "Practice questions built from the job description.", { text: day });
       } else if (a.preps === 0) add(1, "prep", "interview", `Prep for the ${kind}`, "Practice questions built from the job description.");
       else if (a.debriefs === 0) add(3, "debrief", "debrief", "Note how the interview went", "A quick debrief while it's fresh feeds your stories.");
-    } else if (job.stage === "saved" && a.letters > 0) add(2, "send", "apply", "Send it and mark as applied", "Your letter is ready.");
-    else if (job.stage === "saved" && job.fitScore != null) add(2, "letter", "apply", "Write your letter", `Fit score ${job.fitScore}.`);
-    else if (job.stage === "saved") add(4, "fit", "decide", "See if it's a fit", "Score it against your goals before you spend time on it.");
-    else if (job.stage === "applied") {
+    } else if (job.stage === "saved") {
+      const deadline = applyByCue(job, now);
+      const p = (base: number) => Math.min(base, deadline?.priority ?? base);
+      if (a.letters > 0) add(p(2), "send", "apply", "Send it and mark as applied", "Your letter is ready.", deadline?.chip);
+      else if (job.fitScore != null) add(p(2), "letter", "apply", "Write your letter", `Fit score ${job.fitScore}.`, deadline?.chip);
+      else add(p(4), "fit", "decide", "See if it's a fit", "Score it against your goals before you spend time on it.", deadline?.chip);
+    } else if (job.stage === "applied" && !job.followUpsOff && job.followUps < FOLLOW_UP_NUDGES) {
+      // A gentle, optional nudge: the chip is a time cue, never "overdue".
       const applied = daysBetween(job.appliedAt ?? job.updatedAt, now);
       if (job.lastFollowUpAt) {
         const since = daysBetween(job.lastFollowUpAt, now);
         if (since >= FOLLOW_UP_AGAIN_DAYS)
-          add(3, "follow_up", "decide", "Follow up again?", `You followed up ${since} days ago and haven't heard back.`, { text: `${applied} days`, overdue: true });
+          add(3, "follow_up", "decide", "Follow up again?", `You followed up ${since} days ago and haven't heard back. This is the last reminder.`, { text: `${applied} days` });
       } else if (applied >= FOLLOW_UP_DAYS)
-        add(3, "follow_up", "decide", "Follow up?", `Applied ${applied} days ago and no word yet.`, { text: `${applied} days`, overdue: true });
+        add(3, "follow_up", "decide", "Follow up?", `Applied ${applied} days ago and no word yet. Optional: many teams never reply.`, { text: `${applied} days` });
     }
   }
 

@@ -110,3 +110,21 @@ export function weekSummary(
     reviewDue: !reviewed && [5, 6, 0].includes(now.getDay()),
   };
 }
+
+// What the tracker already knows about a week, so the weekly review doesn't ask you to recall it.
+// An interview is a job on a day; a debrief and the date on the job for the same interview count once.
+export function weekCounts(
+  input: { jobs: Job[]; debriefs: { jobId: string; interviewDate: Date }[] },
+  weekOf: Date
+): { applicationsSent: number; interviewsBooked: number } {
+  const from = startOfDay(weekOf);
+  const to = new Date(from.getFullYear(), from.getMonth(), from.getDate() + 7);
+  const inWeek = (d: Date | null): d is Date => d != null && d >= from && d < to;
+  const interviews = new Set<string>();
+  for (const j of input.jobs) if (inWeek(j.nextInterviewAt)) interviews.add(`${j.id}:${startOfDay(j.nextInterviewAt).getTime()}`);
+  for (const d of input.debriefs) if (inWeek(d.interviewDate)) interviews.add(`${d.jobId}:${startOfDay(d.interviewDate).getTime()}`);
+  return {
+    applicationsSent: input.jobs.filter((j) => inWeek(j.appliedAt)).length,
+    interviewsBooked: interviews.size,
+  };
+}

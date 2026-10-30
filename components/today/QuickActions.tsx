@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { dayLabel, type NextAction } from "@/lib/next-steps";
+import { dayLabel, FOLLOW_UP_NUDGES, type NextAction } from "@/lib/next-steps";
 import { parseInputDate, toInputDate } from "@/components/job/InterviewDateField";
 import type { Job } from "@/types/job";
 
 // The fields Today is allowed to change on a job. Every one of them can be put back by Undo.
-export type JobPatch = Partial<Pick<Job, "stage" | "appliedAt" | "nextInterviewAt" | "lastFollowUpAt" | "snoozedUntil">>;
+export type JobPatch = Partial<
+  Pick<Job, "stage" | "appliedAt" | "nextInterviewAt" | "lastFollowUpAt" | "followUps" | "followUpsOff" | "snoozedUntil">
+>;
 export type Act = (job: Job, patch: JobPatch, message: string) => void;
 
 const SNOOZE_DAYS = 3;
@@ -84,8 +86,24 @@ export default function QuickActions({
       onClick: () => onAct(job, { stage: "applied", appliedAt: job.appliedAt ?? now }, `Marked ${co} as applied`),
     });
   if (action.kind === "follow_up") {
-    buttons.push({ label: "I followed up", aria: `I followed up with ${co}`, onClick: () => onAct(job, { lastFollowUpAt: now }, `Noted. We'll check on ${co} in a week`) });
+    const followUps = job.followUps + 1;
+    buttons.push({
+      label: "I followed up",
+      aria: `I followed up with ${co}`,
+      onClick: () =>
+        onAct(
+          job,
+          { lastFollowUpAt: now, followUps },
+          followUps >= FOLLOW_UP_NUDGES ? `Noted. That's the last reminder for ${co}` : `Noted. We'll check on ${co} in a week`
+        ),
+    });
     buttons.push({ label: "Got an interview", aria: `Got an interview with ${co}`, onClick: () => setPicking("interview") });
+    // Chasing is optional; stopping is the honest way out for a role that went quiet.
+    buttons.push({
+      label: "Stop reminding me",
+      aria: `Stop follow-up reminders for ${co}`,
+      onClick: () => onAct(job, { followUpsOff: true }, `No more follow-up reminders for ${co}`),
+    });
   }
   if (action.kind === "prep")
     buttons.push({
@@ -93,7 +111,7 @@ export default function QuickActions({
       aria: `${job.nextInterviewAt ? "Change" : "Add"} the interview date for ${co}`,
       onClick: () => setPicking("date"),
     });
-  if (action.kind !== "prep") buttons.push({ label: "Not now", aria: `Hide ${co} for ${SNOOZE_DAYS} days`, onClick: snooze });
+  if (action.kind !== "prep" && action.kind !== "follow_up") buttons.push({ label: "Not now", aria: `Hide ${co} for ${SNOOZE_DAYS} days`, onClick: snooze });
 
   return (
     <div className="flex items-center gap-1.5 flex-wrap">

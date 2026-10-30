@@ -10,6 +10,10 @@ import {
   updateReview,
   deleteReview,
 } from "@/lib/weeklyReviews";
+import { getJobs } from "@/lib/jobs";
+import { getDebriefs } from "@/lib/debriefs";
+import { weekCounts } from "@/lib/today";
+import type { Job } from "@/types/job";
 import type { WeeklyReview } from "@/types/weeklyReview";
 
 function weekStartOf(d: Date): Date {
@@ -56,6 +60,14 @@ export default function WeeklyReviewPage() {
   const [loading, setLoading] = useState(true);
 
   const [activeId, setActiveId] = useState<string | null>(null);
+  // Writing a new review for this week that isn't saved yet.
+  const [composing, setComposing] = useState(false);
+  // The numbers in the new review came from the tracker, not from memory.
+  const [prefilled, setPrefilled] = useState(false);
+  const [tracked, setTracked] = useState<{ jobs: Job[]; debriefs: { jobId: string; interviewDate: Date }[] }>({
+    jobs: [],
+    debriefs: [],
+  });
   const [fields, setFields] = useState<Fields>(BLANK_FIELDS);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
@@ -69,10 +81,19 @@ export default function WeeklyReviewPage() {
 
   useEffect(() => {
     if (!user) return;
-    getReviews(user.uid).then((r) => {
+    Promise.all([
+      getReviews(user.uid),
+      // The tracker only pre-fills numbers, so a failed read just leaves them for you to type.
+      getJobs(user.uid).catch(() => []),
+      getDebriefs(user.uid).catch(() => []),
+    ]).then(([r, jobs, debriefs]) => {
       setReviews(r);
+      setTracked({ jobs, debriefs });
+      if (r.length === 0) startNewReview({ jobs, debriefs });
       setLoading(false);
     });
+    // startNewReview only reads what it's handed here.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   function showToast(msg: string) {
@@ -85,15 +106,30 @@ export default function WeeklyReviewPage() {
     setDirty(true);
   }
 
-  function startNewReview() {
+  // A new review starts with what the tracker already knows; everything stays editable.
+  function startNewReview(from = tracked) {
+    const counts = weekCounts(from, weekStartOf(new Date()));
     setActiveId(null);
+    setComposing(true);
+    setFields({ ...BLANK_FIELDS, ...counts });
+    setPrefilled(true);
+    setDirty(false);
+    setSummaryError("");
+  }
+
+  function closeForm() {
+    setActiveId(null);
+    setComposing(false);
     setFields(BLANK_FIELDS);
+    setPrefilled(false);
     setDirty(false);
     setSummaryError("");
   }
 
   function loadReview(review: WeeklyReview) {
     setActiveId(review.id);
+    setComposing(false);
+    setPrefilled(false);
     setFields({
       applicationsSent: review.applicationsSent,
       interviewsBooked: review.interviewsBooked,
@@ -135,6 +171,8 @@ export default function WeeklyReviewPage() {
         };
         setReviews((prev) => [newReview, ...prev]);
         setActiveId(id);
+        setComposing(false);
+        setPrefilled(false);
         showToast("Review saved");
       }
       setDirty(false);
@@ -180,7 +218,7 @@ export default function WeeklyReviewPage() {
     setDeletingId(id);
     await deleteReview(user.uid, id);
     setReviews((prev) => prev.filter((r) => r.id !== id));
-    if (activeId === id) startNewReview();
+    if (activeId === id) closeForm();
     setDeletingId(null);
     showToast("Deleted");
   }
@@ -220,10 +258,10 @@ export default function WeeklyReviewPage() {
             {reviews.length} review{reviews.length !== 1 ? "s" : ""} logged
           </p>
         </div>
-        {!activeId && (
+        {!activeId && !composing && (
           <button
             onClick={
-              thisWeekReview ? () => loadReview(thisWeekReview) : startNewReview
+              thisWeekReview ? () => loadReview(thisWeekReview) : () => startNewReview()
             }
             className="flex items-center gap-2 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-primary-700 transition-colors shrink-0"
           >
@@ -234,7 +272,7 @@ export default function WeeklyReviewPage() {
       </div>
 
       {/* Active form */}
-      {(activeId !== null || reviews.length === 0) && (
+      {(activeId !== null || composing) && (
         <div className="surface mb-4">
           <div className="px-4 py-3 border-b border-gray-50 dark:border-gray-800 flex items-center justify-between">
             <div>
@@ -281,6 +319,12 @@ export default function WeeklyReviewPage() {
                 </div>
               ))}
             </div>
+            {prefilled && (
+              <p className="-mt-2 text-xs text-gray-500 dark:text-gray-400">
+                <i className="ti ti-sparkles text-xs mr-1" aria-hidden="true" />
+                Applications and interviews are counted from your tracker. Change them if they&apos;re off.
+              </p>
+            )}
 
             {/* Text fields */}
             <div className="space-y-3">
@@ -349,9 +393,9 @@ export default function WeeklyReviewPage() {
                 </button>
               )}
 
-              {activeId && (
+              {(activeId || composing) && (
                 <button
-                  onClick={startNewReview}
+                  onClick={closeForm}
                   className="text-sm text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                 >
                   Close
@@ -395,7 +439,7 @@ export default function WeeklyReviewPage() {
       )}
 
       {/* No reviews + not editing */}
-      {reviews.length === 0 && activeId === null && (
+      {reviews.length === 0 && activeId === null && !composing && (
         <div className="surface p-10 text-center">
           <div className="w-10 h-10 rounded-full glow-gradient flex items-center justify-center mx-auto mb-3">
             <i className="ti ti-calendar-week text-gray-700 dark:text-gray-100 text-xl" aria-hidden="true" />
@@ -404,7 +448,7 @@ export default function WeeklyReviewPage() {
             No weekly reviews yet. Start your first one above.
           </p>
           <button
-            onClick={startNewReview}
+            onClick={() => startNewReview()}
             className="inline-flex items-center gap-2 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-primary-700 transition-colors"
           >
             <i className="ti ti-plus text-sm" aria-hidden="true" />

@@ -403,6 +403,9 @@ export function buildDemoDocs(now: Date): DemoDoc[] {
         interviewInDays === undefined ? null : new Date(now.getFullYear(), now.getMonth(), now.getDate() + interviewInDays),
       lastFollowUpAt: null,
       snoozedUntil: null,
+      followUps: 0,
+      followUpsOff: false,
+      applyBy: null,
       createdAt: created,
       updatedAt: daysAgo(now, Math.max(0, (appliedDaysAgo ?? 1) - 2)),
     });

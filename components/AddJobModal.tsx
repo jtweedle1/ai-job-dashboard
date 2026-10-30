@@ -162,6 +162,9 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
         nextInterviewAt: null,
         lastFollowUpAt: null,
         snoozedUntil: null,
+        followUps: 0,
+        followUpsOff: false,
+        applyBy: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
