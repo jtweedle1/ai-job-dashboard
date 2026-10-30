@@ -15,6 +15,8 @@ import { getDebriefs } from "@/lib/debriefs";
 import { weekCounts } from "@/lib/today";
 import type { Job } from "@/types/job";
 import type { WeeklyReview } from "@/types/weeklyReview";
+import Toast from "@/components/Toast";
+import { useToast } from "@/lib/use-toast";
 
 function weekStartOf(d: Date): Date {
   const s = new Date(d);
@@ -76,8 +78,7 @@ export default function WeeklyReviewPage() {
   const [summaryError, setSummaryError] = useState("");
 
   const [expandedArchiveId, setExpandedArchiveId] = useState<string | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [toast, setToast] = useState("");
+  const { show: showToast, toastProps } = useToast();
 
   useEffect(() => {
     if (!user) return;
@@ -96,10 +97,6 @@ export default function WeeklyReviewPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  function showToast(msg: string) {
-    setToast(msg);
-    setTimeout(() => setToast(""), 3000);
-  }
 
   function setField<K extends keyof Fields>(key: K, value: Fields[K]) {
     setFields((prev) => ({ ...prev, [key]: value }));
@@ -213,14 +210,26 @@ export default function WeeklyReviewPage() {
     }
   }
 
-  async function handleDelete(id: string) {
+  // Gone from the page at once; really deleted only once the Undo toast has gone.
+  function handleDelete(id: string) {
     if (!user) return;
-    setDeletingId(id);
-    await deleteReview(user.uid, id);
+    const uid = user.uid;
+    const before = reviews;
+    const review = reviews.find((r) => r.id === id);
     setReviews((prev) => prev.filter((r) => r.id !== id));
     if (activeId === id) closeForm();
-    setDeletingId(null);
-    showToast("Deleted");
+    const restore = () => {
+      setReviews(before);
+      if (review && activeId === id) loadReview(review);
+    };
+    showToast("Review deleted", {
+      undo: restore,
+      commit: () =>
+        void deleteReview(uid, id).catch(() => {
+          restore();
+          showToast("Couldn't delete that review. Try again.", { tone: "error" });
+        }),
+    });
   }
 
   const thisWeekStart = weekStartOf(new Date());
@@ -243,12 +252,7 @@ export default function WeeklyReviewPage() {
 
   return (
     <div className="p-6 max-w-3xl mx-auto">
-      {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-full shadow-lg shadow-gray-900/20">
-          <i className="ti ti-circle-check text-primary-400 text-base" aria-hidden="true" />
-          {toast}
-        </div>
-      )}
+      <Toast {...toastProps} />
 
       {/* Header */}
       <div className="flex items-start justify-between gap-4 mb-6">
@@ -285,7 +289,6 @@ export default function WeeklyReviewPage() {
             {activeId && (
               <button
                 onClick={() => handleDelete(activeId)}
-                disabled={deletingId === activeId}
                 className="text-gray-500 dark:text-gray-400 hover:text-red-400 transition-colors disabled:opacity-50"
                 aria-label="Delete review"
               >
@@ -499,7 +502,6 @@ export default function WeeklyReviewPage() {
                       </button>
                       <button
                         onClick={() => handleDelete(review.id)}
-                        disabled={deletingId === review.id}
                         className="text-gray-200 dark:text-gray-700 hover:text-red-400 transition-colors disabled:opacity-50"
                         aria-label="Delete"
                       >

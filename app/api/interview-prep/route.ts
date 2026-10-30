@@ -11,6 +11,8 @@ Return ONLY valid JSON with exactly two keys — no markdown, no explanation out
 - "studyTips": a string with 4-6 concise, actionable study tips separated by newlines (each tip on its own line, no bullet characters)
 Mix behavioral, situational, and role-specific technical questions as appropriate for the process described.`;
 
+const GENERAL_ROUND = "Not described yet. Prepare for a typical first interview for this role.";
+
 export async function POST(request: Request) {
   try {
     const authResult = await requireAuth(request);
@@ -20,9 +22,14 @@ export async function POST(request: Request) {
     const { limited } = await checkRateLimit(uid);
     if (limited) return NextResponse.json({ error: "rate_limited" }, { status: 429 });
 
-    const { jobId, interviewProcess } = await request.json();
-    if (!jobId || !interviewProcess)
-      return NextResponse.json({ error: "missing fields" }, { status: 400 });
+    const body = await request.json();
+    const jobId = body.jobId;
+    // Describing the round is optional, so a blank box never blocks getting started.
+    const interviewProcess =
+      typeof body.interviewProcess === "string" && body.interviewProcess.trim()
+        ? body.interviewProcess.trim()
+        : GENERAL_ROUND;
+    if (!jobId) return NextResponse.json({ error: "missing fields" }, { status: 400 });
 
     const jobSnap = await adminDb
       .collection("users").doc(uid).collection("jobs").doc(jobId).get();
@@ -76,7 +83,7 @@ ${interviewProcess}`;
         createdAt: FieldValue.serverTimestamp(),
       });
 
-    return NextResponse.json({ id: ref.id, questions, studyTips });
+    return NextResponse.json({ id: ref.id, questions, studyTips, interviewProcess });
   } catch (err) {
     console.error("[interview-prep] Error:", err);
     return NextResponse.json({ error: "server_error" }, { status: 500 });

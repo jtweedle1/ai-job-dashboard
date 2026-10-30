@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth-context";
 import { getJobs } from "@/lib/jobs";
 import { createDebrief, getDebriefs, getDebriefsByJobId, deleteDebrief } from "@/lib/debriefs";
 import Toast from "@/components/Toast";
+import { useToast } from "@/lib/use-toast";
 import type { Job } from "@/types/job";
 import { DEBRIEF_FIELDS } from "@/types/debrief";
 import type { Debrief } from "@/types/debrief";
@@ -51,8 +52,7 @@ export default function DebriefPanel({
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [toast, setToast] = useState("");
+  const { show: showToast, toastProps } = useToast();
 
   useEffect(() => {
     if (!user) return;
@@ -71,10 +71,6 @@ export default function DebriefPanel({
     onDebriefsChange?.(next.length);
   }
 
-  function showToast(msg: string) {
-    setToast(msg);
-    setTimeout(() => setToast(""), 3000);
-  }
 
   async function handleSave() {
     if (!user || !job || !interviewDate) return;
@@ -98,14 +94,26 @@ export default function DebriefPanel({
     }
   }
 
-  async function handleDelete(id: string) {
+  // Gone from the page at once; really deleted only once the Undo toast has gone.
+  function handleDelete(id: string) {
     if (!user) return;
-    setDeletingId(id);
-    await deleteDebrief(user.uid, id);
+    const uid = user.uid;
+    const before = debriefs;
+    const wasExpanded = expandedId;
     updateDebriefs(debriefs.filter((d) => d.id !== id));
     if (expandedId === id) setExpandedId(null);
-    setDeletingId(null);
-    showToast("Deleted");
+    const restore = () => {
+      updateDebriefs(before);
+      setExpandedId(wasExpanded);
+    };
+    showToast("Interview notes deleted", {
+      undo: restore,
+      commit: () =>
+        void deleteDebrief(uid, id).catch(() => {
+          restore();
+          showToast("Couldn't delete those notes. Try again.", { tone: "error" });
+        }),
+    });
   }
 
   function jobFor(jobId: string) {
@@ -121,7 +129,7 @@ export default function DebriefPanel({
 
   return (
     <div className="space-y-4">
-      <Toast message={toast} />
+      <Toast {...toastProps} />
 
       {job && (
         <div className="surface">
@@ -213,7 +221,6 @@ export default function DebriefPanel({
                     )}
                     <button
                       onClick={() => handleDelete(debrief.id)}
-                      disabled={deletingId === debrief.id}
                       className="w-8 h-8 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-red-400 transition-colors disabled:opacity-50 shrink-0"
                       aria-label="Delete debrief"
                     >

@@ -19,6 +19,7 @@ import { parseBannedPhrases } from "@/lib/banned-phrases";
 import { letterQualityChecks } from "@/lib/letter-quality";
 import LetterReview, { HighlightedLetter } from "@/components/LetterReview";
 import Toast from "@/components/Toast";
+import { useToast } from "@/lib/use-toast";
 import { backgroundHeading } from "@/types/background";
 import type { Background } from "@/types/background";
 import type { Job } from "@/types/job";
@@ -61,11 +62,10 @@ export default function CoverLetterPanel({
   const [viewingLetter, setViewingLetter] = useState<CoverLetter | null>(null);
   const [copied, setCopied] = useState(false);
   const [savingToBank, setSavingToBank] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
-  const [toast, setToast] = useState("");
+  const { show: showToast, toastProps } = useToast();
 
   useEffect(() => {
     if (!user) return;
@@ -91,10 +91,6 @@ export default function CoverLetterPanel({
     onLettersChange?.(next.length);
   }
 
-  function showToast(msg: string) {
-    setToast(msg);
-    setTimeout(() => setToast(""), 3000);
-  }
 
   async function handleGenerate() {
     if (!user || !selectedResumeId) return;
@@ -227,15 +223,27 @@ export default function CoverLetterPanel({
     }
   }
 
-  async function handleDelete(id: string) {
+  // Gone from the page at once; really deleted only once the Undo toast has gone.
+  function handleDelete(id: string) {
     if (!user) return;
-    setDeletingId(id);
-    await deleteCoverLetter(user.uid, id);
+    const uid = user.uid;
+    const before = letters;
+    const wasViewing = viewingLetter;
     const next = letters.filter((l) => l.id !== id);
     updateLetters(next);
     if (viewingLetter?.id === id) openLetter(next[0] ?? null);
-    setDeletingId(null);
-    showToast("Deleted");
+    const restore = () => {
+      updateLetters(before);
+      openLetter(wasViewing);
+    };
+    showToast("Letter deleted", {
+      undo: restore,
+      commit: () =>
+        void deleteCoverLetter(uid, id).catch(() => {
+          restore();
+          showToast("Couldn't delete that letter. Try again.", { tone: "error" });
+        }),
+    });
   }
 
   function resumeLabel(resumeId: string) {
@@ -266,7 +274,7 @@ export default function CoverLetterPanel({
 
   return (
     <div className="space-y-4">
-      <Toast message={toast} />
+      <Toast {...toastProps} />
 
       {/* The letter itself comes first once there is one. */}
       {viewingLetter && (
@@ -306,7 +314,6 @@ export default function CoverLetterPanel({
               </button>
               <button
                 onClick={() => handleDelete(viewingLetter.id)}
-                disabled={deletingId === viewingLetter.id}
                 className="w-8 h-8 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-red-400 transition-colors disabled:opacity-50"
                 aria-label="Delete cover letter"
               >

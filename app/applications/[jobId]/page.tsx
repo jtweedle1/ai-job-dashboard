@@ -12,7 +12,8 @@ import { getResumes } from "@/lib/resumes";
 import { getCoverLettersByJobId } from "@/lib/coverLetters";
 import { getInterviewPrepsByJobId } from "@/lib/interviewPreps";
 import { getDebriefsByJobId } from "@/lib/debriefs";
-import { JOB_STEPS, isStep, stepsDone, suggestedStep, type JobActivity, type JobStep } from "@/lib/next-steps";
+import { JOB_STEPS, dayLabel, isStep, stepsDone, suggestedStep, type JobActivity, type JobStep } from "@/lib/next-steps";
+import { interviewIcs } from "@/lib/calendar";
 import EditableField from "@/components/EditableField";
 import Toast from "@/components/Toast";
 import CoverLetterPanel from "@/components/job/CoverLetterPanel";
@@ -92,6 +93,90 @@ function Nudge({ text, action, onClick }: { text: string; action: string; onClic
         {action}
       </button>
     </div>
+  );
+}
+
+function Fact({ icon, children }: { icon: string; children: React.ReactNode }) {
+  return (
+    <li className="inline-flex items-center gap-1.5">
+      <i className={`ti ${icon} text-sm text-gray-400 dark:text-gray-500`} aria-hidden="true" />
+      {children}
+    </li>
+  );
+}
+
+// The few facts worth having on every step, so none of them has to be remembered. Empty ones stay hidden.
+function JobFacts({ job, now, onSave }: { job: Job; now: Date; onSave: (patch: Partial<Job>) => void }) {
+  const snoozed = job.snoozedUntil && job.snoozedUntil > now;
+  const link = "text-primary-700 dark:text-primary-300 hover:underline";
+  return (
+    <ul aria-label="At a glance" className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600 dark:text-gray-300">
+      {job.stage === "saved" && job.applyBy && <Fact icon="ti-calendar-due">Apply by {dayLabel(job.applyBy, now)}</Fact>}
+      {job.appliedAt && <Fact icon="ti-send">Applied {formatDate(job.appliedAt)}</Fact>}
+      {job.lastFollowUpAt && (
+        <Fact icon="ti-message-forward">
+          Followed up {formatDate(job.lastFollowUpAt)}
+          {job.followUps > 1 ? ` (${job.followUps} times)` : ""}
+        </Fact>
+      )}
+      {job.nextInterviewAt && <Fact icon="ti-microphone">Interview {dayLabel(job.nextInterviewAt, now)}</Fact>}
+      {job.url && (
+        <Fact icon="ti-external-link">
+          <a href={job.url} target="_blank" rel="noopener noreferrer" className={link}>
+            Job posting<span className="sr-only"> (opens in a new tab)</span>
+          </a>
+        </Fact>
+      )}
+      {snoozed && (
+        <Fact icon="ti-eye-off">
+          Hidden from Today until {dayLabel(job.snoozedUntil!, now)}
+          <button type="button" onClick={() => onSave({ snoozedUntil: null })} className={link}>
+            Show it again
+          </button>
+        </Fact>
+      )}
+      {job.stage === "applied" && job.followUpsOff && (
+        <Fact icon="ti-bell-off">
+          Follow-up reminders off
+          <button type="button" onClick={() => onSave({ followUpsOff: false, followUps: 0 })} className={link}>
+            Turn back on
+          </button>
+        </Fact>
+      )}
+    </ul>
+  );
+}
+
+// An all-day event for the interview, downloaded as a file the person's own calendar can open.
+function downloadInterview(job: Job) {
+  if (!job.nextInterviewAt) return;
+  const d = job.nextInterviewAt;
+  const ics = interviewIcs({
+    uid: `${job.id}-${d.getFullYear()}${d.getMonth() + 1}${d.getDate()}`,
+    title: `${STAGE_META[job.stage].label}: ${job.company}, ${job.title}`,
+    day: d,
+    details: "Added from Wayfinder.",
+    url: job.url,
+  });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([ics], { type: "text/calendar" }));
+  a.download = `${job.company} interview.ics`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// Notes follow you through every step, folded away until there's something in them.
+function NotesCard({ notes, onSave }: { notes: string | null; onSave: (v: string) => void }) {
+  return (
+    <details open={!!notes} className="surface mt-4 group">
+      <summary className="px-5 py-4 cursor-pointer list-none flex items-center justify-between gap-3 rounded-3xl">
+        <h2 className="section-label">Notes</h2>
+        <i className="ti ti-chevron-down text-gray-500 dark:text-gray-400 transition-transform group-open:rotate-180" aria-hidden="true" />
+      </summary>
+      <div className="px-5 pb-3">
+        <EditableField label="Notes" value={notes} placeholder="Anything worth remembering about this role…" multiline onSave={onSave} />
+      </div>
+    </details>
   );
 }
 
@@ -274,6 +359,7 @@ function JobWorkspace({ jobId }: { jobId: string }) {
             {job.company}
             {job.location ? ` · ${job.location}` : ""}
           </p>
+          <JobFacts job={job} now={new Date()} onSave={save} />
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <label className="sr-only" htmlFor="stage">Stage</label>
@@ -399,6 +485,18 @@ function JobWorkspace({ jobId }: { jobId: string }) {
                   {ALL_SOURCES.map((s) => <option key={s} value={s}>{SOURCE_LABELS[s]}</option>)}
                 </select>
               </div>
+              {job.stage === "saved" && (
+                <div className="px-5 py-2.5">
+                  <InterviewDateField
+                    label="Apply by"
+                    labelClassName="text-xs text-gray-500 dark:text-gray-400 w-20 shrink-0"
+                    value={job.applyBy}
+                    onSave={async (applyBy) => {
+                      if (await save({ applyBy })) showToast(applyBy ? "Apply-by day saved" : "Apply-by day cleared");
+                    }}
+                  />
+                </div>
+              )}
               {resumes.length > 0 && (
                 <div className="flex items-center gap-4 px-5 py-2.5">
                   <span className="text-xs text-gray-500 dark:text-gray-400 w-20 shrink-0">Resume</span>
@@ -481,6 +579,16 @@ function JobWorkspace({ jobId }: { jobId: string }) {
                   if (await save({ nextInterviewAt })) showToast(nextInterviewAt ? "Interview date saved" : "Interview date cleared");
                 }}
               />
+              {job.nextInterviewAt && (
+                <button
+                  type="button"
+                  onClick={() => downloadInterview(job)}
+                  className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-primary-700 dark:text-primary-300 hover:underline"
+                >
+                  <i className="ti ti-calendar-plus text-sm" aria-hidden="true" />
+                  Add to my calendar
+                </button>
+              )}
             </div>
           )}
           <InterviewPrepPanel job={job} onPrepsChange={(preps) => setActivity((a) => ({ ...a, preps }))} />
@@ -490,6 +598,10 @@ function JobWorkspace({ jobId }: { jobId: string }) {
       {/* Debrief: what happened */}
       {step === "debrief" && (
         <DebriefPanel job={job} onDebriefsChange={(debriefs) => setActivity((a) => ({ ...a, debriefs }))} />
+      )}
+
+      {(step === "apply" || step === "interview" || step === "debrief") && (
+        <NotesCard notes={job.notes} onSave={(v) => save({ notes: v || null })} />
       )}
 
       {/* Outcome: how it ended */}
