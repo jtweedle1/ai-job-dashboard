@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useState, useEffect, useMemo, useRef } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { getJobs, deleteJob } from "@/lib/jobs";
@@ -41,6 +42,40 @@ function SortIcon({ active, dir }: { active: boolean; dir: SortDir }) {
   return dir === "asc"
     ? <i className="ti ti-sort-ascending text-gray-600 dark:text-gray-300 text-xs ml-1" aria-hidden="true" />
     : <i className="ti ti-sort-descending text-gray-600 dark:text-gray-300 text-xs ml-1" aria-hidden="true" />;
+}
+
+function SortHeader({
+  label,
+  col,
+  sortKey,
+  sortDir,
+  onSort,
+  className = "",
+}: {
+  label: string;
+  col: SortKey;
+  sortKey: SortKey;
+  sortDir: SortDir;
+  onSort: (key: SortKey) => void;
+  className?: string;
+}) {
+  const active = sortKey === col;
+  return (
+    <th
+      scope="col"
+      aria-sort={active ? (sortDir === "asc" ? "ascending" : "descending") : undefined}
+      className={`px-4 py-2.5 text-left text-xs font-medium whitespace-nowrap ${className}`}
+    >
+      <button
+        type="button"
+        onClick={() => onSort(col)}
+        className="inline-flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors rounded"
+      >
+        {label}
+        <SortIcon active={active} dir={sortDir} />
+      </button>
+    </th>
+  );
 }
 
 function ApplicationsList() {
@@ -157,9 +192,6 @@ function ApplicationsList() {
   }
 
   const hasFilters = stageFilter !== "all" || sourceFilter !== "all";
-
-  const thClass =
-    "px-4 py-2.5 text-left text-xs font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap select-none cursor-pointer hover:text-gray-800 dark:hover:text-gray-200 transition-colors";
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -289,24 +321,12 @@ function ApplicationsList() {
                     aria-label="Select all"
                   />
                 </th>
-                <th className={thClass} onClick={() => handleSort("title")}>
-                  Role <SortIcon active={sortKey === "title"} dir={sortDir} />
-                </th>
-                <th className={thClass} onClick={() => handleSort("company")}>
-                  Company <SortIcon active={sortKey === "company"} dir={sortDir} />
-                </th>
-                <th className={`${thClass} hidden sm:table-cell`} onClick={() => handleSort("source")}>
-                  Source <SortIcon active={sortKey === "source"} dir={sortDir} />
-                </th>
-                <th className={thClass} onClick={() => handleSort("stage")}>
-                  Stage <SortIcon active={sortKey === "stage"} dir={sortDir} />
-                </th>
-                <th className={`${thClass} hidden md:table-cell`} onClick={() => handleSort("createdAt")}>
-                  Added <SortIcon active={sortKey === "createdAt"} dir={sortDir} />
-                </th>
-                <th className={`${thClass} hidden lg:table-cell`} onClick={() => handleSort("fitScore")}>
-                  Fit <SortIcon active={sortKey === "fitScore"} dir={sortDir} />
-                </th>
+                <SortHeader label="Role" col="title" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+                <SortHeader label="Company" col="company" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+                <SortHeader label="Source" col="source" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="hidden sm:table-cell" />
+                <SortHeader label="Stage" col="stage" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+                <SortHeader label="Added" col="createdAt" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="hidden md:table-cell" />
+                <SortHeader label="Fit" col="fitScore" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="hidden lg:table-cell" />
               </tr>
             </thead>
             <tbody>
@@ -326,7 +346,14 @@ function ApplicationsList() {
                     />
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-sm font-medium text-gray-900 dark:text-gray-50">{job.title}</span>
+                    {/* The real link for keyboards and screen readers; the row click is a mouse shortcut. */}
+                    <Link
+                      href={`/applications/${job.id}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-sm font-medium text-gray-900 dark:text-gray-50 hover:underline rounded"
+                    >
+                      {job.title}
+                    </Link>
                   </td>
                   <td className="px-4 py-3">
                     <span className="text-sm text-gray-600 dark:text-gray-300">{job.company}</span>

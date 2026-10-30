@@ -5,8 +5,10 @@ export default function Toast({
   action,
   onHold,
   onRelease,
+  tone = "done",
 }: {
   message: string;
+  tone?: "done" | "error";
   action?: { label: string; onClick: () => void };
   onHold?: () => void;
   onRelease?: () => void;
@@ -19,9 +21,12 @@ export default function Toast({
           onMouseLeave={onRelease}
           onFocus={onHold}
           onBlur={onRelease}
-          className="flex items-center gap-2 bg-gray-900 text-white text-sm font-medium pl-4 pr-2 py-2 rounded-full shadow-lg shadow-gray-900/20 whitespace-nowrap"
+          className="flex items-center gap-2 bg-gray-900 text-white text-sm font-medium pl-4 pr-2 py-2 rounded-full shadow-lg shadow-gray-900/20 w-max max-w-[calc(100vw-2rem)]"
         >
-          <i className="ti ti-circle-check text-primary-300 text-base" aria-hidden="true" />
+          <i
+            className={`ti ${tone === "error" ? "ti-alert-circle text-amber-300" : "ti-circle-check text-primary-300"} text-base shrink-0`}
+            aria-hidden="true"
+          />
           <span className={action ? "" : "pr-2"}>{message}</span>
           {action && (
             <button

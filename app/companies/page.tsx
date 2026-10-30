@@ -273,10 +273,11 @@ export default function CompaniesPage() {
             </div>
             <div className="px-5 py-4 space-y-3">
               <div>
-                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">
-                  Company name <span className="text-red-400">*</span>
+                <label htmlFor="company-new-name" className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">
+                  Company name <span className="text-red-700 dark:text-red-300" aria-hidden="true">*</span>
                 </label>
                 <input
+                  id="company-new-name"
                   type="text"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
@@ -288,8 +289,9 @@ export default function CompaniesPage() {
               </div>
               {jobs.length > 0 && (
                 <div>
-                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Link to job (optional)</label>
+                  <label htmlFor="company-new-job" className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Link to job (optional)</label>
                   <select
+                    id="company-new-job"
                     value={newJobId}
                     onChange={(e) => setNewJobId(e.target.value)}
                     className={inputClass}

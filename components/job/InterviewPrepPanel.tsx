@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { authedFetch, noKeyMessage } from "@/lib/api-client";
+import { aiErrorMessage } from "@/lib/ai-errors";
 import { getInterviewPrepsByJobId, deleteInterviewPrep } from "@/lib/interviewPreps";
 import { createAnswer } from "@/lib/answerBank";
 import Toast from "@/components/Toast";
@@ -67,7 +68,7 @@ export default function InterviewPrepPanel({
         return;
       }
       if (data.error) {
-        setGenerateError("Generation failed. Try again.");
+        setGenerateError(aiErrorMessage(res.status, data.error, "Generation failed. Try again."));
         return;
       }
       const newPrep: InterviewPrep = {
@@ -123,7 +124,7 @@ export default function InterviewPrepPanel({
         <div className="surface overflow-hidden">
           <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800 flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <p className="section-label">Your prep</p>
+              <h2 className="section-label">Your prep</h2>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{formatDate(viewingPrep.createdAt)}</p>
             </div>
             <button
@@ -186,7 +187,7 @@ export default function InterviewPrepPanel({
 
       <div className="surface">
         <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
-          <p className="section-label">{preps.length ? "Prep for another round" : "Prep for the interview"}</p>
+          <h2 className="section-label">{preps.length ? "Prep for another round" : "Prep for the interview"}</h2>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
             Describe the round and get practice questions built from this job description.
           </p>
@@ -212,7 +213,7 @@ export default function InterviewPrepPanel({
               )}
               {generating ? "Preparing…" : "Build my prep"}
             </button>
-            {generateError && <p className="text-xs text-amber-600 flex-1">{generateError}</p>}
+            {generateError && <p role="alert" className="text-xs text-amber-800 dark:text-amber-300 flex-1">{generateError}</p>}
           </div>
         </div>
       </div>
@@ -220,7 +221,7 @@ export default function InterviewPrepPanel({
       {preps.length > 1 && (
         <div className="surface">
           <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
-            <p className="section-label">Earlier prep</p>
+            <h2 className="section-label">Earlier prep</h2>
           </div>
           <div className="divide-y divide-gray-100 dark:divide-gray-800">
             {preps.map((prep) => (

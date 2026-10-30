@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { useTheme } from "@/lib/theme-context";
@@ -13,6 +13,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { theme, toggleTheme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const menuButton = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -32,13 +33,21 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen app-backdrop">
-      <Sidebar mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar
+        mobileOpen={sidebarOpen}
+        onClose={() => {
+          setSidebarOpen(false);
+          menuButton.current?.focus();
+        }}
+      />
 
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         {/* Mobile top bar */}
         <header className="flex md:hidden items-center gap-3 px-4 py-3 bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl border-b border-white/80 dark:border-white/5 shrink-0">
           <button
+            ref={menuButton}
             onClick={() => setSidebarOpen(true)}
+            aria-expanded={sidebarOpen}
             className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
             aria-label="Open menu"
           >

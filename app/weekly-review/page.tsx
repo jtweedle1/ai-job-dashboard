@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { authedFetch, noKeyMessage } from "@/lib/api-client";
+import { aiErrorMessage } from "@/lib/ai-errors";
 import {
   createReview,
   getReviews,
@@ -158,7 +159,7 @@ export default function WeeklyReviewPage() {
         return;
       }
       if (data.error) {
-        setSummaryError("Generation failed. Try again.");
+        setSummaryError(aiErrorMessage(res.status, data.error, "Generation failed. Try again."));
         return;
       }
       setReviews((prev) =>
@@ -237,11 +238,11 @@ export default function WeeklyReviewPage() {
         <div className="surface mb-4">
           <div className="px-4 py-3 border-b border-gray-50 dark:border-gray-800 flex items-center justify-between">
             <div>
-              <p className="section-label">
+              <h2 className="section-label">
                 {activeId
                   ? `Week of ${formatWeek(activeReview!.weekOf)}`
                   : `Week of ${formatWeek(thisWeekStart)}`}
-              </p>
+              </h2>
             </div>
             {activeId && (
               <button
@@ -266,8 +267,9 @@ export default function WeeklyReviewPage() {
                 ] as { key: keyof Fields; label: string }[]
               ).map(({ key, label }) => (
                 <div key={key}>
-                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">{label}</label>
+                  <label htmlFor={`wr-${key}`} className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">{label}</label>
                   <input
+                    id={`wr-${key}`}
                     type="number"
                     min={0}
                     value={fields[key] as number}
@@ -302,8 +304,9 @@ export default function WeeklyReviewPage() {
                 ] as { key: keyof Fields; label: string; placeholder: string }[]
               ).map(({ key, label, placeholder }) => (
                 <div key={key}>
-                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">{label}</label>
+                  <label htmlFor={`wr-${key}`} className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">{label}</label>
                   <textarea
+                    id={`wr-${key}`}
                     value={fields[key] as string}
                     onChange={(e) => setField(key, e.target.value)}
                     placeholder={placeholder}
@@ -356,7 +359,7 @@ export default function WeeklyReviewPage() {
               )}
 
               {summaryError && (
-                <p className="text-xs text-amber-600 w-full">{summaryError}</p>
+                <p role="alert" className="text-xs text-amber-800 dark:text-amber-300 w-full">{summaryError}</p>
               )}
             </div>
           </div>
@@ -364,17 +367,17 @@ export default function WeeklyReviewPage() {
           {/* AI summary */}
           {parsedSummary && (
             <div className="border-t border-gray-50 dark:border-gray-800 px-4 py-4 space-y-3">
-              <p className="section-label">
+              <h3 className="section-label">
                 AI summary
-              </p>
+              </h3>
               <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
                 {parsedSummary.summary}
               </p>
               {parsedSummary.steps.length > 0 && (
                 <div className="space-y-1.5 pt-1">
-                  <p className="section-label">
+                  <h3 className="section-label">
                     Next steps
-                  </p>
+                  </h3>
                   {parsedSummary.steps.map((step, i) => (
                     <div key={i} className="flex gap-2">
                       <i
@@ -414,9 +417,9 @@ export default function WeeklyReviewPage() {
       {reviews.filter((r) => r.id !== activeId).length > 0 && (
         <div className="surface">
           <div className="px-4 py-3 border-b border-gray-50 dark:border-gray-800">
-            <p className="section-label">
+            <h2 className="section-label">
               Past reviews
-            </p>
+            </h2>
           </div>
           <div className="divide-y divide-gray-50 dark:divide-gray-800">
             {reviews
@@ -491,9 +494,9 @@ export default function WeeklyReviewPage() {
                         const parsed = parseAiSummary(review.aiSummary);
                         return (
                           <div className="pt-2 border-t border-gray-50 dark:border-gray-800 space-y-2">
-                            <p className="section-label">
+                            <h3 className="section-label">
                               AI summary
-                            </p>
+                            </h3>
                             <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
                               {parsed.summary}
                             </p>

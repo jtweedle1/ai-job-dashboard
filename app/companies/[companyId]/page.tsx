@@ -4,6 +4,7 @@ import { use, useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { authedFetch, noKeyMessage } from "@/lib/api-client";
+import { aiErrorMessage } from "@/lib/ai-errors";
 import { getCompany, updateCompany, deleteCompany } from "@/lib/companies";
 import { getJob } from "@/lib/jobs";
 import EditableField from "@/components/EditableField";
@@ -89,7 +90,7 @@ export default function CompanyProfilePage({
         return;
       }
       if (data.error) {
-        setFillError("Auto-fill failed. Try again.");
+        setFillError(aiErrorMessage(res.status, data.error, "Auto-fill failed. Try again."));
         return;
       }
       setCompany((prev) =>
@@ -173,7 +174,7 @@ export default function CompanyProfilePage({
       {toast && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-full shadow-lg shadow-gray-900/20">
           {toast.error ? (
-            <i className="ti ti-alert-circle text-red-400 text-base" aria-hidden="true" />
+            <i className="ti ti-alert-circle text-red-600 text-base" aria-hidden="true" />
           ) : (
             <i className="ti ti-circle-check text-primary-400 text-base" aria-hidden="true" />
           )}
@@ -228,6 +229,7 @@ export default function CompanyProfilePage({
           <div className="flex-1 min-w-0">
             <EditableField
               value={company.name}
+              label="Company name"
               onSave={(v) => { if (v.trim()) { save({ name: v.trim() }); showToast("Name updated"); } }}
               placeholder="Company name"
               className="text-xl font-semibold text-gray-900 px-0 hover:bg-transparent"
@@ -278,14 +280,14 @@ export default function CompanyProfilePage({
       </div>
       <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 px-3">Updated {formatDate(company.updatedAt)}</p>
       {fillError && (
-        <p className="text-xs text-amber-600 mb-5 px-3">{fillError}</p>
+        <p role="alert" className="text-xs text-amber-800 dark:text-amber-300 mb-5 px-3">{fillError}</p>
       )}
       {!fillError && <div className="mb-6" />}
 
       {/* Linked job */}
       <div className="surface mb-4">
         <div className="px-4 py-3 border-b border-gray-50 dark:border-gray-800">
-          <p className="section-label">Linked role</p>
+          <h2 className="section-label">Linked role</h2>
         </div>
         {linkedJob ? (
           <div className="px-4 py-3 flex items-center justify-between">
@@ -310,7 +312,7 @@ export default function CompanyProfilePage({
       {/* Profile fields */}
       <div className="surface mb-4">
         <div className="px-4 py-3 border-b border-gray-50 dark:border-gray-800">
-          <p className="section-label">Research notes</p>
+          <h2 className="section-label">Research notes</h2>
         </div>
         <div className="divide-y divide-gray-50 dark:divide-gray-800">
           {PROFILE_FIELDS.map(({ key, label, placeholder }) => (
@@ -318,6 +320,7 @@ export default function CompanyProfilePage({
               <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{label}</p>
               <EditableField
                 value={company[key] as string | null}
+                label={label}
                 placeholder={placeholder}
                 multiline
                 rows={3}

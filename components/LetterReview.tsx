@@ -67,14 +67,14 @@ export default function LetterReview({ claims, checks, checking, checkError, onC
   return (
     <div className="px-4 py-3 border-t border-gray-50 dark:border-gray-800 space-y-4">
       <div>
-        <p className="section-label mb-2">
+        <h3 className="section-label mb-2">
           Before you send
-        </p>
+        </h3>
         <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5">
           {checks.map((c) => (
             <li key={c.id} className="flex items-start gap-2 text-xs">
               <i
-                className={`ti ${c.ok ? "ti-circle-check text-primary-500" : "ti-alert-triangle text-amber-500"} text-sm mt-px`}
+                className={`ti ${c.ok ? "ti-circle-check text-primary-500" : "ti-alert-triangle text-amber-600"} text-sm mt-px`}
                 aria-hidden="true"
               />
               <span className="min-w-0">
@@ -88,9 +88,9 @@ export default function LetterReview({ claims, checks, checking, checkError, onC
 
       <div>
         <div className="flex items-center justify-between gap-3 mb-2">
-          <p className="section-label">
+          <h3 className="section-label">
             Where each claim came from
-          </p>
+          </h3>
           <div className="flex items-center gap-3">
             {claims && claims.length > 0 && (
               <button
@@ -111,7 +111,7 @@ export default function LetterReview({ claims, checks, checking, checkError, onC
           </div>
         </div>
 
-        {checkError && <p className="text-xs text-amber-600 mb-2">{checkError}</p>}
+        {checkError && <p role="alert" className="text-xs text-amber-800 dark:text-amber-300 mb-2">{checkError}</p>}
 
         {!claims ? (
           <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -131,7 +131,7 @@ export default function LetterReview({ claims, checks, checking, checkError, onC
                 {claims.map((c, i) => (
                   <li key={i} className="flex items-start gap-2 text-xs">
                     <i
-                      className={`ti ${c.source ? "ti-link text-primary-500" : "ti-help-circle text-amber-500"} text-sm mt-px`}
+                      className={`ti ${c.source ? "ti-link text-primary-500" : "ti-help-circle text-amber-600"} text-sm mt-px`}
                       aria-hidden="true"
                     />
                     <div className="min-w-0">
@@ -142,7 +142,7 @@ export default function LetterReview({ claims, checks, checking, checkError, onC
                           <span className="block italic">&ldquo;{c.evidence}&rdquo;</span>
                         </p>
                       ) : (
-                        <p className="text-amber-600 dark:text-amber-500 mt-0.5">Not found in your material</p>
+                        <p className="text-amber-800 dark:text-amber-300 mt-0.5">Not found in your material</p>
                       )}
                     </div>
                   </li>

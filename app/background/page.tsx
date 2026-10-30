@@ -165,13 +165,14 @@ export default function BackgroundPage() {
       {editingId !== null && (
         <div className={cardClass}>
           <div className={cardHeaderClass}>
-            <p className={cardTitleClass}>{editingId === "new" ? "New position" : "Edit position"}</p>
+            <h2 className={cardTitleClass}>{editingId === "new" ? "New position" : "Edit position"}</h2>
           </div>
           <div className="px-4 py-4 space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Job title</label>
+                <label htmlFor="bg-title" className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Job title</label>
                 <input
+                  id="bg-title"
                   value={form.title}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
                   placeholder="e.g. Product Designer"
@@ -179,8 +180,9 @@ export default function BackgroundPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Company</label>
+                <label htmlFor="bg-company" className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Company</label>
                 <input
+                  id="bg-company"
                   value={form.company}
                   onChange={(e) => setForm({ ...form, company: e.target.value })}
                   placeholder="e.g. Acme Co"
@@ -188,8 +190,9 @@ export default function BackgroundPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Start</label>
+                <label htmlFor="bg-start" className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Start</label>
                 <input
+                  id="bg-start"
                   value={form.startDate}
                   onChange={(e) => setForm({ ...form, startDate: e.target.value })}
                   placeholder="e.g. Mar 2021"
@@ -197,8 +200,9 @@ export default function BackgroundPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">End</label>
+                <label htmlFor="bg-end" className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">End</label>
                 <input
+                  id="bg-end"
                   value={form.endDate}
                   onChange={(e) => setForm({ ...form, endDate: e.target.value })}
                   placeholder="e.g. Present"
@@ -214,9 +218,10 @@ export default function BackgroundPage() {
 
             {BACKGROUND_QUESTIONS.map((q) => (
               <div key={q.id}>
-                <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">{q.label}</label>
+                <label htmlFor={`bg-q-${q.id}`} className="block text-sm font-medium text-gray-900 dark:text-gray-100">{q.label}</label>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-1.5">{q.hint}</p>
                 <textarea
+                  id={`bg-q-${q.id}`}
                   value={form.answers[q.id] ?? ""}
                   onChange={(e) => setAnswer(q.id, e.target.value)}
                   rows={4}
@@ -249,7 +254,7 @@ export default function BackgroundPage() {
       {backgrounds.length > 0 ? (
         <div className={cardClass}>
           <div className={`${cardHeaderClass} flex items-center justify-between gap-4`}>
-            <p className={cardTitleClass}>Positions</p>
+            <h2 className={cardTitleClass}>Positions</h2>
             <p className="text-xs text-gray-500 dark:text-gray-400">
               {includedCount} of {backgrounds.length} used in cover letters
             </p>
@@ -276,7 +281,7 @@ export default function BackgroundPage() {
                     </button>
                     {deleteConfirm === b.id ? (
                       <span className="flex items-center gap-2 text-xs">
-                        <button onClick={() => handleDelete(b.id)} className="text-red-500 font-medium">
+                        <button onClick={() => handleDelete(b.id)} className="text-red-700 dark:text-red-400 font-medium">
                           Delete
                         </button>
                         <button onClick={() => setDeleteConfirm(null)} className="text-gray-500">

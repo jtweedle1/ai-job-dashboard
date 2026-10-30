@@ -113,6 +113,7 @@ export default function StoriesPage() {
                 aria-hidden="true"
               />
               <input
+                aria-label="Search stories"
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}

@@ -305,8 +305,9 @@ export default function ResumesPage() {
 
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
               <div>
-                <label className="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1.5">Label</label>
+                <label htmlFor="resume-label" className="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1.5">Label</label>
                 <input
+                  id="resume-label"
                   type="text"
                   value={label}
                   onChange={(e) => setLabel(e.target.value)}
@@ -335,6 +336,7 @@ export default function ResumesPage() {
 
                 {tab === "paste" ? (
                   <textarea
+                    aria-label="Resume text"
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
                     placeholder="Paste your resume text here…"
@@ -374,7 +376,7 @@ export default function ResumesPage() {
                         Extracting text…
                       </div>
                     )}
-                    {parseError && <p className="text-xs text-red-500">{parseError}</p>}
+                    {parseError && <p role="alert" className="text-xs text-red-700 dark:text-red-300">{parseError}</p>}
 
                     {pdfText && !parsing && (
                       <div>
@@ -382,6 +384,7 @@ export default function ResumesPage() {
                           Extracted text — review and edit if needed
                         </p>
                         <textarea
+                          aria-label="Text from your PDF"
                           value={pdfText}
                           onChange={(e) => setPdfText(e.target.value)}
                           rows={10}
@@ -395,7 +398,7 @@ export default function ResumesPage() {
             </div>
 
             <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-gray-100 dark:border-gray-800 flex-wrap">
-              {saveError && <p className="text-xs text-red-500 w-full text-right">{saveError}</p>}
+              {saveError && <p role="alert" className="text-xs text-red-700 dark:text-red-300 w-full text-right">{saveError}</p>}
               <button onClick={closeModal} className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 px-4 py-2 rounded-xl transition-colors">
                 Cancel
               </button>

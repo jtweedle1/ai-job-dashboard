@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { authedFetch, noKeyMessage } from "@/lib/api-client";
+import { aiErrorMessage } from "@/lib/ai-errors";
 import { createJob } from "@/lib/jobs";
 import { getCompanyByName, createCompany } from "@/lib/companies";
 import {
@@ -91,7 +92,7 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
         return;
       }
       if (data.error) {
-        setExtractError("Extraction failed. Fill in the fields manually.");
+        setExtractError(aiErrorMessage(res.status, data.error, "Extraction failed. Fill in the fields manually."));
         return;
       }
       if (data.title && !title) setTitle(data.title);
@@ -222,7 +223,7 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
                     {fetching ? "Fetching…" : "Fetch"}
                   </button>
                 </div>
-                {fetchError && <p className="text-xs text-red-500">{fetchError}</p>}
+                {fetchError && <p role="alert" className="text-xs text-red-700 dark:text-red-300">{fetchError}</p>}
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   Some sites block scraping — if it fails, paste the JD text directly.
                 </p>
@@ -247,7 +248,7 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
                   {extracting ? "Extracting…" : "Extract fields with AI"}
                 </button>
                 {extractError && (
-                  <p className="text-xs text-amber-600 flex-1">{extractError}</p>
+                  <p role="alert" className="text-xs text-amber-800 dark:text-amber-300 flex-1">{extractError}</p>
                 )}
               </div>
             </div>
@@ -260,7 +261,7 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">
-                    Role title <span className="text-red-400">*</span>
+                    Role title <span className="text-red-700 dark:text-red-300" aria-hidden="true">*</span>
                   </label>
                   <input
                     type="text"
@@ -272,7 +273,7 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
                 </div>
                 <div>
                   <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">
-                    Company <span className="text-red-400">*</span>
+                    Company <span className="text-red-700 dark:text-red-300" aria-hidden="true">*</span>
                   </label>
                   <input
                     type="text"
@@ -353,7 +354,7 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
 
         {/* Footer */}
         <div className="flex items-center gap-2 px-5 py-4 border-t border-gray-100 dark:border-gray-800 shrink-0">
-          {saveError && <p className="text-xs text-red-500 mr-auto">{saveError}</p>}
+          {saveError && <p role="alert" className="text-xs text-red-700 dark:text-red-300 mr-auto">{saveError}</p>}
           <div className="flex items-center gap-2 ml-auto">
             <button
               onClick={onClose}

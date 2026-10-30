@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { authedFetch, noKeyMessage } from "@/lib/api-client";
+import { aiErrorMessage } from "@/lib/ai-errors";
 import {
   getWritingSamples,
   createWritingSample,
@@ -138,7 +139,7 @@ export default function VoicePage() {
         return;
       }
       if (data.error) {
-        setProfileError("Couldn't build your profile. Try again.");
+        setProfileError(aiErrorMessage(res.status, data.error, "Couldn't build your profile. Try again."));
         return;
       }
       await saveVoiceProfile(user.uid, data.content);
@@ -293,7 +294,7 @@ export default function VoicePage() {
       {/* Voice profile */}
       <div className={cardClass}>
         <div className={`${cardHeaderClass} flex items-center justify-between gap-4`}>
-          <p className={cardTitleClass}>Voice profile</p>
+          <h2 className={cardTitleClass}>Voice profile</h2>
           <p className="text-xs text-gray-500 dark:text-gray-400">
             {includedCount} sample{includedCount !== 1 ? "s" : ""} included
             {profileUpdatedAt && ` · updated ${formatDate(profileUpdatedAt)}`}
@@ -301,6 +302,7 @@ export default function VoicePage() {
         </div>
         <div className="px-4 py-4 space-y-3">
           <textarea
+            aria-label="Your voice profile"
             value={profile}
             onChange={(e) => setProfile(e.target.value)}
             placeholder="Add a few writing samples below, then build your profile. You can edit it afterwards."
@@ -324,7 +326,7 @@ export default function VoicePage() {
                 {savingProfile ? "Saving…" : "Save edits"}
               </button>
             )}
-            {profileError && <p className="text-xs text-amber-600 flex-1">{profileError}</p>}
+            {profileError && <p role="alert" className="text-xs text-amber-800 dark:text-amber-300 flex-1">{profileError}</p>}
           </div>
           {savedProfile && (
             <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -337,7 +339,7 @@ export default function VoicePage() {
       {/* Preferences */}
       <div className={cardClass}>
         <div className={`${cardHeaderClass} flex items-center justify-between gap-4`}>
-          <p className={cardTitleClass}>Preferences</p>
+          <h2 className={cardTitleClass}>Preferences</h2>
           {stats && (
             <p className="text-xs text-gray-500 dark:text-gray-400">
               Your letters: ~{stats.medianWords} words · {stats.medianParagraphs} paragraphs ·{" "}
@@ -348,8 +350,9 @@ export default function VoicePage() {
         <div className="px-4 py-4 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Length (words)</label>
+              <label htmlFor="voice-length" className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Length (words)</label>
               <input
+                id="voice-length"
                 type="number"
                 min={50}
                 max={800}
@@ -362,8 +365,9 @@ export default function VoicePage() {
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Format</label>
+              <label htmlFor="voice-format" className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Format</label>
               <select
+                id="voice-format"
                 value={settings.format}
                 onChange={(e) => setSettings({ ...settings, format: e.target.value as LetterFormat })}
                 className={inputClass}
@@ -374,10 +378,11 @@ export default function VoicePage() {
             </div>
           </div>
           <div>
-            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">
+            <label htmlFor="voice-weave" className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">
               Things to weave in when relevant
             </label>
             <textarea
+              id="voice-weave"
               value={settings.alwaysMention}
               onChange={(e) => setSettings({ ...settings, alwaysMention: e.target.value })}
               rows={3}
@@ -386,8 +391,9 @@ export default function VoicePage() {
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Guidelines</label>
+            <label htmlFor="voice-guidelines" className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Guidelines</label>
             <textarea
+              id="voice-guidelines"
               value={settings.guidelines}
               onChange={(e) => setSettings({ ...settings, guidelines: e.target.value })}
               rows={settings.guidelines ? 8 : 3}
@@ -397,7 +403,7 @@ export default function VoicePage() {
           </div>
           <div>
             <div className="flex items-baseline justify-between gap-2 mb-1.5">
-              <label className="block text-xs text-gray-500 dark:text-gray-400">Words to avoid</label>
+              <label htmlFor="voice-avoid" className="block text-xs text-gray-500 dark:text-gray-400">Words to avoid</label>
               {bannedCount > 0 && (
                 <span className="text-xs text-gray-500 dark:text-gray-400">
                   {bannedCount} phrase{bannedCount !== 1 ? "s" : ""} checked after every letter
@@ -405,6 +411,7 @@ export default function VoicePage() {
               )}
             </div>
             <textarea
+              id="voice-avoid"
               value={settings.neverSay}
               onChange={(e) => setSettings({ ...settings, neverSay: e.target.value })}
               rows={settings.neverSay ? 8 : 3}
@@ -428,7 +435,7 @@ export default function VoicePage() {
       {/* Writing samples */}
       <div className={cardClass}>
         <div className={`${cardHeaderClass} flex items-center justify-between gap-4`}>
-          <p className={cardTitleClass}>Writing samples</p>
+          <h2 className={cardTitleClass}>Writing samples</h2>
           {!adding && (
             <button onClick={() => setAdding(true)} className={secondaryButtonClass}>
               <i className="ti ti-plus text-xs" aria-hidden="true" />
@@ -444,6 +451,7 @@ export default function VoicePage() {
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <input
+                aria-label="Sample name"
                 type="text"
                 value={label}
                 onChange={(e) => setLabel(e.target.value)}
@@ -451,6 +459,7 @@ export default function VoicePage() {
                 className={inputClass}
               />
               <select
+                aria-label="Sample type"
                 value={kind}
                 onChange={(e) => setKind(e.target.value as WritingSampleKind)}
                 className={inputClass}
@@ -496,9 +505,10 @@ export default function VoicePage() {
                 </p>
               </div>
             )}
-            {parseError && <p className="text-xs text-red-500">{parseError}</p>}
+            {parseError && <p role="alert" className="text-xs text-red-700 dark:text-red-300">{parseError}</p>}
             {(tab === "paste" || content) && (
               <textarea
+                aria-label="Writing sample"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="Paste something you wrote…"
@@ -544,7 +554,7 @@ export default function VoicePage() {
                   {deleteConfirm === s.id ? (
                     <div className="flex items-center gap-1.5">
                       <span className="text-xs text-gray-500 dark:text-gray-400">Delete?</span>
-                      <button onClick={() => handleDeleteSample(s.id)} className="text-xs font-medium text-red-500 hover:text-red-600">
+                      <button onClick={() => handleDeleteSample(s.id)} className="text-xs font-medium text-red-700 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">
                         Yes
                       </button>
                       <button onClick={() => setDeleteConfirm(null)} className="text-xs text-gray-500 hover:text-gray-600">
@@ -571,7 +581,7 @@ export default function VoicePage() {
       {/* Past cover letters (opt-in) */}
       <div className={cardClass}>
         <div className={cardHeaderClass}>
-          <p className={cardTitleClass}>Past cover letters</p>
+          <h2 className={cardTitleClass}>Past cover letters</h2>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 normal-case">
             Off by default. Only include letters you&apos;ve edited into your own words, so AI drafts don&apos;t drift your voice.
           </p>
@@ -599,7 +609,7 @@ export default function VoicePage() {
       {/* Answer bank (opt-in) */}
       <div className={cardClass}>
         <div className={cardHeaderClass}>
-          <p className={cardTitleClass}>Saved answers</p>
+          <h2 className={cardTitleClass}>Saved answers</h2>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 normal-case">
             Off by default. Turn on answers you wrote yourself.
           </p>

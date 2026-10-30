@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { authedFetch, noKeyMessage } from "@/lib/api-client";
+import { aiErrorMessage } from "@/lib/ai-errors";
 import { getJob, updateJob, deleteJob } from "@/lib/jobs";
 import { getCompanyByJobId, createCompany } from "@/lib/companies";
 import { getResumes } from "@/lib/resumes";
@@ -100,6 +101,11 @@ const OUTCOMES: { stage: JobStage; label: string; icon: string; blurb: string }[
   { stage: "withdrawn", label: "I stepped away", icon: "ti-door-exit", blurb: "Knowing when to walk away is a skill." },
 ];
 
+interface ToastState {
+  message: string;
+  tone?: "done" | "error";
+}
+
 function JobWorkspace({ jobId }: { jobId: string }) {
   const { user } = useAuth();
   const router = useRouter();
@@ -117,7 +123,7 @@ function JobWorkspace({ jobId }: { jobId: string }) {
   const [creatingCompany, setCreatingCompany] = useState(false);
   const [scoring, setScoring] = useState(false);
   const [scoreError, setScoreError] = useState("");
-  const [toast, setToast] = useState("");
+  const [toast, setToast] = useState<ToastState>({ message: "" });
 
   useEffect(() => {
     if (!user) return;
@@ -145,19 +151,29 @@ function JobWorkspace({ jobId }: { jobId: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, jobId]);
 
-  const save = useCallback(
-    async (patch: Partial<Omit<Job, "id" | "createdAt">>) => {
-      if (!user || !job) return;
-      setJob((prev) => (prev ? { ...prev, ...patch } : prev));
-      await updateJob(user.uid, jobId, patch);
-    },
-    [user, job, jobId]
-  );
+  const showToast = useCallback((message: string, tone: ToastState["tone"] = "done") => {
+    setToast({ message, tone });
+    setTimeout(() => setToast({ message: "" }), tone === "error" ? 5000 : 2500);
+  }, []);
 
-  function showToast(msg: string) {
-    setToast(msg);
-    setTimeout(() => setToast(""), 2500);
-  }
+  // Shows the change at once, then saves it. If the save fails the old value comes back, so the
+  // page never shows something that isn't stored. Resolves true when the change was saved.
+  const save = useCallback(
+    async (patch: Partial<Omit<Job, "id" | "createdAt">>): Promise<boolean> => {
+      if (!user || !job) return false;
+      const before = Object.fromEntries(Object.keys(patch).map((k) => [k, job[k as keyof Job]])) as Partial<Job>;
+      setJob((prev) => (prev ? { ...prev, ...patch } : prev));
+      try {
+        await updateJob(user.uid, jobId, patch);
+        return true;
+      } catch {
+        setJob((prev) => (prev ? { ...prev, ...before } : prev));
+        showToast("Couldn't save that. Check your connection and try again.", "error");
+        return false;
+      }
+    },
+    [user, job, jobId, showToast]
+  );
 
   function goTo(next: JobStep) {
     setStep(next);
@@ -167,13 +183,11 @@ function JobWorkspace({ jobId }: { jobId: string }) {
   async function handleStageChange(stage: JobStage) {
     const patch: Partial<Job> = { stage };
     if (stage === "applied" && !job?.appliedAt) patch.appliedAt = new Date();
-    await save(patch);
-    showToast(`Moved to ${STAGE_META[stage].label}`);
+    if (await save(patch)) showToast(`Moved to ${STAGE_META[stage].label}`);
   }
 
   async function handleSourceChange(source: JobSource) {
-    await save({ source });
-    showToast("Source updated");
+    if (await save({ source })) showToast("Source updated");
   }
 
   async function handleScore() {
@@ -188,7 +202,7 @@ function JobWorkspace({ jobId }: { jobId: string }) {
       const data = await res.json();
       if (res.status === 401 || data.error === "no_key") { setScoreError(noKeyMessage("score roles")); return; }
       if (data.error === "no_resume") { setScoreError("Add a resume in Me first."); return; }
-      if (data.error) { setScoreError("Scoring failed. Try again."); return; }
+      if (data.error) { setScoreError(aiErrorMessage(res.status, data.error, "Scoring failed. Try again.")); return; }
       setJob((prev) => prev ? { ...prev, fitScore: data.score, fitReasoning: data.reasoning } : prev);
       showToast("Fit score updated");
     } catch {
@@ -201,8 +215,13 @@ function JobWorkspace({ jobId }: { jobId: string }) {
   async function handleDelete() {
     if (!user) return;
     setDeleting(true);
-    await deleteJob(user.uid, jobId);
-    router.push("/applications");
+    try {
+      await deleteJob(user.uid, jobId);
+      router.push("/applications");
+    } catch {
+      setDeleting(false);
+      showToast("Couldn't delete this job. Try again.", "error");
+    }
   }
 
   async function handleCreateCompany() {
@@ -240,7 +259,7 @@ function JobWorkspace({ jobId }: { jobId: string }) {
 
   return (
     <div className="p-6 max-w-3xl mx-auto">
-      <Toast message={toast} />
+      <Toast message={toast.message} tone={toast.tone} />
 
       <Link href="/applications" className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors mb-4">
         <i className="ti ti-arrow-left text-sm" aria-hidden="true" />
@@ -263,10 +282,10 @@ function JobWorkspace({ jobId }: { jobId: string }) {
           </select>
           {deleteConfirm ? (
             <>
-              <button onClick={handleDelete} disabled={deleting} className="text-xs font-medium text-red-600 hover:text-red-700 transition-colors">
+              <button onClick={handleDelete} disabled={deleting} className="text-xs font-medium text-red-700 dark:text-red-400 hover:text-red-800 px-2 min-h-8 rounded-full transition-colors">
                 {deleting ? "Deleting…" : "Delete"}
               </button>
-              <button onClick={() => setDeleteConfirm(false)} className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">Keep</button>
+              <button onClick={() => setDeleteConfirm(false)} className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 px-2 min-h-8 rounded-full transition-colors">Keep</button>
             </>
           ) : (
             <button onClick={() => setDeleteConfirm(true)} className="w-8 h-8 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-red-400 transition-colors" aria-label="Delete job">
@@ -284,7 +303,7 @@ function JobWorkspace({ jobId }: { jobId: string }) {
           <div className="surface">
             <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between gap-3">
               <div>
-                <p className="section-label">Is it a fit?</p>
+                <h2 className="section-label">Is it a fit?</h2>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Measured against your resume and your goals in Me.</p>
               </div>
               <button onClick={handleScore} disabled={scoring} className="flex items-center gap-1.5 text-xs font-medium text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-950 px-3 py-1.5 rounded-full hover:bg-primary-100 dark:hover:bg-primary-900 disabled:opacity-50 transition-colors shrink-0">
@@ -295,7 +314,7 @@ function JobWorkspace({ jobId }: { jobId: string }) {
             <div className="px-5 py-4">
               {job.fitScore != null ? (
                 <div className="flex items-start gap-4">
-                  <span className={`text-3xl font-display font-extrabold shrink-0 ${job.fitScore >= 80 ? "text-emerald-600" : job.fitScore >= 60 ? "text-amber-500" : "text-red-500"}`}>
+                  <span className={`text-3xl font-display font-extrabold shrink-0 ${job.fitScore >= 80 ? "text-emerald-700 dark:text-emerald-400" : job.fitScore >= 60 ? "text-amber-700 dark:text-amber-400" : "text-red-600 dark:text-red-400"}`}>
                     {job.fitScore}
                   </span>
                   <div>
@@ -307,25 +326,25 @@ function JobWorkspace({ jobId }: { jobId: string }) {
                 </div>
               ) : (
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {scoreError ? <span className="text-amber-600">{scoreError}</span> : "Score it to see how well this role matches you before you spend an evening on it."}
+                  {scoreError ? <span role="alert" className="text-amber-800 dark:text-amber-300">{scoreError}</span> : "Score it to see how well this role matches you before you spend an evening on it."}
                 </p>
               )}
-              {scoreError && job.fitScore != null && <p className="text-xs text-amber-600 mt-2">{scoreError}</p>}
+              {scoreError && job.fitScore != null && <p role="alert" className="text-xs text-amber-800 dark:text-amber-300 mt-2">{scoreError}</p>}
             </div>
           </div>
 
           <div className="surface">
             <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
-              <p className="section-label">Job description</p>
+              <h2 className="section-label">Job description</h2>
             </div>
             <div className="px-5 py-2">
-              <EditableField value={job.description || null} placeholder="Paste the job description…" multiline onSave={(v) => save({ description: v })} />
+              <EditableField label="Job description" value={job.description || null} placeholder="Paste the job description…" multiline onSave={(v) => save({ description: v })} />
             </div>
           </div>
 
           <div className="surface">
             <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
-              <p className="section-label">The company</p>
+              <h2 className="section-label">The company</h2>
             </div>
             {company ? (
               <div className="px-5 py-3 flex items-center justify-between">
@@ -347,7 +366,7 @@ function JobWorkspace({ jobId }: { jobId: string }) {
 
           <div className="surface">
             <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
-              <p className="section-label">Details</p>
+              <h2 className="section-label">Details</h2>
             </div>
             <div className="divide-y divide-gray-100 dark:divide-gray-800">
               {([
@@ -359,14 +378,14 @@ function JobWorkspace({ jobId }: { jobId: string }) {
                 <div key={key} className="flex items-center gap-4 px-5">
                   <span className="text-xs text-gray-500 dark:text-gray-400 w-20 shrink-0">{label}</span>
                   <div className="flex-1 py-1">
-                    <EditableField value={value} placeholder={placeholder ?? "—"} onSave={(v) => save({ [key]: v || null })} />
+                    <EditableField label={label} value={value} placeholder={placeholder ?? "—"} onSave={(v) => save({ [key]: v || null })} />
                   </div>
                 </div>
               ))}
               <div className="flex items-center gap-4 px-5">
                 <span className="text-xs text-gray-500 dark:text-gray-400 w-20 shrink-0">URL</span>
                 <div className="flex-1 py-1 flex items-center gap-2">
-                  <EditableField value={job.url} placeholder="Add job URL" onSave={(v) => save({ url: v || null })} className="flex-1" />
+                  <EditableField label="Job URL" value={job.url} placeholder="Add job URL" onSave={(v) => save({ url: v || null })} className="flex-1" />
                   {job.url && (
                     <a href={job.url} target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:text-primary-700 shrink-0" aria-label="Open job posting">
                       <i className="ti ti-external-link text-sm" aria-hidden="true" />
@@ -376,7 +395,7 @@ function JobWorkspace({ jobId }: { jobId: string }) {
               </div>
               <div className="flex items-center gap-4 px-5 py-2.5">
                 <span className="text-xs text-gray-500 dark:text-gray-400 w-20 shrink-0">Source</span>
-                <select value={job.source} onChange={(e) => handleSourceChange(e.target.value as JobSource)} className={`${selectClass} font-normal`}>
+                <select aria-label="Source" value={job.source} onChange={(e) => handleSourceChange(e.target.value as JobSource)} className={`${selectClass} font-normal`}>
                   {ALL_SOURCES.map((s) => <option key={s} value={s}>{SOURCE_LABELS[s]}</option>)}
                 </select>
               </div>
@@ -384,8 +403,9 @@ function JobWorkspace({ jobId }: { jobId: string }) {
                 <div className="flex items-center gap-4 px-5 py-2.5">
                   <span className="text-xs text-gray-500 dark:text-gray-400 w-20 shrink-0">Resume</span>
                   <select
+                    aria-label="Resume used"
                     value={job.resumeIdUsed ?? ""}
-                    onChange={(e) => { save({ resumeIdUsed: e.target.value || null }); showToast("Resume updated"); }}
+                    onChange={async (e) => { if (await save({ resumeIdUsed: e.target.value || null })) showToast("Resume updated"); }}
                     className={`${selectClass} font-normal`}
                   >
                     <option value="">Not set</option>
@@ -414,10 +434,10 @@ function JobWorkspace({ jobId }: { jobId: string }) {
 
           <div className="surface">
             <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
-              <p className="section-label">Notes</p>
+              <h2 className="section-label">Notes</h2>
             </div>
             <div className="px-5 py-2">
-              <EditableField value={job.notes} placeholder="Anything worth remembering about this role…" multiline onSave={(v) => save({ notes: v || null })} />
+              <EditableField label="Notes" value={job.notes} placeholder="Anything worth remembering about this role…" multiline onSave={(v) => save({ notes: v || null })} />
             </div>
           </div>
 
@@ -451,15 +471,14 @@ function JobWorkspace({ jobId }: { jobId: string }) {
           )}
           {interviewing && (
             <div className="surface px-5 py-4 mb-4">
-              <p className="section-label">When is it?</p>
+              <h2 className="section-label">When is it?</h2>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 mb-3">
                 Today will remind you to prep beforehand and ask how it went afterwards.
               </p>
               <InterviewDateField
                 value={job.nextInterviewAt}
-                onSave={(nextInterviewAt) => {
-                  save({ nextInterviewAt });
-                  showToast(nextInterviewAt ? "Interview date saved" : "Interview date cleared");
+                onSave={async (nextInterviewAt) => {
+                  if (await save({ nextInterviewAt })) showToast(nextInterviewAt ? "Interview date saved" : "Interview date cleared");
                 }}
               />
             </div>
@@ -477,7 +496,7 @@ function JobWorkspace({ jobId }: { jobId: string }) {
       {step === "outcome" && (
         <div className="space-y-4">
           <div className="surface p-5">
-            <p className="section-label mb-1">How did it end?</p>
+            <h2 className="section-label mb-1">How did it end?</h2>
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Closing the loop keeps Today focused on what&apos;s still open.</p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {OUTCOMES.map((o) => {
@@ -502,9 +521,9 @@ function JobWorkspace({ jobId }: { jobId: string }) {
             </div>
           </div>
           <div className="surface px-5 py-4">
-            <p className="section-label">One thing to remember</p>
+            <h2 className="section-label">One thing to remember</h2>
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">A sentence for future you. It stays in this job&apos;s notes.</p>
-            <EditableField value={job.notes} placeholder="e.g. Ask about team size earlier next time." multiline onSave={(v) => save({ notes: v || null })} />
+            <EditableField label="One thing to remember" value={job.notes} placeholder="e.g. Ask about team size earlier next time." multiline onSave={(v) => save({ notes: v || null })} />
           </div>
           <Link href="/weekly-review" className="flex items-center gap-1.5 text-sm text-primary-700 dark:text-primary-300 hover:underline">
             <i className="ti ti-calendar-heart text-sm" aria-hidden="true" />

@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { getJobs } from "@/lib/jobs";
 import { authedFetch, noKeyMessage } from "@/lib/api-client";
+import { aiErrorMessage } from "@/lib/ai-errors";
 import { createAnswer, getAnswers, updateAnswer, deleteAnswer } from "@/lib/answerBank";
 import type { Job } from "@/types/job";
 import type { AnswerEntry } from "@/types/answerBank";
@@ -98,7 +99,7 @@ export default function AnswerBankPage() {
         return null;
       }
       if (data.error) {
-        setDraftError({ for: target, message: "Drafting failed. Try again." });
+        setDraftError({ for: target, message: aiErrorMessage(res.status, data.error, "Drafting failed. Try again.") });
         return null;
       }
       return data.answer as string;
@@ -218,12 +219,13 @@ export default function AnswerBankPage() {
       {/* Add form */}
       <div className="surface mb-4">
         <div className="px-4 py-3 border-b border-gray-50 dark:border-gray-800">
-          <p className="section-label">Add answer</p>
+          <h2 className="section-label">Add answer</h2>
         </div>
         <div className="px-4 py-4 space-y-3">
           <div>
-            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Question</label>
+            <label htmlFor="ab-new-question" className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Question</label>
             <input
+              id="ab-new-question"
               type="text"
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
@@ -233,15 +235,16 @@ export default function AnswerBankPage() {
           </div>
           <div>
             <div className="flex items-center justify-between gap-3 mb-1.5">
-              <label className="block text-xs text-gray-500 dark:text-gray-400">Answer</label>
+              <label htmlFor="ab-new-answer" className="block text-xs text-gray-500 dark:text-gray-400">Answer</label>
               <DraftButton
                 onClick={handleDraftNew}
                 drafting={draftingFor === "new"}
                 disabled={!question.trim() || draftingFor !== null}
               />
             </div>
-            {draftError?.for === "new" && <p className="text-xs text-amber-600 mb-1.5">{draftError.message}</p>}
+            {draftError?.for === "new" && <p role="alert" className="text-xs text-amber-800 dark:text-amber-300 mb-1.5">{draftError.message}</p>}
             <textarea
+              id="ab-new-answer"
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
               placeholder="Your prepared answer…"
@@ -251,10 +254,11 @@ export default function AnswerBankPage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">
+              <label htmlFor="ab-new-tags" className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">
                 Tags <span className="text-gray-500 dark:text-gray-400">(comma-separated)</span>
               </label>
               <input
+                id="ab-new-tags"
                 type="text"
                 value={tagsInput}
                 onChange={(e) => setTagsInput(e.target.value)}
@@ -263,10 +267,11 @@ export default function AnswerBankPage() {
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">
+              <label htmlFor="ab-new-job" className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">
                 Link to job <span className="text-gray-500 dark:text-gray-400">(optional)</span>
               </label>
               <select
+                id="ab-new-job"
                 value={selectedJobId}
                 onChange={(e) => setSelectedJobId(e.target.value)}
                 className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
@@ -302,6 +307,7 @@ export default function AnswerBankPage() {
               aria-hidden="true"
             />
             <input
+              aria-label="Search answers"
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -333,8 +339,9 @@ export default function AnswerBankPage() {
               {editingId === entry.id ? (
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Question</label>
+                    <label htmlFor={`ab-${entry.id}-question`} className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Question</label>
                     <input
+                      id={`ab-${entry.id}-question`}
                       type="text"
                       value={editFields.question}
                       onChange={(e) =>
@@ -345,7 +352,7 @@ export default function AnswerBankPage() {
                   </div>
                   <div>
                     <div className="flex items-center justify-between gap-3 mb-1">
-                      <label className="block text-xs text-gray-500 dark:text-gray-400">Answer</label>
+                      <label htmlFor={`ab-${entry.id}-answer`} className="block text-xs text-gray-500 dark:text-gray-400">Answer</label>
                       <DraftButton
                         onClick={() => handleDraftExisting(entry)}
                         drafting={draftingFor === entry.id}
@@ -353,9 +360,10 @@ export default function AnswerBankPage() {
                       />
                     </div>
                     {draftError?.for === entry.id && (
-                      <p className="text-xs text-amber-600 mb-1">{draftError.message}</p>
+                      <p role="alert" className="text-xs text-amber-800 dark:text-amber-300 mb-1">{draftError.message}</p>
                     )}
                     <textarea
+                      id={`ab-${entry.id}-answer`}
                       value={editFields.answer}
                       onChange={(e) =>
                         setEditFields((p) => ({ ...p, answer: e.target.value }))
@@ -365,8 +373,9 @@ export default function AnswerBankPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Tags</label>
+                    <label htmlFor={`ab-${entry.id}-tags`} className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Tags</label>
                     <input
+                      id={`ab-${entry.id}-tags`}
                       type="text"
                       value={editFields.tags}
                       onChange={(e) =>

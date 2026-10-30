@@ -126,7 +126,7 @@ export default function DebriefPanel({
       {job && (
         <div className="surface">
           <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
-            <p className="section-label">How did it go?</p>
+            <h2 className="section-label">How did it go?</h2>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
               Jot it down while it&apos;s fresh. Every debrief lands in Me → Stories, so the next letter and the
               next interview can use it.
@@ -134,8 +134,9 @@ export default function DebriefPanel({
           </div>
           <div className="px-5 py-4 space-y-3">
             <div className="sm:w-1/2">
-              <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Interview date</label>
+              <label htmlFor="debrief-date" className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Interview date</label>
               <input
+                id="debrief-date"
                 type="date"
                 value={interviewDate}
                 onChange={(e) => setInterviewDate(e.target.value)}
@@ -144,8 +145,9 @@ export default function DebriefPanel({
             </div>
             {DEBRIEF_FIELDS.map(({ key, label, placeholder }) => (
               <div key={key}>
-                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">{label}</label>
+                <label htmlFor={`debrief-${key}`} className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">{label}</label>
                 <textarea
+                  id={`debrief-${key}`}
                   value={fields[key]}
                   onChange={(e) => setFields((prev) => ({ ...prev, [key]: e.target.value }))}
                   placeholder={placeholder}
@@ -163,7 +165,7 @@ export default function DebriefPanel({
                 {saving && <i className="ti ti-loader-2 animate-spin text-sm" aria-hidden="true" />}
                 {saving ? "Saving…" : "Save debrief"}
               </button>
-              {saveError && <p className="text-xs text-red-500">{saveError}</p>}
+              {saveError && <p role="alert" className="text-xs text-red-700 dark:text-red-300">{saveError}</p>}
             </div>
           </div>
         </div>
@@ -172,7 +174,7 @@ export default function DebriefPanel({
       {debriefs.length > 0 ? (
         <div className="surface">
           <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
-            <p className="section-label">{job ? "Earlier debriefs" : "Every interview, in your words"}</p>
+            <h2 className="section-label">{job ? "Earlier debriefs" : "Every interview, in your words"}</h2>
           </div>
           <div className="divide-y divide-gray-100 dark:divide-gray-800">
             {debriefs.map((debrief) => {

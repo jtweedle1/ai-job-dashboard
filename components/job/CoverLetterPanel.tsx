@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { authedFetch, noKeyMessage } from "@/lib/api-client";
+import { aiErrorMessage } from "@/lib/ai-errors";
 import { getResumes } from "@/lib/resumes";
 import {
   getCoverLettersByJobId,
@@ -115,7 +116,7 @@ export default function CoverLetterPanel({
         return;
       }
       if (data.error) {
-        setGenerateError("Generation failed. Try again.");
+        setGenerateError(aiErrorMessage(res.status, data.error, "Generation failed. Try again."));
         return;
       }
       const newLetter: CoverLetter = {
@@ -168,7 +169,7 @@ export default function CoverLetterPanel({
         return;
       }
       if (data.error) {
-        setSourcesError("The check failed. Try again.");
+        setSourcesError(aiErrorMessage(res.status, data.error, "The check failed. Try again."));
         return;
       }
       patchLetter(letterId, { claims: data.claims as LetterClaim[] });
@@ -272,7 +273,7 @@ export default function CoverLetterPanel({
         <div className="surface overflow-hidden">
           <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800 flex items-start justify-between gap-4 flex-wrap">
             <div className="min-w-0">
-              <p className="section-label">Your letter</p>
+              <h2 className="section-label">Your letter</h2>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                 {resumeLabel(viewingLetter.resumeId)} · {formatDate(viewingLetter.createdAt)}
                 {viewingLetter.edited ? " · edited by you" : " · AI draft"}
@@ -317,6 +318,7 @@ export default function CoverLetterPanel({
             {editing ? (
               <div className="space-y-3">
                 <textarea
+                  aria-label="Edit your letter"
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}
                   rows={14}
@@ -362,7 +364,7 @@ export default function CoverLetterPanel({
               <span className="text-xs text-gray-500 dark:text-gray-400">
                 Use as a voice sample for future letters
                 {!viewingLetter.edited && (
-                  <span className="block text-amber-600 dark:text-amber-500 mt-0.5">
+                  <span className="block text-amber-800 dark:text-amber-300 mt-0.5">
                     This is still the AI draft. Edit it into your own words first so your voice doesn&apos;t drift.
                   </span>
                 )}
@@ -375,7 +377,7 @@ export default function CoverLetterPanel({
       {/* Generator */}
       <div className="surface">
         <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
-          <p className="section-label">{letters.length ? "Write another version" : "Write your letter"}</p>
+          <h2 className="section-label">{letters.length ? "Write another version" : "Write your letter"}</h2>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
             Drafted from your resume, your stories and your voice in Me.
           </p>
@@ -393,8 +395,9 @@ export default function CoverLetterPanel({
             <div className="space-y-4">
               {resumes.length > 1 && (
                 <div>
-                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Resume</label>
+                  <label htmlFor="letter-resume" className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Resume</label>
                   <select
+                    id="letter-resume"
                     value={selectedResumeId}
                     onChange={(e) => setSelectedResumeId(e.target.value)}
                     className={fieldClass}
@@ -409,7 +412,7 @@ export default function CoverLetterPanel({
               )}
               <div>
                 <div className="flex items-center justify-between gap-3 mb-1.5">
-                  <label className="block text-xs text-gray-500 dark:text-gray-400">Stories to draw from</label>
+                  <p id="letter-stories" className="text-xs text-gray-500 dark:text-gray-400">Experience to draw from</p>
                   <Link
                     href="/background"
                     className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-primary-600 transition-colors"
@@ -423,7 +426,7 @@ export default function CoverLetterPanel({
                     Write up the stories behind your past jobs once, and every letter will draw from them.
                   </p>
                 ) : (
-                  <div className="flex flex-wrap gap-2">
+                  <div role="group" aria-labelledby="letter-stories" className="flex flex-wrap gap-2">
                     {backgrounds.map((b) => (
                       <label
                         key={b.id}
@@ -446,10 +449,11 @@ export default function CoverLetterPanel({
                 )}
               </div>
               <div>
-                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">
+                <label htmlFor="letter-notes" className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">
                   Notes for this letter <span className="text-gray-500 dark:text-gray-400">(optional)</span>
                 </label>
                 <textarea
+                  id="letter-notes"
                   value={letterNotes}
                   onChange={(e) => setLetterNotes(e.target.value)}
                   rows={2}
@@ -471,7 +475,7 @@ export default function CoverLetterPanel({
                   )}
                   {generating ? "Writing…" : letters.length ? "Write a new version" : "Write my letter"}
                 </button>
-                {generateError && <p className="text-xs text-amber-600 flex-1">{generateError}</p>}
+                {generateError && <p role="alert" className="text-xs text-amber-800 dark:text-amber-300 flex-1">{generateError}</p>}
                 <Link
                   href="/voice"
                   className="ml-auto flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-primary-600 transition-colors"
@@ -489,7 +493,7 @@ export default function CoverLetterPanel({
       {letters.length > 1 && (
         <div className="surface">
           <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
-            <p className="section-label">Earlier versions</p>
+            <h2 className="section-label">Earlier versions</h2>
           </div>
           <div className="divide-y divide-gray-100 dark:divide-gray-800">
             {letters.map((letter) => (

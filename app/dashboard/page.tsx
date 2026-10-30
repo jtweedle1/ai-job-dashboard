@@ -52,6 +52,7 @@ interface TodayData {
 interface ToastState {
   message: string;
   undo?: () => void;
+  tone?: "done" | "error";
 }
 
 const TOAST_MS = 6000;
@@ -121,8 +122,8 @@ export default function TodayPage() {
   }, []);
 
   const showToast = useCallback(
-    (message: string, undo?: () => void) => {
-      setToast({ message, undo });
+    (message: string, undo?: () => void, tone?: ToastState["tone"]) => {
+      setToast({ message, undo, tone });
       hideToastIn(TOAST_MS);
     },
     [hideToastIn]
@@ -160,7 +161,7 @@ export default function TodayPage() {
         await updateJob(user.uid, job.id, patch);
       } catch {
         apply(before);
-        showToast("Couldn't save that. Check your connection and try again.");
+        showToast("Couldn't save that. Check your connection and try again.", undefined, "error");
         return;
       }
       showToast(message, async () => {
@@ -171,7 +172,7 @@ export default function TodayPage() {
           showToast("Undone");
         } catch {
           apply(patch);
-          showToast("Couldn't undo that. Try again from the job page.");
+          showToast("Couldn't undo that. Try again from the job page.", undefined, "error");
         }
       });
     },
@@ -239,6 +240,7 @@ export default function TodayPage() {
       {modalOpen && <AddJobModal onClose={() => setModalOpen(false)} onSaved={handleSaved} />}
       <Toast
         message={toast.message}
+        tone={toast.tone}
         action={toast.undo && { label: "Undo", onClick: toast.undo }}
         onHold={() => toastTimer.current && clearTimeout(toastTimer.current)}
         onRelease={() => hideToastIn(3000)}
