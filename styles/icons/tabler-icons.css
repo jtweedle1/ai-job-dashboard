@@ -51,9 +51,8 @@
 .ti-confetti:before { content: "\ee46"; }
 .ti-copy:before { content: "\ea7a"; }
 .ti-door-exit:before { content: "\ef4d"; }
-.ti-download:before { content: "\ea96"; }
+.ti-dots:before { content: "\ea95"; }
 .ti-external-link:before { content: "\ea99"; }
-.ti-eye:before { content: "\ea9a"; }
 .ti-eye-off:before { content: "\ecf0"; }
 .ti-feather:before { content: "\ee8b"; }
 .ti-file-cv:before { content: "\fa5a"; }
@@ -62,6 +61,7 @@
 .ti-file-x:before { content: "\eaa3"; }
 .ti-flag:before { content: "\eaa6"; }
 .ti-help-circle:before { content: "\f91d"; }
+.ti-info-circle:before { content: "\eac5"; }
 .ti-link:before { content: "\eade"; }
 .ti-loader-2:before { content: "\f226"; }
 .ti-logout:before { content: "\eba8"; }

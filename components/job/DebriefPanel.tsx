@@ -11,6 +11,9 @@ import { useDraft } from "@/lib/use-draft";
 import type { Job } from "@/types/job";
 import { DEBRIEF_FIELDS } from "@/types/debrief";
 import type { Debrief } from "@/types/debrief";
+import Button, { IconButton } from "@/components/ui/Button";
+import { Field, Input, TextArea } from "@/components/ui/Field";
+import { EmptyState, InlineMessage, Section, Sheet, Skeleton } from "@/components/ui/bits";
 
 function todayString() {
   const d = new Date();
@@ -126,147 +129,112 @@ export default function DebriefPanel({
     return jobs.find((j) => j.id === jobId);
   }
 
-  const fieldClass =
-    "w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-800";
-
   if (loading) {
-    return <div className="h-48 bg-white/60 dark:bg-gray-800 rounded-3xl animate-pulse" />;
+    return <Skeleton className="h-56 rounded-sheet" />;
   }
 
+  const list = debriefs.length > 0 && (
+    <ul>
+      {debriefs.map((debrief) => {
+        const dj = jobFor(debrief.jobId);
+        const open = expandedId === debrief.id;
+        return (
+          <li key={debrief.id} className="border-b border-rule last:border-b-0">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setExpandedId(open ? null : debrief.id)}
+                aria-expanded={open}
+                className="flex-1 min-w-0 py-3 px-3 -mx-3 rounded-field flex items-center justify-between gap-4 hover:bg-well transition-colors duration-100 text-left"
+              >
+                <span className="min-w-0">
+                  <span className="block font-semibold text-ink truncate">{job ? formatDate(debrief.interviewDate) : dj?.title ?? "Unknown job"}</span>
+                  {!job && (
+                    <span className="block text-meta text-ink-soft">
+                      {dj?.company} · {formatDate(debrief.interviewDate)}
+                    </span>
+                  )}
+                </span>
+                <i className={`ti ti-chevron-down text-ink-soft transition-transform duration-200 ${open ? "rotate-180" : ""}`} aria-hidden="true" />
+              </button>
+              {!job && dj && (
+                <Link href={`/applications/${dj.id}?step=debrief`} className="text-meta font-semibold text-action hover:underline underline-offset-4 shrink-0">
+                  Open job
+                </Link>
+              )}
+              <IconButton icon="ti-trash" label="Delete interview notes" size="sm" onClick={() => handleDelete(debrief.id)} />
+            </div>
+
+            {open && (
+              <div className="pb-5 pt-1 space-y-4 animate-[fade-in_200ms_var(--ease-out)]">
+                {DEBRIEF_FIELDS.map(({ key, label }) =>
+                  debrief[key] ? (
+                    <div key={key}>
+                      <p className="text-label font-semibold text-ink-soft mb-1">{label}</p>
+                      <p className="text-ink whitespace-pre-wrap">{debrief[key]}</p>
+                    </div>
+                  ) : null
+                )}
+                {DEBRIEF_FIELDS.every(({ key }) => !debrief[key]) && <p className="text-ink-muted">No notes recorded.</p>}
+              </div>
+            )}
+          </li>
+        );
+      })}
+    </ul>
+  );
+
   return (
-    <div className="space-y-4">
+    <div>
       <Toast {...toastProps} />
 
       {job && (
-        <div className="surface">
-          <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
-            <h2 className="section-label">How did it go?</h2>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-              Jot it down while it&apos;s fresh. Every debrief lands in Me → Library, so the next letter and the
-              next interview can use it.
-            </p>
-          </div>
-          <div className="px-5 py-4 space-y-3">
-            <div className="sm:w-1/2">
-              <label htmlFor="debrief-date" className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Interview date</label>
-              <input
-                id="debrief-date"
-                type="date"
-                value={interviewDate}
-                onChange={(e) => setInterviewDate(e.target.value)}
-                className={fieldClass}
-              />
-            </div>
+        <Sheet as="section" aria-labelledby="debrief-heading">
+          <h2 id="debrief-heading" className="font-serif text-heading font-semibold text-ink">
+            How did it go?
+          </h2>
+          <p className="mt-1 text-meta text-ink-soft">
+            Jot it down while it&apos;s fresh. Every debrief lands in Me, under Library, so the next letter and the next
+            interview can use it.
+          </p>
+          <div className="mt-6 space-y-5">
+            <Field id="debrief-date" label="Interview date" className="sm:max-w-[13rem]">
+              <Input id="debrief-date" type="date" value={interviewDate} onChange={(e) => setInterviewDate(e.target.value)} />
+            </Field>
             {DEBRIEF_FIELDS.map(({ key, label, placeholder }) => (
-              <div key={key}>
-                <label htmlFor={`debrief-${key}`} className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">{label}</label>
-                <textarea
+              <Field key={key} id={`debrief-${key}`} label={label}>
+                <TextArea
                   id={`debrief-${key}`}
                   value={fields[key]}
                   onChange={(e) => setFields((prev) => ({ ...prev, [key]: e.target.value }))}
                   placeholder={placeholder}
                   rows={3}
-                  className={`${fieldClass} resize-none`}
                 />
-              </div>
+              </Field>
             ))}
-            <div className="flex items-center gap-3 pt-1">
-              <button
-                onClick={handleSave}
-                disabled={!interviewDate || saving}
-                className="flex items-center gap-1.5 bg-primary-600 text-white text-sm font-medium px-5 py-2.5 rounded-full shadow-sm shadow-primary-600/20 hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {saving && <i className="ti ti-loader-2 animate-spin text-sm" aria-hidden="true" />}
-                {saving ? "Saving…" : "Save notes"}
-              </button>
-              {saveError && <p role="alert" className="text-xs text-red-700 dark:text-red-300">{saveError}</p>}
-            </div>
+            <Button variant="primary" onClick={handleSave} disabled={!interviewDate} loading={saving} loadingLabel="Saving…">
+              Save notes
+            </Button>
+            {saveError && (
+              <InlineMessage tone="danger" role="alert">
+                {saveError}
+              </InlineMessage>
+            )}
           </div>
-        </div>
+        </Sheet>
       )}
 
-      {debriefs.length > 0 ? (
-        <div className="surface">
-          <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
-            <h2 className="section-label">{job ? "Earlier debriefs" : "Every interview, in your words"}</h2>
-          </div>
-          <div className="divide-y divide-gray-100 dark:divide-gray-800">
-            {debriefs.map((debrief) => {
-              const dj = jobFor(debrief.jobId);
-              const open = expandedId === debrief.id;
-              return (
-                <div key={debrief.id}>
-                  <div className="flex items-center gap-2 pr-3">
-                    <button
-                      onClick={() => setExpandedId(open ? null : debrief.id)}
-                      aria-expanded={open}
-                      className="flex-1 min-w-0 px-5 py-3 flex items-center justify-between gap-4 hover:bg-white/60 dark:hover:bg-white/5 transition-colors text-left"
-                    >
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-900 dark:text-gray-50 truncate">
-                          {job ? formatDate(debrief.interviewDate) : dj?.title ?? "Unknown job"}
-                        </p>
-                        {!job && (
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {dj?.company} · {formatDate(debrief.interviewDate)}
-                          </p>
-                        )}
-                      </div>
-                      <i
-                        className={`ti ${open ? "ti-chevron-up" : "ti-chevron-down"} text-gray-500 dark:text-gray-400 text-sm`}
-                        aria-hidden="true"
-                      />
-                    </button>
-                    {!job && dj && (
-                      <Link
-                        href={`/applications/${dj.id}?step=debrief`}
-                        className="text-xs text-primary-600 hover:underline shrink-0"
-                      >
-                        Open job
-                      </Link>
-                    )}
-                    <button
-                      onClick={() => handleDelete(debrief.id)}
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-red-400 transition-colors disabled:opacity-50 shrink-0"
-                      aria-label="Delete interview notes"
-                    >
-                      <i className="ti ti-trash text-xs" aria-hidden="true" />
-                    </button>
-                  </div>
-
-                  {open && (
-                    <div className="px-5 pb-4 space-y-3 pt-1">
-                      {DEBRIEF_FIELDS.map(({ key, label }) =>
-                        debrief[key] ? (
-                          <div key={key}>
-                            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{label}</p>
-                            <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
-                              {debrief[key]}
-                            </p>
-                          </div>
-                        ) : null
-                      )}
-                      {DEBRIEF_FIELDS.every(({ key }) => !debrief[key]) && (
-                        <p className="text-sm text-gray-500 dark:text-gray-400 italic">No notes recorded.</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      ) : (
-        !job && (
-          <div className="surface p-10 text-center">
-            <div className="w-12 h-12 rounded-full glow-gradient flex items-center justify-center mx-auto mb-3">
-              <i className="ti ti-clipboard-list text-gray-700 dark:text-gray-100 text-xl" aria-hidden="true" />
-            </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              No interview notes yet. After an interview, open the job and use its Debrief step.
-            </p>
-          </div>
+      {list ? (
+        job ? (
+          <Section title="Earlier debriefs" serif id="debriefs" className="mt-12">
+            {list}
+          </Section>
+        ) : (
+          <Section title="Every interview, in your words" id="debriefs">
+            {list}
+          </Section>
         )
+      ) : (
+        !job && <EmptyState title="No interview notes yet">After an interview, open the job and use its Interview notes step.</EmptyState>
       )}
     </div>
   );

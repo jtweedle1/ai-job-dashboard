@@ -20,8 +20,16 @@ import CoverLetterPanel from "@/components/job/CoverLetterPanel";
 import InterviewPrepPanel from "@/components/job/InterviewPrepPanel";
 import DebriefPanel from "@/components/job/DebriefPanel";
 import InterviewDateField from "@/components/job/InterviewDateField";
+import PageFrame from "@/components/ui/PageFrame";
+import Button, { buttonClasses } from "@/components/ui/Button";
+import Select from "@/components/ui/Select";
+import Menu from "@/components/ui/Menu";
+import Dialog from "@/components/ui/Dialog";
+import Trail from "@/components/ui/Trail";
+import { EmptyState, InlineMessage, LoadingBlocks, Section, Sheet } from "@/components/ui/bits";
+import { useToast } from "@/lib/use-toast";
 import {
-  STAGE_META, SOURCE_LABELS, ALL_STAGES, ALL_SOURCES,
+  STAGE_META, SOURCE_LABELS, ALL_STAGES, ALL_SOURCES, fitWord,
   type Job, type JobStage, type JobSource,
 } from "@/types/job";
 import type { Company } from "@/types/company";
@@ -31,9 +39,10 @@ function formatDate(d: Date) {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-const selectClass =
-  "border border-gray-200 dark:border-gray-700 rounded-full px-3 py-1.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white/80 dark:bg-gray-800 dark:text-gray-100";
+const STAGE_OPTIONS = ALL_STAGES.map((s) => ({ value: s, label: STAGE_META[s].label }));
+const SOURCE_OPTIONS = ALL_SOURCES.map((s) => ({ value: s, label: SOURCE_LABELS[s] }));
 
+// The five steps of a job, drawn as the trail. Every stop opens its step.
 function StepRail({
   current,
   done,
@@ -44,91 +53,63 @@ function StepRail({
   onSelect: (step: JobStep) => void;
 }) {
   return (
-    <nav aria-label="Steps for this job" className="mb-6 -mx-1 overflow-x-auto">
-      <ol className="flex items-center gap-1 px-1 min-w-max">
-        {JOB_STEPS.map((s, i) => {
-          const active = s.id === current;
-          return (
-            <li key={s.id} className="flex items-center gap-1">
-              {i > 0 && <span className="w-4 sm:w-6 h-px bg-gray-200 dark:bg-gray-700" aria-hidden="true" />}
-              <button
-                onClick={() => onSelect(s.id)}
-                aria-current={active ? "step" : undefined}
-                className={`flex items-center gap-2 pl-1.5 pr-3.5 py-1.5 rounded-full text-sm font-display font-bold transition-all ${
-                  active
-                    ? "glow-gradient text-gray-900 dark:text-white shadow-sm shadow-gray-900/5"
-                    : "text-gray-500 dark:text-gray-400 hover:bg-white/70 dark:hover:bg-white/5"
-                }`}
-              >
-                <span
-                  className={`w-7 h-7 rounded-full flex items-center justify-center text-sm ${
-                    active
-                      ? "bg-white/80 dark:bg-white/15"
-                      : done[s.id]
-                      ? "bg-primary-100 dark:bg-primary-950 text-primary-700 dark:text-primary-300"
-                      : "bg-white/70 dark:bg-white/5"
-                  }`}
-                >
-                  <i className={`ti ${done[s.id] && !active ? "ti-check" : s.icon}`} aria-hidden="true" />
-                </span>
-                {s.label}
-                {done[s.id] && <span className="sr-only">(done)</span>}
-              </button>
-            </li>
-          );
-        })}
-      </ol>
-    </nav>
-  );
-}
-
-function Nudge({ text, action, onClick }: { text: string; action: string; onClick: () => void }) {
-  return (
-    <div className="mb-4 flex items-center gap-3 flex-wrap px-5 py-3 rounded-3xl glow-gradient">
-      <p className="text-sm text-gray-800 dark:text-gray-100 flex-1 min-w-[12rem]">{text}</p>
-      <button
-        onClick={onClick}
-        className="text-sm font-medium bg-white/90 dark:bg-white/15 text-gray-900 dark:text-white px-4 py-1.5 rounded-full hover:bg-white dark:hover:bg-white/25 transition-colors"
-      >
-        {action}
-      </button>
+    <div className="mb-8 -mx-2">
+      <Trail
+        label="Steps for this job"
+        stops={JOB_STEPS.map((s) => ({
+          id: s.id,
+          label: s.label,
+          state: s.id === current ? "current" : done[s.id] ? "done" : "upcoming",
+          srHint: done[s.id] ? "(done)" : undefined,
+          onSelect: () => onSelect(s.id),
+        }))}
+      />
     </div>
   );
 }
 
-function Fact({ icon, children }: { icon: string; children: React.ReactNode }) {
+// A gentle prompt to move the job along, on the sun's wash.
+function Nudge({ text, action, onClick }: { text: string; action: string; onClick: () => void }) {
   return (
-    <li className="inline-flex items-center gap-1.5">
-      <i className={`ti ${icon} text-sm text-gray-400 dark:text-gray-500`} aria-hidden="true" />
-      {children}
-    </li>
+    <div className="mb-6 flex items-center gap-3 flex-wrap px-5 py-3 rounded-field bg-sun-wash">
+      <span className="w-2 h-2 rounded-full bg-sun shrink-0" aria-hidden="true" />
+      <p className="text-ink flex-1 min-w-[12rem]">{text}</p>
+      <Button variant="secondary" size="sm" onClick={onClick}>
+        {action}
+      </Button>
+    </div>
   );
+}
+
+function Fact({ children }: { children: React.ReactNode }) {
+  return <li className="inline-flex items-center gap-1.5">{children}</li>;
 }
 
 // The few facts worth having on every step, so none of them has to be remembered. Empty ones stay hidden.
 function JobFacts({ job, now, onSave }: { job: Job; now: Date; onSave: (patch: Partial<Job>) => void }) {
   const snoozed = job.snoozedUntil && job.snoozedUntil > now;
-  const link = "text-primary-700 dark:text-primary-300 hover:underline";
+  const link = "font-semibold text-action hover:underline underline-offset-4";
   return (
-    <ul aria-label="At a glance" className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600 dark:text-gray-300">
-      {job.stage === "saved" && job.applyBy && <Fact icon="ti-calendar-due">Apply by {dayLabel(job.applyBy, now)}</Fact>}
-      {job.appliedAt && <Fact icon="ti-send">Applied {formatDate(job.appliedAt)}</Fact>}
+    <ul aria-label="At a glance" className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-meta text-ink-soft empty:hidden">
+      {job.stage === "saved" && job.applyBy && <Fact>Apply by {dayLabel(job.applyBy, now)}</Fact>}
+      {job.appliedAt && <Fact>Applied {formatDate(job.appliedAt)}</Fact>}
       {job.lastFollowUpAt && (
-        <Fact icon="ti-message-forward">
+        <Fact>
           Followed up {formatDate(job.lastFollowUpAt)}
           {job.followUps > 1 ? ` (${job.followUps} times)` : ""}
         </Fact>
       )}
-      {job.nextInterviewAt && <Fact icon="ti-microphone">Interview {dayLabel(job.nextInterviewAt, now)}</Fact>}
+      {job.nextInterviewAt && <Fact>Interview {dayLabel(job.nextInterviewAt, now)}</Fact>}
       {job.url && (
-        <Fact icon="ti-external-link">
+        <Fact>
           <a href={job.url} target="_blank" rel="noopener noreferrer" className={link}>
             Job posting<span className="sr-only"> (opens in a new tab)</span>
+            <i className="ti ti-arrow-up-right ml-0.5" aria-hidden="true" />
           </a>
         </Fact>
       )}
       {snoozed && (
-        <Fact icon="ti-eye-off">
+        <Fact>
           Hidden from Today until {dayLabel(job.snoozedUntil!, now)}
           <button type="button" onClick={() => onSave({ snoozedUntil: null })} className={link}>
             Show it again
@@ -136,7 +117,7 @@ function JobFacts({ job, now, onSave }: { job: Job; now: Date; onSave: (patch: P
         </Fact>
       )}
       {job.stage === "applied" && job.followUpsOff && (
-        <Fact icon="ti-bell-off">
+        <Fact>
           Follow-up reminders off
           <button type="button" onClick={() => onSave({ followUpsOff: false, followUps: 0 })} className={link}>
             Turn back on
@@ -168,27 +149,34 @@ function downloadInterview(job: Job) {
 // Notes follow you through every step, folded away until there's something in them.
 function NotesCard({ notes, onSave }: { notes: string | null; onSave: (v: string) => void }) {
   return (
-    <details open={!!notes} className="surface mt-4 group">
-      <summary className="px-5 py-4 cursor-pointer list-none flex items-center justify-between gap-3 rounded-3xl">
-        <h2 className="section-label">Notes</h2>
-        <i className="ti ti-chevron-down text-gray-500 dark:text-gray-400 transition-transform group-open:rotate-180" aria-hidden="true" />
+    <details open={!!notes} className="mt-12 group">
+      <summary className="cursor-pointer list-none inline-flex items-center gap-2 rounded-stamp font-serif text-heading font-semibold text-ink">
+        <h2>Notes</h2>
+        <i className="ti ti-chevron-down text-base text-ink-soft transition-transform duration-200 group-open:rotate-180" aria-hidden="true" />
       </summary>
-      <div className="px-5 pb-3">
+      <div className="mt-2 -mx-3">
         <EditableField label="Notes" value={notes} placeholder="Anything worth remembering about this role…" multiline onSave={onSave} />
       </div>
     </details>
   );
 }
 
-const OUTCOMES: { stage: JobStage; label: string; icon: string; blurb: string }[] = [
-  { stage: "offer", label: "Got an offer", icon: "ti-confetti", blurb: "Well earned." },
-  { stage: "rejected", label: "Not this time", icon: "ti-cloud-rain", blurb: "It happens to everyone. Your notes still count." },
-  { stage: "withdrawn", label: "I stepped away", icon: "ti-door-exit", blurb: "Knowing when to walk away is a skill." },
+const OUTCOMES: { stage: JobStage; label: string; blurb: string }[] = [
+  { stage: "offer", label: "Got an offer", blurb: "Well earned." },
+  { stage: "rejected", label: "Not this time", blurb: "It happens to everyone. Your notes still count." },
+  { stage: "withdrawn", label: "I stepped away", blurb: "Knowing when to walk away is a skill." },
 ];
 
-interface ToastState {
-  message: string;
-  tone?: "done" | "error";
+const FIT_TONE = { moss: "text-moss", "ink-soft": "text-ink", stone: "text-stone" } as const;
+
+// One row of the Details list: a label and its value, lined up.
+function Detail({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-[8rem_1fr] sm:items-center gap-x-4 py-1.5 border-b border-rule last:border-b-0">
+      <dt className="text-label font-semibold text-ink-soft pt-2 sm:pt-0">{label}</dt>
+      <dd className="min-w-0 sm:-ml-3 -mx-3 sm:mr-0">{children}</dd>
+    </div>
+  );
 }
 
 function JobWorkspace({ jobId }: { jobId: string }) {
@@ -208,7 +196,7 @@ function JobWorkspace({ jobId }: { jobId: string }) {
   const [creatingCompany, setCreatingCompany] = useState(false);
   const [scoring, setScoring] = useState(false);
   const [scoreError, setScoreError] = useState("");
-  const [toast, setToast] = useState<ToastState>({ message: "" });
+  const { show, toastProps } = useToast();
 
   useEffect(() => {
     if (!user) return;
@@ -236,10 +224,7 @@ function JobWorkspace({ jobId }: { jobId: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, jobId]);
 
-  const showToast = useCallback((message: string, tone: ToastState["tone"] = "done") => {
-    setToast({ message, tone });
-    setTimeout(() => setToast({ message: "" }), tone === "error" ? 5000 : 2500);
-  }, []);
+  const showToast = useCallback((message: string, tone: "done" | "error" = "done") => show(message, { tone }), [show]);
 
   // Shows the change at once, then saves it. If the save fails the old value comes back, so the
   // page never shows something that isn't stored. Resolves true when the change was saved.
@@ -320,233 +305,214 @@ function JobWorkspace({ jobId }: { jobId: string }) {
     }
   }
 
+  const back = (
+    <Link href="/applications" className="inline-flex items-center gap-1 text-meta font-semibold text-ink-soft hover:text-ink">
+      <i className="ti ti-arrow-left" aria-hidden="true" />
+      All jobs
+    </Link>
+  );
+
   if (loading) {
     return (
-      <div className="p-6 max-w-3xl mx-auto animate-pulse space-y-4">
-        <div className="h-8 bg-white/60 dark:bg-gray-800 rounded-full w-64" />
-        <div className="h-10 bg-white/60 dark:bg-gray-800 rounded-full w-full" />
-        <div className="h-48 bg-white/60 dark:bg-gray-800 rounded-3xl" />
-      </div>
+      <PageFrame>
+        <LoadingBlocks rows={2} label="Loading this job" />
+      </PageFrame>
     );
   }
 
   if (notFound || !job) {
     return (
-      <div className="p-6 max-w-3xl mx-auto text-center pt-20">
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Job not found.</p>
-        <Link href="/applications" className="text-sm text-primary-600 hover:underline">Back to your jobs</Link>
-      </div>
+      <PageFrame>
+        <EmptyState
+          title="We couldn't find that job"
+          action={
+            <Link href="/applications" className={buttonClasses({ variant: "secondary" })}>
+              Back to your jobs
+            </Link>
+          }
+        >
+          It may have been deleted.
+        </EmptyState>
+      </PageFrame>
     );
   }
 
   const done = stepsDone(job, activity);
   const interviewing = job.stage === "phone_screen" || job.stage === "interview";
+  const fit = job.fitScore != null ? fitWord(job.fitScore) : null;
+  const resumeOptions = [{ value: "", label: "Not set" }, ...resumes.map((r) => ({ value: r.id, label: r.label }))];
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
-      <Toast message={toast.message} tone={toast.tone} />
+    <PageFrame>
+      <Toast {...toastProps} />
 
-      <Link href="/applications" className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors mb-4">
-        <i className="ti ti-arrow-left text-sm" aria-hidden="true" />
-        All jobs
-      </Link>
-
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4 mb-5">
-        <div className="flex-1 min-w-0">
-          <h1 className="page-title mb-0.5">{job.title}</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            {job.company}
-            {job.location ? ` · ${job.location}` : ""}
-          </p>
-          <JobFacts job={job} now={new Date()} onSave={save} />
+      <header className="pt-2 mb-8">
+        <div className="mb-3">{back}</div>
+        <div className="flex items-start gap-4">
+          <div className="flex-1 min-w-0">
+            <h1 className="font-serif text-title font-semibold text-ink text-balance">{job.title}</h1>
+            <p className="mt-1 text-ink-soft">
+              <span className="font-semibold text-ink">{job.company}</span>
+              {job.location ? ` · ${job.location}` : ""}
+            </p>
+          </div>
+          <Menu
+            items={[
+              ...(job.url
+                ? [{ label: "Open the job posting", icon: "ti-arrow-up-right", onSelect: () => window.open(job.url!, "_blank", "noopener,noreferrer") }]
+                : []),
+              { label: "Delete job", icon: "ti-trash", danger: true, onSelect: () => setDeleteConfirm(true) },
+            ]}
+          />
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <label className="sr-only" htmlFor="stage">Stage</label>
-          <select id="stage" value={job.stage} onChange={(e) => handleStageChange(e.target.value as JobStage)} className={selectClass}>
-            {ALL_STAGES.map((s) => <option key={s} value={s}>{STAGE_META[s].label}</option>)}
-          </select>
-          {deleteConfirm ? (
-            <>
-              <span className="text-xs text-gray-500 dark:text-gray-400">Its letter, prep and notes go too.</span>
-              <button onClick={handleDelete} disabled={deleting} className="text-xs font-medium text-red-700 dark:text-red-400 hover:text-red-800 px-2 min-h-8 rounded-full transition-colors">
-                {deleting ? "Deleting…" : "Delete"}
-              </button>
-              <button onClick={() => setDeleteConfirm(false)} className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 px-2 min-h-8 rounded-full transition-colors">Keep</button>
-            </>
-          ) : (
-            <button onClick={() => setDeleteConfirm(true)} className="w-8 h-8 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-red-400 transition-colors" aria-label="Delete job">
-              <i className="ti ti-trash text-sm" aria-hidden="true" />
-            </button>
-          )}
+        <div className="mt-4 flex items-center gap-x-5 gap-y-3 flex-wrap">
+          <Select look="pill" prefix="Stage:" value={job.stage} options={STAGE_OPTIONS} onChange={handleStageChange} ariaLabel="Stage" />
         </div>
-      </div>
+        <JobFacts job={job} now={new Date()} onSave={save} />
+      </header>
 
       <StepRail current={step} done={done} onSelect={goTo} />
 
       {/* Decide: is this worth your time? */}
       {step === "decide" && (
-        <div className="space-y-4">
-          <div className="surface">
-            <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between gap-3">
-              <div>
-                <h2 className="section-label">Is it a fit?</h2>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Measured against your resume and your goals in Me.</p>
+        <>
+          <Sheet as="section" aria-labelledby="fit-heading">
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              <div className="min-w-0">
+                <h2 id="fit-heading" className="font-serif text-heading font-semibold text-ink">
+                  Is it a fit?
+                </h2>
+                <p className="mt-1 text-meta text-ink-soft">Measured against your resume and your goals in Me.</p>
               </div>
-              <button onClick={handleScore} disabled={scoring} className="flex items-center gap-1.5 text-xs font-medium text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-950 px-3 py-1.5 rounded-full hover:bg-primary-100 dark:hover:bg-primary-900 disabled:opacity-50 transition-colors shrink-0">
-                {scoring ? <i className="ti ti-loader-2 animate-spin text-xs" aria-hidden="true" /> : <i className="ti ti-sparkles text-xs" aria-hidden="true" />}
-                {scoring ? "Scoring…" : job.fitScore != null ? "Score again" : "Score this role"}
-              </button>
+              <Button variant={job.fitScore != null ? "quiet" : "primary"} icon="ti-sparkles" loading={scoring} loadingLabel="Scoring…" onClick={handleScore}>
+                {job.fitScore != null ? "Score again" : "Score this role"}
+              </Button>
             </div>
-            <div className="px-5 py-4">
-              {job.fitScore != null ? (
-                <div className="flex items-start gap-4">
-                  <span className={`text-3xl font-display font-extrabold shrink-0 ${job.fitScore >= 80 ? "text-emerald-700 dark:text-emerald-400" : job.fitScore >= 60 ? "text-amber-700 dark:text-amber-400" : "text-red-600 dark:text-red-400"}`}>
-                    {job.fitScore}
-                  </span>
-                  <div>
-                    <div className={`inline-flex items-center text-xs font-medium px-2.5 py-0.5 rounded-full mb-1.5 ${job.fitScore >= 80 ? "bg-emerald-50 text-emerald-700" : job.fitScore >= 60 ? "bg-amber-50 text-amber-700" : "bg-red-50 text-red-600"}`}>
-                      {job.fitScore >= 80 ? "Strong fit" : job.fitScore >= 60 ? "Moderate fit" : "Weak fit"}
-                    </div>
-                    {job.fitReasoning && <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{job.fitReasoning}</p>}
-                  </div>
-                </div>
-              ) : (
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {scoreError ? <span role="alert" className="text-amber-800 dark:text-amber-300">{scoreError}</span> : "Score it to see how well this role matches you before you spend an evening on it."}
-                </p>
-              )}
-              {scoreError && job.fitScore != null && <p role="alert" className="text-xs text-amber-800 dark:text-amber-300 mt-2">{scoreError}</p>}
-            </div>
-          </div>
-
-          <div className="surface">
-            <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
-              <h2 className="section-label">Job description</h2>
-            </div>
-            <div className="px-5 py-2">
-              <EditableField label="Job description" value={job.description || null} placeholder="Paste the job description…" multiline onSave={(v) => save({ description: v })} />
-            </div>
-          </div>
-
-          <div className="surface">
-            <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
-              <h2 className="section-label">The company</h2>
-            </div>
-            {company ? (
-              <div className="px-5 py-3 flex items-center justify-between">
+            {job.fitScore != null && fit ? (
+              <div className="mt-6 flex items-start gap-5">
+                <span className={`font-serif text-display font-semibold leading-none tabular-nums ${FIT_TONE[fit.tone]}`}>{job.fitScore}</span>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-50">{company.name}</p>
-                  {company.whatTheyDo && <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">{company.whatTheyDo}</p>}
+                  <p className={`font-semibold ${FIT_TONE[fit.tone]}`}>{fit.word} fit</p>
+                  {job.fitReasoning && <p className="mt-1 text-reading text-ink-soft">{job.fitReasoning}</p>}
                 </div>
-                <Link href={`/companies/${company.id}`} className="text-xs text-primary-600 hover:underline shrink-0 ml-4">Open research</Link>
               </div>
             ) : (
-              <div className="px-5 py-3 flex items-center justify-between gap-4">
-                <p className="text-sm text-gray-500 dark:text-gray-400">Research what they do, their values and recent news.</p>
-                <button onClick={handleCreateCompany} disabled={creatingCompany} className="text-xs text-primary-600 hover:underline disabled:opacity-50 shrink-0">
-                  {creatingCompany ? "Starting…" : "Start research"}
-                </button>
-              </div>
+              !scoreError && <p className="mt-5 text-ink-soft">Score it to see how well this role matches you before you spend an evening on it.</p>
             )}
-          </div>
+            {scoreError && (
+              <InlineMessage tone="caution" role="alert" className="mt-5">
+                {scoreError}
+              </InlineMessage>
+            )}
+          </Sheet>
 
-          <div className="surface">
-            <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
-              <h2 className="section-label">Details</h2>
-            </div>
-            <div className="divide-y divide-gray-100 dark:divide-gray-800">
-              {([
-                { label: "Title", value: job.title, key: "title" },
-                { label: "Company", value: job.company, key: "company" },
-                { label: "Location", value: job.location, key: "location", placeholder: "Add location" },
-                { label: "Salary", value: job.salary, key: "salary", placeholder: "Add salary range" },
-              ] as { label: string; value: string | null; key: keyof Job; placeholder?: string }[]).map(({ label, value, key, placeholder }) => (
-                <div key={key} className="flex items-center gap-4 px-5">
-                  <span className="text-xs text-gray-500 dark:text-gray-400 w-20 shrink-0">{label}</span>
-                  <div className="flex-1 py-1">
+          <div className="mt-12 space-y-12">
+            <Section title="Job description" serif id="description">
+              <div className="-mx-3">
+                <EditableField label="Job description" value={job.description || null} placeholder="Paste the job description…" multiline onSave={(v) => save({ description: v })} />
+              </div>
+            </Section>
+
+            <Section title="The company" serif id="company">
+              {company ? (
+                <Link
+                  href={`/companies/${company.id}`}
+                  className="group flex items-center gap-3 py-3 px-3 -mx-3 rounded-field hover:bg-well transition-colors duration-100"
+                >
+                  <span className="flex-1 min-w-0">
+                    <span className="block font-semibold text-ink">{company.name}</span>
+                    {company.whatTheyDo && <span className="block mt-0.5 text-meta text-ink-soft line-clamp-2">{company.whatTheyDo}</span>}
+                  </span>
+                  <span className="text-ui font-semibold text-action shrink-0">Open research</span>
+                  <i className="ti ti-arrow-right text-action" aria-hidden="true" />
+                </Link>
+              ) : (
+                <div className="flex items-center justify-between gap-4 flex-wrap">
+                  <p className="text-ink-soft">Research what they do, their values and recent news.</p>
+                  <Button variant="secondary" size="sm" loading={creatingCompany} loadingLabel="Starting…" onClick={handleCreateCompany}>
+                    Start research
+                  </Button>
+                </div>
+              )}
+            </Section>
+
+            <Section title="Details" serif id="details">
+              <dl>
+                {([
+                  { label: "Title", value: job.title, key: "title" },
+                  { label: "Company", value: job.company, key: "company" },
+                  { label: "Location", value: job.location, key: "location", placeholder: "Add location" },
+                  { label: "Salary", value: job.salary, key: "salary", placeholder: "Add salary range" },
+                  { label: "Link", value: job.url, key: "url", placeholder: "Add the job posting's link" },
+                ] as { label: string; value: string | null; key: keyof Job; placeholder?: string }[]).map(({ label, value, key, placeholder }) => (
+                  <Detail key={key} label={label}>
                     <EditableField label={label} value={value} placeholder={placeholder ?? "—"} onSave={(v) => save({ [key]: v || null })} />
+                  </Detail>
+                ))}
+                <Detail label="Source">
+                  <div className="py-1 px-3">
+                    <Select value={job.source} options={SOURCE_OPTIONS} onChange={handleSourceChange} ariaLabel="Source" className="max-w-xs" />
                   </div>
-                </div>
-              ))}
-              <div className="flex items-center gap-4 px-5">
-                <span className="text-xs text-gray-500 dark:text-gray-400 w-20 shrink-0">URL</span>
-                <div className="flex-1 py-1 flex items-center gap-2">
-                  <EditableField label="Job URL" value={job.url} placeholder="Add job URL" onSave={(v) => save({ url: v || null })} className="flex-1" />
-                  {job.url && (
-                    <a href={job.url} target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:text-primary-700 shrink-0" aria-label="Open job posting">
-                      <i className="ti ti-external-link text-sm" aria-hidden="true" />
-                    </a>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center gap-4 px-5 py-2.5">
-                <span className="text-xs text-gray-500 dark:text-gray-400 w-20 shrink-0">Source</span>
-                <select aria-label="Source" value={job.source} onChange={(e) => handleSourceChange(e.target.value as JobSource)} className={`${selectClass} font-normal`}>
-                  {ALL_SOURCES.map((s) => <option key={s} value={s}>{SOURCE_LABELS[s]}</option>)}
-                </select>
-              </div>
-              {job.stage === "saved" && (
-                <div className="px-5 py-2.5">
-                  <InterviewDateField
-                    label="Apply by"
-                    labelClassName="text-xs text-gray-500 dark:text-gray-400 w-20 shrink-0"
-                    value={job.applyBy}
-                    onSave={async (applyBy) => {
-                      if (await save({ applyBy })) showToast(applyBy ? "Apply-by day saved" : "Apply-by day cleared");
-                    }}
-                  />
-                </div>
-              )}
-              {resumes.length > 0 && (
-                <div className="flex items-center gap-4 px-5 py-2.5">
-                  <span className="text-xs text-gray-500 dark:text-gray-400 w-20 shrink-0">Resume</span>
-                  <select
-                    aria-label="Resume used"
-                    value={job.resumeIdUsed ?? ""}
-                    onChange={async (e) => { if (await save({ resumeIdUsed: e.target.value || null })) showToast("Resume updated"); }}
-                    className={`${selectClass} font-normal`}
-                  >
-                    <option value="">Not set</option>
-                    {resumes.map((r) => <option key={r.id} value={r.id}>{r.label}</option>)}
-                  </select>
-                </div>
-              )}
-              {job.appliedAt && (
-                <div className="flex items-center gap-4 px-5 py-2.5">
-                  <span className="text-xs text-gray-500 dark:text-gray-400 w-20 shrink-0">Applied</span>
-                  <span className="text-sm text-gray-600 dark:text-gray-300">{formatDate(job.appliedAt)}</span>
-                </div>
-              )}
-              {job.lastFollowUpAt && (
-                <div className="flex items-center gap-4 px-5 py-2.5">
-                  <span className="text-xs text-gray-500 dark:text-gray-400 w-20 shrink-0">Followed up</span>
-                  <span className="text-sm text-gray-600 dark:text-gray-300">{formatDate(job.lastFollowUpAt)}</span>
-                </div>
-              )}
-              <div className="flex items-center gap-4 px-5 py-2.5">
-                <span className="text-xs text-gray-500 dark:text-gray-400 w-20 shrink-0">Added</span>
-                <span className="text-sm text-gray-500 dark:text-gray-400">{formatDate(job.createdAt)}</span>
-              </div>
-            </div>
-          </div>
+                </Detail>
+                {job.stage === "saved" && (
+                  <Detail label="Apply by">
+                    <div className="py-1 px-3">
+                      <InterviewDateField
+                        label="Apply by"
+                        labelClassName="sr-only"
+                        value={job.applyBy}
+                        onSave={async (applyBy) => {
+                          if (await save({ applyBy })) showToast(applyBy ? "Apply-by day saved" : "Apply-by day cleared");
+                        }}
+                      />
+                    </div>
+                  </Detail>
+                )}
+                {resumes.length > 0 && (
+                  <Detail label="Resume">
+                    <div className="py-1 px-3">
+                      <Select
+                        value={job.resumeIdUsed ?? ""}
+                        options={resumeOptions}
+                        ariaLabel="Resume used"
+                        className="max-w-xs"
+                        onChange={async (v) => {
+                          if (await save({ resumeIdUsed: v || null })) showToast("Resume updated");
+                        }}
+                      />
+                    </div>
+                  </Detail>
+                )}
+                {job.appliedAt && (
+                  <Detail label="Applied">
+                    <p className="py-2 px-3 text-ink">{formatDate(job.appliedAt)}</p>
+                  </Detail>
+                )}
+                {job.lastFollowUpAt && (
+                  <Detail label="Followed up">
+                    <p className="py-2 px-3 text-ink">{formatDate(job.lastFollowUpAt)}</p>
+                  </Detail>
+                )}
+                <Detail label="Added">
+                  <p className="py-2 px-3 text-ink-soft">{formatDate(job.createdAt)}</p>
+                </Detail>
+              </dl>
+            </Section>
 
-          <div className="surface">
-            <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
-              <h2 className="section-label">Notes</h2>
-            </div>
-            <div className="px-5 py-2">
-              <EditableField label="Notes" value={job.notes} placeholder="Anything worth remembering about this role…" multiline onSave={(v) => save({ notes: v || null })} />
-            </div>
-          </div>
+            <Section title="Notes" serif id="notes">
+              <div className="-mx-3">
+                <EditableField label="Notes" value={job.notes} placeholder="Anything worth remembering about this role…" multiline onSave={(v) => save({ notes: v || null })} />
+              </div>
+            </Section>
 
-          <div className="flex justify-end">
-            <button onClick={() => goTo("apply")} className="flex items-center gap-1.5 text-sm font-medium text-primary-700 dark:text-primary-300 hover:underline">
-              Next: write your letter
-              <i className="ti ti-arrow-right text-sm" aria-hidden="true" />
-            </button>
+            <div className="flex justify-end">
+              <Button variant="secondary" onClick={() => goTo("apply")}>
+                Next: write your letter
+                <i className="ti ti-arrow-right" aria-hidden="true" />
+              </Button>
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* Apply: the letter */}
@@ -556,7 +522,14 @@ function JobWorkspace({ jobId }: { jobId: string }) {
             <Nudge text="Sent it off?" action="Mark as applied" onClick={() => handleStageChange("applied")} />
           )}
           {job.stage === "applied" && (
-            <Nudge text="Heard back with an interview?" action="Move to interviewing" onClick={() => { handleStageChange("interview"); goTo("interview"); }} />
+            <Nudge
+              text="Heard back with an interview?"
+              action="Move to interviewing"
+              onClick={() => {
+                handleStageChange("interview");
+                goTo("interview");
+              }}
+            />
           )}
           <CoverLetterPanel job={job} onLettersChange={(letters) => setActivity((a) => ({ ...a, letters }))} />
         </>
@@ -569,37 +542,33 @@ function JobWorkspace({ jobId }: { jobId: string }) {
             <Nudge text="Got an interview on the calendar?" action="Move to interviewing" onClick={() => handleStageChange("interview")} />
           )}
           {interviewing && (
-            <div className="surface px-5 py-4 mb-4">
-              <h2 className="section-label">When is it?</h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 mb-3">
-                Today will remind you to prep beforehand and ask how it went afterwards.
-              </p>
-              <InterviewDateField
-                value={job.nextInterviewAt}
-                onSave={async (nextInterviewAt) => {
-                  if (await save({ nextInterviewAt })) showToast(nextInterviewAt ? "Interview date saved" : "Interview date cleared");
-                }}
-              />
-              {job.nextInterviewAt && (
-                <button
-                  type="button"
-                  onClick={() => downloadInterview(job)}
-                  className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-primary-700 dark:text-primary-300 hover:underline"
-                >
-                  <i className="ti ti-calendar-plus text-sm" aria-hidden="true" />
-                  Add to my calendar
-                </button>
-              )}
-            </div>
+            <section aria-labelledby="when-heading" className="mb-10">
+              <h2 id="when-heading" className="font-serif text-heading font-semibold text-ink">
+                When is it?
+              </h2>
+              <p className="mt-1 mb-4 text-meta text-ink-soft">Today will remind you to prep beforehand and ask how it went afterwards.</p>
+              <div className="flex items-center gap-x-4 gap-y-3 flex-wrap">
+                <InterviewDateField
+                  labelClassName="sr-only"
+                  value={job.nextInterviewAt}
+                  onSave={async (nextInterviewAt) => {
+                    if (await save({ nextInterviewAt })) showToast(nextInterviewAt ? "Interview date saved" : "Interview date cleared");
+                  }}
+                />
+                {job.nextInterviewAt && (
+                  <Button variant="quiet" size="sm" icon="ti-calendar-plus" onClick={() => downloadInterview(job)}>
+                    Add to my calendar
+                  </Button>
+                )}
+              </div>
+            </section>
           )}
           <InterviewPrepPanel job={job} onPrepsChange={(preps) => setActivity((a) => ({ ...a, preps }))} />
         </>
       )}
 
       {/* Debrief: what happened */}
-      {step === "debrief" && (
-        <DebriefPanel job={job} onDebriefsChange={(debriefs) => setActivity((a) => ({ ...a, debriefs }))} />
-      )}
+      {step === "debrief" && <DebriefPanel job={job} onDebriefsChange={(debriefs) => setActivity((a) => ({ ...a, debriefs }))} />}
 
       {(step === "apply" || step === "interview" || step === "debrief") && (
         <NotesCard notes={job.notes} onSave={(v) => save({ notes: v || null })} />
@@ -607,44 +576,72 @@ function JobWorkspace({ jobId }: { jobId: string }) {
 
       {/* Outcome: how it ended */}
       {step === "outcome" && (
-        <div className="space-y-4">
-          <div className="surface p-5">
-            <h2 className="section-label mb-1">How did it end?</h2>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Closing the loop keeps Today focused on what&apos;s still open.</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <>
+          <Sheet as="section" aria-labelledby="outcome-heading">
+            <h2 id="outcome-heading" className="font-serif text-heading font-semibold text-ink">
+              How did it end?
+            </h2>
+            <p className="mt-1 text-meta text-ink-soft">Closing the loop keeps Today focused on what&apos;s still open.</p>
+            <ul className="mt-5 -mx-3">
               {OUTCOMES.map((o) => {
                 const chosen = job.stage === o.stage;
                 return (
-                  <button
-                    key={o.stage}
-                    onClick={() => handleStageChange(o.stage)}
-                    aria-pressed={chosen}
-                    className={`text-left p-4 rounded-2xl border transition-all ${
-                      chosen
-                        ? "glow-gradient border-transparent shadow-sm"
-                        : "border-gray-200 dark:border-gray-700 hover:bg-white/70 dark:hover:bg-white/5"
-                    }`}
-                  >
-                    <i className={`ti ${o.icon} text-xl text-gray-700 dark:text-gray-200`} aria-hidden="true" />
-                    <p className="mt-2 text-sm font-display font-bold text-gray-900 dark:text-gray-50">{o.label}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{o.blurb}</p>
-                  </button>
+                  <li key={o.stage}>
+                    <button
+                      type="button"
+                      onClick={() => handleStageChange(o.stage)}
+                      aria-pressed={chosen}
+                      className={`w-full flex items-start gap-4 px-3 py-3.5 rounded-field text-left transition-colors duration-100 ${
+                        chosen ? "bg-well" : "hover:bg-well"
+                      }`}
+                    >
+                      <span
+                        className={`mt-1 w-4 h-4 shrink-0 rounded-full ${chosen ? "bg-sun ring-4 ring-sun-wash" : "border-[1.5px] border-control"}`}
+                        aria-hidden="true"
+                      />
+                      <span className="min-w-0">
+                        <span className="block font-semibold text-ink">{o.label}</span>
+                        <span className="block text-meta text-ink-soft">{o.blurb}</span>
+                      </span>
+                    </button>
+                  </li>
                 );
               })}
-            </div>
+            </ul>
+          </Sheet>
+          <div className="mt-12 space-y-8">
+            <Section title="One thing to remember" serif id="remember">
+              <p className="-mt-2 mb-2 text-meta text-ink-soft">A sentence for future you. It stays in this job&apos;s notes.</p>
+              <div className="-mx-3">
+                <EditableField label="One thing to remember" value={job.notes} placeholder="e.g. Ask about team size earlier next time." multiline onSave={(v) => save({ notes: v || null })} />
+              </div>
+            </Section>
+            <Link href="/weekly-review" className="inline-flex items-center gap-1.5 text-ui font-semibold text-action hover:underline underline-offset-4">
+              Reflect on it in your weekly review
+              <i className="ti ti-arrow-right" aria-hidden="true" />
+            </Link>
           </div>
-          <div className="surface px-5 py-4">
-            <h2 className="section-label">One thing to remember</h2>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">A sentence for future you. It stays in this job&apos;s notes.</p>
-            <EditableField label="One thing to remember" value={job.notes} placeholder="e.g. Ask about team size earlier next time." multiline onSave={(v) => save({ notes: v || null })} />
-          </div>
-          <Link href="/weekly-review" className="flex items-center gap-1.5 text-sm text-primary-700 dark:text-primary-300 hover:underline">
-            <i className="ti ti-calendar-heart text-sm" aria-hidden="true" />
-            Reflect on it in your weekly review
-          </Link>
-        </div>
+        </>
       )}
-    </div>
+
+      {deleteConfirm && (
+        <Dialog
+          title="Delete this job?"
+          description="Its letters, prep and notes go too. This can't be undone."
+          onRequestClose={() => setDeleteConfirm(false)}
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setDeleteConfirm(false)}>
+                Keep it
+              </Button>
+              <Button variant="danger-solid" loading={deleting} loadingLabel="Deleting…" onClick={handleDelete}>
+                Delete job
+              </Button>
+            </>
+          }
+        />
+      )}
+    </PageFrame>
   );
 }
 
