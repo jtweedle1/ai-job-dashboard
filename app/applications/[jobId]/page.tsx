@@ -368,6 +368,7 @@ function JobWorkspace({ jobId }: { jobId: string }) {
           </select>
           {deleteConfirm ? (
             <>
+              <span className="text-xs text-gray-500 dark:text-gray-400">Its letter, prep and notes go too.</span>
               <button onClick={handleDelete} disabled={deleting} className="text-xs font-medium text-red-700 dark:text-red-400 hover:text-red-800 px-2 min-h-8 rounded-full transition-colors">
                 {deleting ? "Deleting…" : "Delete"}
               </button>

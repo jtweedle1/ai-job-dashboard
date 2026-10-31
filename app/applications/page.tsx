@@ -201,7 +201,7 @@ function ApplicationsList() {
   async function handleDeleteSelected() {
     if (!user || selectedIds.size === 0) return;
     const count = selectedIds.size;
-    if (!confirm(`Delete ${count} job${count !== 1 ? "s" : ""}? This cannot be undone.`)) return;
+    if (!confirm(`Delete ${count} job${count !== 1 ? "s" : ""}, with ${count !== 1 ? "their" : "its"} letters, prep and interview notes? This cannot be undone.`)) return;
     setDeleting(true);
     const ids = [...selectedIds];
     const results = await Promise.allSettled(ids.map((id) => deleteJob(user.uid, id)));
