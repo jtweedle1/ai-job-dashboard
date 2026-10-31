@@ -61,14 +61,14 @@ export const TRAIL_GROUPS: { id: TrailGroup; label: string }[] = [
   { id: "decided", label: "Decided" },
 ];
 
-export const STAGE_META: Record<JobStage, { label: string; badge: string; group: TrailGroup; tone: StageTone; hollow?: boolean }> = {
-  saved:        { label: "Saved",          badge: "bg-gray-100 text-gray-600",       group: "exploring", tone: "stone", hollow: true },
-  applied:      { label: "Applied",        badge: "bg-blue-50 text-blue-700",        group: "applied",   tone: "sky" },
-  phone_screen: { label: "Phone screen",   badge: "bg-violet-50 text-violet-700",    group: "talking",   tone: "sun" },
-  interview:    { label: "Interview",      badge: "bg-amber-50 text-amber-700",      group: "talking",   tone: "sun" },
-  offer:        { label: "Offer",          badge: "bg-emerald-50 text-emerald-700",  group: "decided",   tone: "moss" },
-  rejected:     { label: "Not this time",  badge: "bg-red-50 text-red-600",          group: "decided",   tone: "stone" },
-  withdrawn:    { label: "Stepped away",   badge: "bg-gray-100 text-gray-500",       group: "decided",   tone: "stone" },
+export const STAGE_META: Record<JobStage, { label: string; group: TrailGroup; tone: StageTone; hollow?: boolean }> = {
+  saved:        { label: "Saved",          group: "exploring", tone: "stone", hollow: true },
+  applied:      { label: "Applied",        group: "applied",   tone: "sky" },
+  phone_screen: { label: "Phone screen",   group: "talking",   tone: "sun" },
+  interview:    { label: "Interview",      group: "talking",   tone: "sun" },
+  offer:        { label: "Offer",          group: "decided",   tone: "moss" },
+  rejected:     { label: "Not this time",  group: "decided",   tone: "stone" },
+  withdrawn:    { label: "Stepped away",   group: "decided",   tone: "stone" },
 };
 
 export const SOURCE_LABELS: Record<JobSource, string> = {

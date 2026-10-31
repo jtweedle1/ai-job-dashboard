@@ -123,7 +123,7 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps) {
       {mobileOpen && (
         <div ref={drawerRef} role="dialog" aria-modal="true" aria-label="Menu" className="fixed inset-0 z-40 flex md:hidden">
           <div
-            className="fixed inset-0 bg-[rgb(43_38_69/0.4)] dark:bg-black/60 animate-[fade-in_240ms_var(--ease-out)]"
+            className="fixed inset-0 bg-scrim animate-[fade-in_240ms_var(--ease-out)]"
             onClick={onClose}
             aria-hidden="true"
           />

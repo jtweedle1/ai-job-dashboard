@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Figtree, Fraunces, Nunito, Geist_Mono } from "next/font/google";
+import { Figtree, Fraunces, Geist_Mono } from "next/font/google";
 import "@/styles/icons/tabler-icons.css";
 import "./globals.css";
 import Providers from "./providers";
@@ -7,12 +7,6 @@ import Providers from "./providers";
 const figtree = Figtree({
   variable: "--font-figtree",
   subsets: ["latin"],
-});
-
-const nunito = Nunito({
-  variable: "--font-nunito",
-  subsets: ["latin"],
-  weight: ["600", "700", "800"],
 });
 
 // Trailhead's display face. SOFT rounds the serifs; opsz lets large and small sizes each look right.
@@ -42,7 +36,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${figtree.variable} ${fraunces.variable} ${nunito.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${figtree.variable} ${fraunces.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <Providers>{children}</Providers>

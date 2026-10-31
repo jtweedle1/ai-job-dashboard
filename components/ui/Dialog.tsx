@@ -47,7 +47,7 @@ export default function Dialog({
       }}
       className={`p-0 bg-transparent overflow-visible w-full max-w-none mx-0 mb-0 mt-auto sm:m-auto sm:w-[calc(100%-2rem)] ${
         wide ? "sm:max-w-[45rem]" : "sm:max-w-[35rem]"
-      } backdrop:bg-[rgb(43_38_69/0.4)] dark:backdrop:bg-black/60 backdrop:animate-[fade-in_240ms_var(--ease-out)]`}
+      } backdrop:bg-scrim backdrop:animate-[fade-in_240ms_var(--ease-out)]`}
     >
       <div className="bg-sheet text-ink rounded-t-dialog sm:rounded-dialog shadow-overlay flex flex-col max-h-[92dvh] sm:max-h-[90dvh] animate-[sheet-up_240ms_var(--ease-out)]">
         <div className="flex items-start gap-4 px-5 sm:px-8 pt-6 sm:pt-7 pb-4 shrink-0">
