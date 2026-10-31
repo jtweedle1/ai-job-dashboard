@@ -16,7 +16,7 @@ import type { Job, JobStage, JobSource } from "@/types/job";
 
 type CreateJobData = Omit<
   Job,
-  "id" | "createdAt" | "updatedAt" | "fitScore" | "fitReasoning" | "resumeIdUsed" | "nextInterviewAt" | "lastFollowUpAt" | "snoozedUntil"
+  "id" | "createdAt" | "updatedAt" | "fitScore" | "fitReasoning" | "resumeIdUsed" | "nextInterviewAt" | "lastFollowUpAt" | "snoozedUntil" | "followUps" | "followUpsOff" | "applyBy"
 >;
 
 function toDate(v: unknown): Date | null {
@@ -43,6 +43,10 @@ function toJob(id: string, d: Record<string, unknown>): Job {
     nextInterviewAt: toDate(d.nextInterviewAt),
     lastFollowUpAt: toDate(d.lastFollowUpAt),
     snoozedUntil: toDate(d.snoozedUntil),
+    // Jobs chased before the count existed have been chased at least once.
+    followUps: (d.followUps as number | undefined) ?? (d.lastFollowUpAt ? 1 : 0),
+    followUpsOff: (d.followUpsOff as boolean | undefined) ?? false,
+    applyBy: toDate(d.applyBy),
     createdAt: d.createdAt instanceof Timestamp ? d.createdAt.toDate() : new Date(),
     updatedAt: d.updatedAt instanceof Timestamp ? d.updatedAt.toDate() : new Date(),
   };
@@ -58,6 +62,9 @@ export async function createJob(uid: string, data: CreateJobData): Promise<strin
     nextInterviewAt: null,
     lastFollowUpAt: null,
     snoozedUntil: null,
+    followUps: 0,
+    followUpsOff: false,
+    applyBy: null,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });

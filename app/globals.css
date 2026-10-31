@@ -67,6 +67,18 @@ body {
   outline-offset: 2px;
 }
 
+/* Respect "reduce motion": spinners, skeleton pulses and transitions settle immediately. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* The soft sunrise behind every page. Fixed so it stays put while content scrolls. */
 @utility app-backdrop {
   background-color: #fbf9fe;

@@ -14,20 +14,22 @@ export function parseInputDate(s: string): Date | null {
   return new Date(y, m - 1, d);
 }
 
-// The day of the next interview. Saves as soon as a full date is picked.
+// A day picker (the next interview, or a saved role's apply-by day). Saves as soon as a full date is picked.
 export default function InterviewDateField({
   value,
   onSave,
   label = "Interview date",
+  labelClassName = "text-xs text-gray-500 dark:text-gray-400",
 }: {
   value: Date | null;
   onSave: (date: Date | null) => void;
   label?: string;
+  labelClassName?: string;
 }) {
   const id = useId();
   return (
     <div className="flex items-center gap-2 flex-wrap">
-      <label htmlFor={id} className="text-xs text-gray-500 dark:text-gray-400">
+      <label htmlFor={id} className={labelClassName}>
         {label}
       </label>
       <input

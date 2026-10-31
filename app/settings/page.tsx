@@ -88,7 +88,7 @@ export default function SettingsPage() {
       {/* API Key */}
       <div className="surface mb-4">
         <div className="px-4 py-3 border-b border-gray-50 dark:border-gray-800">
-          <p className="section-label">Anthropic API key</p>
+          <h2 className="section-label">Anthropic API key</h2>
         </div>
         <div className="px-4 py-4 space-y-3">
           {keyStatus === "loading" ? (
@@ -102,7 +102,7 @@ export default function SettingsPage() {
               <button
                 onClick={handleRemoveKey}
                 disabled={removingKey}
-                className="text-xs text-red-500 hover:text-red-600 transition-colors disabled:opacity-50"
+                className="text-xs text-red-700 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors disabled:opacity-50"
               >
                 {removingKey ? "Removing…" : "Remove key"}
               </button>
@@ -139,7 +139,7 @@ export default function SettingsPage() {
               </div>
             </>
           )}
-          {keyError && <p className="text-xs text-red-500">{keyError}</p>}
+          {keyError && <p role="alert" className="text-xs text-red-700 dark:text-red-300">{keyError}</p>}
         </div>
       </div>
 
@@ -149,8 +149,8 @@ export default function SettingsPage() {
         className="surface mb-4 px-5 py-4 flex items-center justify-between gap-4 hover:shadow-md transition-shadow"
       >
         <div>
-          <p className="section-label">Career goals</p>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Now live in Me, next to your resume, stories and voice.</p>
+          <h2 className="section-label">Career goals</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Now live in Me, next to your resume, library and voice.</p>
         </div>
         <i className="ti ti-arrow-right text-gray-400" aria-hidden="true" />
       </Link>
@@ -158,7 +158,7 @@ export default function SettingsPage() {
       {/* Account */}
       <div className="surface">
         <div className="px-4 py-3 border-b border-gray-50 dark:border-gray-800">
-          <p className="section-label">Account</p>
+          <h2 className="section-label">Account</h2>
         </div>
         <div className="px-4 py-4 space-y-2">
           {user ? (

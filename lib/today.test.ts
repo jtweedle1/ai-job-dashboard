@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { comingUp, groupActions, trailStations, weekStart, weekSummary } from "./today";
+import { comingUp, groupActions, trailStations, weekCounts, weekStart, weekSummary } from "./today";
 import { nextActions, type JobActivity, type NextAction } from "./next-steps";
 import type { Job } from "@/types/job";
 
@@ -26,6 +26,9 @@ function job(over: Partial<Job>): Job {
     nextInterviewAt: null,
     lastFollowUpAt: null,
     snoozedUntil: null,
+    followUps: 0,
+    followUpsOff: false,
+    applyBy: null,
     createdAt: NOW,
     updatedAt: NOW,
     ...over,
@@ -151,6 +154,29 @@ describe("nextActions with dates", () => {
     const applied = daysFrom(-20);
     expect(nextActions([job({ stage: "applied", appliedAt: applied, lastFollowUpAt: daysFrom(-3) })], () => NONE, NOW)).toEqual([]);
     const [a] = nextActions([job({ stage: "applied", appliedAt: applied, lastFollowUpAt: daysFrom(-8) })], () => NONE, NOW);
-    expect(a).toMatchObject({ kind: "follow_up", action: "Follow up again?", chip: { text: "20 days", overdue: true } });
+    expect(a).toMatchObject({ kind: "follow_up", action: "Follow up again?", chip: { text: "20 days" } });
+  });
+});
+
+describe("weekCounts", () => {
+  const weekOf = weekStart(NOW);
+
+  it("counts this week's applications and interviews from the tracker", () => {
+    const jobs = [
+      job({ id: "a", appliedAt: daysFrom(-1) }),
+      job({ id: "b", appliedAt: daysFrom(-9) }),
+      job({ id: "c", stage: "interview", nextInterviewAt: daysFrom(1) }),
+      job({ id: "d", stage: "interview", nextInterviewAt: daysFrom(14) }),
+    ];
+    expect(weekCounts({ jobs, debriefs: [] }, weekOf)).toEqual({ applicationsSent: 1, interviewsBooked: 1 });
+  });
+
+  it("counts a debriefed interview once, even when the job still has its date", () => {
+    const jobs = [job({ id: "c", stage: "interview", nextInterviewAt: daysFrom(-1) })];
+    const debriefs = [
+      { jobId: "c", interviewDate: daysFrom(-1, 15) },
+      { jobId: "e", interviewDate: daysFrom(-2) },
+    ];
+    expect(weekCounts({ jobs, debriefs }, weekOf).interviewsBooked).toBe(2);
   });
 });

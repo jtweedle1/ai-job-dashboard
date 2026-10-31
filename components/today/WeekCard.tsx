@@ -6,7 +6,7 @@ export default function WeekCard({ week }: { week: WeekSummary }) {
   const stats = [
     { n: week.applied, one: "application sent", many: "applications sent" },
     { n: week.letters, one: "letter written", many: "letters written" },
-    { n: week.interviews, one: "interview debriefed", many: "interviews debriefed" },
+    { n: week.interviews, one: "interview written up", many: "interviews written up" },
   ];
   const quiet = stats.every((s) => s.n === 0);
 

@@ -26,7 +26,7 @@ const USES: { icon: string; title: string; body: string }[] = [
   {
     icon: "ti-microphone",
     title: "Interviews",
-    body: "Your debrief notes sit next to your prepared answers, so you can see what to tell better next time.",
+    body: "Your interview notes sit next to your prepared answers, so you can see what to tell better next time.",
   },
 ];
 
@@ -73,7 +73,7 @@ export default function StoriesPage() {
       <StoryTabs />
 
       <div className="mb-6">
-        <h1 className="page-title">Your stories</h1>
+        <h1 className="page-title">Your library</h1>
         <p className="text-sm text-gray-500 dark:text-gray-400">
           Everything you&apos;ve told Wayfinder about your work, in one place. Write a story once and use it everywhere.
         </p>
@@ -113,6 +113,7 @@ export default function StoriesPage() {
                 aria-hidden="true"
               />
               <input
+                aria-label="Search stories"
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}

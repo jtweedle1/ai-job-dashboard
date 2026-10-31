@@ -44,7 +44,7 @@ export const SECTIONS: NavSection[] = [
     icon: "ti-user-circle",
     tabs: [
       { label: "Resume", href: "/resumes" },
-      { label: "Stories", href: "/stories", also: ["/background", "/answer-bank", "/debrief"] },
+      { label: "Library", href: "/stories", also: ["/background", "/answer-bank", "/debrief"] },
       { label: "Voice", href: "/voice" },
       { label: "Goals", href: "/goals" },
     ],

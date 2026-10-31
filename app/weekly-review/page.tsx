@@ -3,13 +3,21 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { authedFetch, noKeyMessage } from "@/lib/api-client";
+import { aiErrorMessage } from "@/lib/ai-errors";
 import {
   createReview,
   getReviews,
   updateReview,
   deleteReview,
 } from "@/lib/weeklyReviews";
+import { getJobs } from "@/lib/jobs";
+import { getDebriefs } from "@/lib/debriefs";
+import { weekCounts } from "@/lib/today";
+import type { Job } from "@/types/job";
 import type { WeeklyReview } from "@/types/weeklyReview";
+import Toast from "@/components/Toast";
+import { useToast } from "@/lib/use-toast";
+import { useDraft } from "@/lib/use-draft";
 
 function weekStartOf(d: Date): Date {
   const s = new Date(d);
@@ -55,6 +63,15 @@ export default function WeeklyReviewPage() {
   const [loading, setLoading] = useState(true);
 
   const [activeId, setActiveId] = useState<string | null>(null);
+  const draft = useDraft<{ weekOf: number; fields: Fields } | null>("weekly-review-new", null, (v) => v == null);
+  // Writing a new review for this week that isn't saved yet.
+  const [composing, setComposing] = useState(false);
+  // The numbers in the new review came from the tracker, not from memory.
+  const [prefilled, setPrefilled] = useState(false);
+  const [tracked, setTracked] = useState<{ jobs: Job[]; debriefs: { jobId: string; interviewDate: Date }[] }>({
+    jobs: [],
+    debriefs: [],
+  });
   const [fields, setFields] = useState<Fields>(BLANK_FIELDS);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
@@ -63,36 +80,59 @@ export default function WeeklyReviewPage() {
   const [summaryError, setSummaryError] = useState("");
 
   const [expandedArchiveId, setExpandedArchiveId] = useState<string | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [toast, setToast] = useState("");
+  const { show: showToast, toastProps } = useToast();
 
   useEffect(() => {
     if (!user) return;
-    getReviews(user.uid).then((r) => {
+    Promise.all([
+      getReviews(user.uid),
+      // The tracker only pre-fills numbers, so a failed read just leaves them for you to type.
+      getJobs(user.uid).catch(() => []),
+      getDebriefs(user.uid).catch(() => []),
+    ]).then(([r, jobs, debriefs]) => {
       setReviews(r);
+      setTracked({ jobs, debriefs });
+      if (r.length === 0) startNewReview({ jobs, debriefs });
       setLoading(false);
     });
+    // startNewReview only reads what it's handed here.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  function showToast(msg: string) {
-    setToast(msg);
-    setTimeout(() => setToast(""), 3000);
-  }
 
   function setField<K extends keyof Fields>(key: K, value: Fields[K]) {
-    setFields((prev) => ({ ...prev, [key]: value }));
+    const next = { ...fields, [key]: value };
+    setFields(next);
+    // A new review in progress is kept as a draft until it's saved.
+    if (!activeId) draft.setValue({ weekOf: weekStartOf(new Date()).getTime(), fields: next });
     setDirty(true);
   }
 
-  function startNewReview() {
+  // A new review starts with what the tracker already knows; everything stays editable.
+  function startNewReview(from = tracked) {
+    const weekOf = weekStartOf(new Date());
+    const kept = draft.value?.weekOf === weekOf.getTime() ? draft.value.fields : null;
     setActiveId(null);
+    setComposing(true);
+    setFields(kept ?? { ...BLANK_FIELDS, ...weekCounts(from, weekOf) });
+    setPrefilled(!kept);
+    setDirty(false);
+    setSummaryError("");
+  }
+
+  function closeForm() {
+    setActiveId(null);
+    setComposing(false);
     setFields(BLANK_FIELDS);
+    setPrefilled(false);
     setDirty(false);
     setSummaryError("");
   }
 
   function loadReview(review: WeeklyReview) {
     setActiveId(review.id);
+    setComposing(false);
+    setPrefilled(false);
     setFields({
       applicationsSent: review.applicationsSent,
       interviewsBooked: review.interviewsBooked,
@@ -134,6 +174,9 @@ export default function WeeklyReviewPage() {
         };
         setReviews((prev) => [newReview, ...prev]);
         setActiveId(id);
+        setComposing(false);
+        draft.clear();
+        setPrefilled(false);
         showToast("Review saved");
       }
       setDirty(false);
@@ -158,7 +201,7 @@ export default function WeeklyReviewPage() {
         return;
       }
       if (data.error) {
-        setSummaryError("Generation failed. Try again.");
+        setSummaryError(aiErrorMessage(res.status, data.error, "Generation failed. Try again."));
         return;
       }
       setReviews((prev) =>
@@ -174,14 +217,26 @@ export default function WeeklyReviewPage() {
     }
   }
 
-  async function handleDelete(id: string) {
+  // Gone from the page at once; really deleted only once the Undo toast has gone.
+  function handleDelete(id: string) {
     if (!user) return;
-    setDeletingId(id);
-    await deleteReview(user.uid, id);
+    const uid = user.uid;
+    const before = reviews;
+    const review = reviews.find((r) => r.id === id);
     setReviews((prev) => prev.filter((r) => r.id !== id));
-    if (activeId === id) startNewReview();
-    setDeletingId(null);
-    showToast("Deleted");
+    if (activeId === id) closeForm();
+    const restore = () => {
+      setReviews(before);
+      if (review && activeId === id) loadReview(review);
+    };
+    showToast("Review deleted", {
+      undo: restore,
+      commit: () =>
+        void deleteReview(uid, id).catch(() => {
+          restore();
+          showToast("Couldn't delete that review. Try again.", { tone: "error" });
+        }),
+    });
   }
 
   const thisWeekStart = weekStartOf(new Date());
@@ -204,12 +259,7 @@ export default function WeeklyReviewPage() {
 
   return (
     <div className="p-6 max-w-3xl mx-auto">
-      {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-full shadow-lg shadow-gray-900/20">
-          <i className="ti ti-circle-check text-primary-400 text-base" aria-hidden="true" />
-          {toast}
-        </div>
-      )}
+      <Toast {...toastProps} />
 
       {/* Header */}
       <div className="flex items-start justify-between gap-4 mb-6">
@@ -219,10 +269,10 @@ export default function WeeklyReviewPage() {
             {reviews.length} review{reviews.length !== 1 ? "s" : ""} logged
           </p>
         </div>
-        {!activeId && (
+        {!activeId && !composing && (
           <button
             onClick={
-              thisWeekReview ? () => loadReview(thisWeekReview) : startNewReview
+              thisWeekReview ? () => loadReview(thisWeekReview) : () => startNewReview()
             }
             className="flex items-center gap-2 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-primary-700 transition-colors shrink-0"
           >
@@ -233,20 +283,19 @@ export default function WeeklyReviewPage() {
       </div>
 
       {/* Active form */}
-      {(activeId !== null || reviews.length === 0) && (
+      {(activeId !== null || composing) && (
         <div className="surface mb-4">
           <div className="px-4 py-3 border-b border-gray-50 dark:border-gray-800 flex items-center justify-between">
             <div>
-              <p className="section-label">
+              <h2 className="section-label">
                 {activeId
                   ? `Week of ${formatWeek(activeReview!.weekOf)}`
                   : `Week of ${formatWeek(thisWeekStart)}`}
-              </p>
+              </h2>
             </div>
             {activeId && (
               <button
                 onClick={() => handleDelete(activeId)}
-                disabled={deletingId === activeId}
                 className="text-gray-500 dark:text-gray-400 hover:text-red-400 transition-colors disabled:opacity-50"
                 aria-label="Delete review"
               >
@@ -266,8 +315,9 @@ export default function WeeklyReviewPage() {
                 ] as { key: keyof Fields; label: string }[]
               ).map(({ key, label }) => (
                 <div key={key}>
-                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">{label}</label>
+                  <label htmlFor={`wr-${key}`} className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">{label}</label>
                   <input
+                    id={`wr-${key}`}
                     type="number"
                     min={0}
                     value={fields[key] as number}
@@ -279,6 +329,12 @@ export default function WeeklyReviewPage() {
                 </div>
               ))}
             </div>
+            {prefilled && (
+              <p className="-mt-2 text-xs text-gray-500 dark:text-gray-400">
+                <i className="ti ti-sparkles text-xs mr-1" aria-hidden="true" />
+                Applications and interviews are counted from your tracker. Change them if they&apos;re off.
+              </p>
+            )}
 
             {/* Text fields */}
             <div className="space-y-3">
@@ -302,8 +358,9 @@ export default function WeeklyReviewPage() {
                 ] as { key: keyof Fields; label: string; placeholder: string }[]
               ).map(({ key, label, placeholder }) => (
                 <div key={key}>
-                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">{label}</label>
+                  <label htmlFor={`wr-${key}`} className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">{label}</label>
                   <textarea
+                    id={`wr-${key}`}
                     value={fields[key] as string}
                     onChange={(e) => setField(key, e.target.value)}
                     placeholder={placeholder}
@@ -346,9 +403,9 @@ export default function WeeklyReviewPage() {
                 </button>
               )}
 
-              {activeId && (
+              {(activeId || composing) && (
                 <button
-                  onClick={startNewReview}
+                  onClick={closeForm}
                   className="text-sm text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                 >
                   Close
@@ -356,7 +413,7 @@ export default function WeeklyReviewPage() {
               )}
 
               {summaryError && (
-                <p className="text-xs text-amber-600 w-full">{summaryError}</p>
+                <p role="alert" className="text-xs text-amber-800 dark:text-amber-300 w-full">{summaryError}</p>
               )}
             </div>
           </div>
@@ -364,17 +421,17 @@ export default function WeeklyReviewPage() {
           {/* AI summary */}
           {parsedSummary && (
             <div className="border-t border-gray-50 dark:border-gray-800 px-4 py-4 space-y-3">
-              <p className="section-label">
+              <h3 className="section-label">
                 AI summary
-              </p>
+              </h3>
               <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
                 {parsedSummary.summary}
               </p>
               {parsedSummary.steps.length > 0 && (
                 <div className="space-y-1.5 pt-1">
-                  <p className="section-label">
+                  <h3 className="section-label">
                     Next steps
-                  </p>
+                  </h3>
                   {parsedSummary.steps.map((step, i) => (
                     <div key={i} className="flex gap-2">
                       <i
@@ -392,7 +449,7 @@ export default function WeeklyReviewPage() {
       )}
 
       {/* No reviews + not editing */}
-      {reviews.length === 0 && activeId === null && (
+      {reviews.length === 0 && activeId === null && !composing && (
         <div className="surface p-10 text-center">
           <div className="w-10 h-10 rounded-full glow-gradient flex items-center justify-center mx-auto mb-3">
             <i className="ti ti-calendar-week text-gray-700 dark:text-gray-100 text-xl" aria-hidden="true" />
@@ -401,7 +458,7 @@ export default function WeeklyReviewPage() {
             No weekly reviews yet. Start your first one above.
           </p>
           <button
-            onClick={startNewReview}
+            onClick={() => startNewReview()}
             className="inline-flex items-center gap-2 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-primary-700 transition-colors"
           >
             <i className="ti ti-plus text-sm" aria-hidden="true" />
@@ -414,9 +471,9 @@ export default function WeeklyReviewPage() {
       {reviews.filter((r) => r.id !== activeId).length > 0 && (
         <div className="surface">
           <div className="px-4 py-3 border-b border-gray-50 dark:border-gray-800">
-            <p className="section-label">
+            <h2 className="section-label">
               Past reviews
-            </p>
+            </h2>
           </div>
           <div className="divide-y divide-gray-50 dark:divide-gray-800">
             {reviews
@@ -452,7 +509,6 @@ export default function WeeklyReviewPage() {
                       </button>
                       <button
                         onClick={() => handleDelete(review.id)}
-                        disabled={deletingId === review.id}
                         className="text-gray-200 dark:text-gray-700 hover:text-red-400 transition-colors disabled:opacity-50"
                         aria-label="Delete"
                       >
@@ -491,9 +547,9 @@ export default function WeeklyReviewPage() {
                         const parsed = parseAiSummary(review.aiSummary);
                         return (
                           <div className="pt-2 border-t border-gray-50 dark:border-gray-800 space-y-2">
-                            <p className="section-label">
+                            <h3 className="section-label">
                               AI summary
-                            </p>
+                            </h3>
                             <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
                               {parsed.summary}
                             </p>

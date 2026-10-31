@@ -9,20 +9,43 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line,
 } from "recharts";
 
-function ChartCard({ title, subtitle, children, empty }: {
+// The chart is a picture; screen readers get the same numbers as a table instead.
+function ChartCard({ title, subtitle, children, empty, table }: {
   title: string; subtitle?: string; children: React.ReactNode; empty?: boolean;
+  table: { columns: [string, string]; rows: [string, string | number][] };
 }) {
   return (
     <div className="surface p-5">
       <div className="mb-4">
-        <p className="text-sm font-medium text-gray-900 dark:text-gray-50">{title}</p>
+        <h2 className="text-sm font-medium text-gray-900 dark:text-gray-50">{title}</h2>
         {subtitle && <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{subtitle}</p>}
       </div>
       {empty ? (
         <div className="h-40 flex items-center justify-center">
           <p className="text-sm text-gray-500 dark:text-gray-400">Not enough data yet.</p>
         </div>
-      ) : children}
+      ) : (
+        <>
+          <div aria-hidden="true">{children}</div>
+          <table className="sr-only">
+            <caption>{title}</caption>
+            <thead>
+              <tr>
+                <th scope="col">{table.columns[0]}</th>
+                <th scope="col">{table.columns[1]}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {table.rows.map(([k, v]) => (
+                <tr key={k}>
+                  <th scope="row">{k}</th>
+                  <td>{v}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
     </div>
   );
 }
@@ -97,7 +120,12 @@ export default function AnalyticsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <ChartCard title="Applications by source" subtitle="Where you're finding roles" empty={!hasSourceData}>
+          <ChartCard
+            title="Applications by source"
+            subtitle="Where you're finding roles"
+            empty={!hasSourceData}
+            table={{ columns: ["Source", "Applications"], rows: sourceStats.map((s) => [s.source, s.applications]) }}
+          >
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={sourceStats} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1eef8" />
@@ -109,7 +137,12 @@ export default function AnalyticsPage() {
             </ResponsiveContainer>
           </ChartCard>
 
-          <ChartCard title="Applications over time" subtitle="Last 12 weeks" empty={!hasWeeklyData}>
+          <ChartCard
+            title="Applications over time"
+            subtitle="Last 12 weeks"
+            empty={!hasWeeklyData}
+            table={{ columns: ["Week", "Applications"], rows: weeklyData.map((w) => [w.week, w.count]) }}
+          >
             <ResponsiveContainer width="100%" height={200}>
               <LineChart data={weeklyData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1eef8" />
@@ -121,7 +154,12 @@ export default function AnalyticsPage() {
             </ResponsiveContainer>
           </ChartCard>
 
-          <ChartCard title="Response rate by source" subtitle="% of applications that reached phone screen or interview" empty={!hasSourceData}>
+          <ChartCard
+            title="Response rate by source"
+            subtitle="% of applications that reached phone screen or interview"
+            empty={!hasSourceData}
+            table={{ columns: ["Source", "Response rate"], rows: sourceStats.map((s) => [s.source, `${s.responseRate}%`]) }}
+          >
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={sourceStats} margin={{ top: 0, right: 0, left: -10, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1eef8" />
@@ -133,7 +171,12 @@ export default function AnalyticsPage() {
             </ResponsiveContainer>
           </ChartCard>
 
-          <ChartCard title="Interview-to-offer conversion" subtitle="% of interviews that resulted in an offer" empty={!hasSourceData || sourceStats.every((s) => s.interviews === 0)}>
+          <ChartCard
+            title="Interview-to-offer conversion"
+            subtitle="% of interviews that resulted in an offer"
+            empty={!hasSourceData || sourceStats.every((s) => s.interviews === 0)}
+            table={{ columns: ["Source", "Offer rate"], rows: sourceStats.map((s) => [s.source, `${s.conversionRate}%`]) }}
+          >
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={sourceStats} margin={{ top: 0, right: 0, left: -10, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1eef8" />

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOutUser } from "@/lib/auth";
@@ -28,6 +29,34 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps) {
   const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const current = sectionFor(pathname);
+  const drawerRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef(onClose);
+  useEffect(() => {
+    closeRef.current = onClose;
+  });
+
+  // The phone menu behaves like a dialog: focus moves in, Escape closes it, Tab stays inside.
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const drawer = drawerRef.current;
+    drawer?.querySelector<HTMLElement>("a, button")?.focus();
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") closeRef.current?.();
+      if (e.key !== "Tab" || !drawer) return;
+      const items = drawer.querySelectorAll<HTMLElement>("a, button");
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [mobileOpen]);
 
   const initials = user?.isAnonymous
     ? "D"
@@ -115,7 +144,7 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps) {
 
       {/* Mobile overlay */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-40 flex md:hidden">
+        <div ref={drawerRef} role="dialog" aria-modal="true" aria-label="Menu" className="fixed inset-0 z-40 flex md:hidden">
           <div
             className="fixed inset-0 bg-gray-900/20 backdrop-blur-sm"
             onClick={onClose}

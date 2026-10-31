@@ -24,6 +24,9 @@ function job(over: Partial<Job>): Job {
     nextInterviewAt: null,
     lastFollowUpAt: null,
     snoozedUntil: null,
+    followUps: 0,
+    followUpsOff: false,
+    applyBy: null,
     createdAt: NOW,
     updatedAt: NOW,
     ...over,
@@ -72,7 +75,32 @@ describe("nextActions", () => {
     const stale = job({ id: "s", stage: "applied", appliedAt: new Date("2026-10-01T12:00:00Z") });
     const actions = nextActions([recent, stale], () => NONE, NOW);
     expect(actions).toHaveLength(1);
-    expect(actions[0]).toMatchObject({ jobId: "s", action: "Follow up?", detail: "Applied 26 days ago and no word yet." });
+    expect(actions[0]).toMatchObject({ jobId: "s", action: "Follow up?", detail: "Applied 26 days ago and no word yet. Optional: many teams never reply." });
+  });
+
+  it("stops suggesting follow-ups after two chases, or when asked to", () => {
+    const appliedAt = new Date("2026-10-01T12:00:00Z");
+    const lastFollowUpAt = new Date("2026-10-10T12:00:00Z");
+    expect(nextActions([job({ stage: "applied", appliedAt, lastFollowUpAt, followUps: 1 })], () => NONE, NOW)).toHaveLength(1);
+    expect(nextActions([job({ stage: "applied", appliedAt, lastFollowUpAt, followUps: 2 })], () => NONE, NOW)).toEqual([]);
+    expect(nextActions([job({ stage: "applied", appliedAt, followUpsOff: true })], () => NONE, NOW)).toEqual([]);
+  });
+
+  it("never marks a follow-up as overdue", () => {
+    const [a] = nextActions([job({ stage: "applied", appliedAt: new Date("2026-09-01T12:00:00Z") })], () => NONE, NOW);
+    expect(a.chip?.overdue).toBeUndefined();
+  });
+
+  it("shows a saved role's apply-by day and raises it when it's close", () => {
+    const soon = job({ id: "soon", applyBy: new Date(2026, 9, 28) });
+    const later = job({ id: "later", applyBy: new Date(2026, 10, 2) });
+    const far = job({ id: "far", applyBy: new Date(2026, 11, 1) });
+    const passed = job({ id: "passed", applyBy: new Date(2026, 9, 20) });
+    const byId = Object.fromEntries(nextActions([soon, later, far, passed], () => NONE, NOW).map((a) => [a.jobId, a]));
+    expect(byId.soon).toMatchObject({ priority: 1, chip: { text: "Apply by tomorrow" } });
+    expect(byId.later).toMatchObject({ priority: 4, chip: { text: "Apply by Monday" } });
+    expect(byId.far.chip).toBeUndefined();
+    expect(byId.passed.chip).toEqual({ text: "Deadline passed" });
   });
 
   it("asks for a debrief once prep exists", () => {

@@ -9,6 +9,8 @@ interface EditableFieldProps {
   multiline?: boolean;
   rows?: number;
   className?: string;
+  // What the field is, for screen readers: "Location" is announced as "Edit Location".
+  label?: string;
 }
 
 export default function EditableField({
@@ -18,6 +20,7 @@ export default function EditableField({
   multiline = false,
   rows = 5,
   className = "",
+  label,
 }: EditableFieldProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value ?? "");
@@ -43,6 +46,7 @@ export default function EditableField({
         onBlur={commit}
         onKeyDown={(e) => e.key === "Escape" && cancel()}
         rows={rows}
+        aria-label={label}
         autoFocus
         className={`${inputClass} resize-none ${className}`}
       />
@@ -56,6 +60,7 @@ export default function EditableField({
           if (e.key === "Enter") commit();
           if (e.key === "Escape") cancel();
         }}
+        aria-label={label}
         autoFocus
         className={`${inputClass} ${className}`}
       />
@@ -70,13 +75,14 @@ export default function EditableField({
       }}
       className={`w-full text-left px-3 py-2 rounded-xl text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group ${className}`}
     >
+      {label && <span className="sr-only">Edit {label}: </span>}
       {value ? (
         <span className="text-gray-900 dark:text-gray-100 whitespace-pre-wrap">{value}</span>
       ) : (
         <span className="text-gray-500 dark:text-gray-400">{placeholder}</span>
       )}
       <i
-        className="ti ti-pencil text-gray-400 dark:text-gray-500 group-hover:text-gray-400 dark:group-hover:text-gray-500 text-xs ml-2 opacity-0 group-hover:opacity-100 transition-opacity"
+        className="ti ti-pencil text-gray-400 dark:text-gray-500 text-xs ml-2 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 pointer-coarse:opacity-100 transition-opacity"
         aria-hidden="true"
       />
     </button>

@@ -37,6 +37,12 @@ export interface Job {
   nextInterviewAt: Date | null;
   // When the user last chased an application. Restarts the follow-up clock.
   lastFollowUpAt: Date | null;
+  // How many times they've chased it. Today stops suggesting follow-ups after FOLLOW_UP_NUDGES.
+  followUps: number;
+  // The user asked Today to stop suggesting follow-ups for this job.
+  followUpsOff: boolean;
+  // An optional "apply by" day for a saved role (local midnight), when the posting has one.
+  applyBy: Date | null;
   // Today's nudge for this job stays hidden until this moment.
   snoozedUntil: Date | null;
   createdAt: Date;

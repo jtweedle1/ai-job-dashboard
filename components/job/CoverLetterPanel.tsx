@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { authedFetch, noKeyMessage } from "@/lib/api-client";
+import { aiErrorMessage } from "@/lib/ai-errors";
 import { getResumes } from "@/lib/resumes";
 import {
   getCoverLettersByJobId,
@@ -18,6 +19,8 @@ import { parseBannedPhrases } from "@/lib/banned-phrases";
 import { letterQualityChecks } from "@/lib/letter-quality";
 import LetterReview, { HighlightedLetter } from "@/components/LetterReview";
 import Toast from "@/components/Toast";
+import { useToast } from "@/lib/use-toast";
+import { useDraft } from "@/lib/use-draft";
 import { backgroundHeading } from "@/types/background";
 import type { Background } from "@/types/background";
 import type { Job } from "@/types/job";
@@ -52,7 +55,7 @@ export default function CoverLetterPanel({
   const [selectedResumeId, setSelectedResumeId] = useState("");
   const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState("");
-  const [letterNotes, setLetterNotes] = useState("");
+  const { value: letterNotes, setValue: setLetterNotes } = useDraft(`letter-notes:${job.id}`, "", (v) => !v.trim());
   const [voiceSettings, setVoiceSettings] = useState<VoiceSettings>(DEFAULT_VOICE_SETTINGS);
   const [checkingSources, setCheckingSources] = useState(false);
   const [sourcesError, setSourcesError] = useState("");
@@ -60,11 +63,10 @@ export default function CoverLetterPanel({
   const [viewingLetter, setViewingLetter] = useState<CoverLetter | null>(null);
   const [copied, setCopied] = useState(false);
   const [savingToBank, setSavingToBank] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState("");
+  // Unsaved edits to a letter survive switching steps or reloading, until saved or cancelled.
+  const edit = useDraft<{ letterId: string; text: string } | null>(`letter-edit:${job.id}`, null, (v) => v == null);
   const [savingEdit, setSavingEdit] = useState(false);
-  const [toast, setToast] = useState("");
+  const { show: showToast, toastProps } = useToast();
 
   useEffect(() => {
     if (!user) return;
@@ -90,10 +92,6 @@ export default function CoverLetterPanel({
     onLettersChange?.(next.length);
   }
 
-  function showToast(msg: string) {
-    setToast(msg);
-    setTimeout(() => setToast(""), 3000);
-  }
 
   async function handleGenerate() {
     if (!user || !selectedResumeId) return;
@@ -115,7 +113,7 @@ export default function CoverLetterPanel({
         return;
       }
       if (data.error) {
-        setGenerateError("Generation failed. Try again.");
+        setGenerateError(aiErrorMessage(res.status, data.error, "Generation failed. Try again."));
         return;
       }
       const newLetter: CoverLetter = {
@@ -148,7 +146,6 @@ export default function CoverLetterPanel({
 
   function openLetter(letter: CoverLetter | null) {
     setViewingLetter(letter);
-    setEditing(false);
     setSourcesError("");
   }
 
@@ -168,7 +165,7 @@ export default function CoverLetterPanel({
         return;
       }
       if (data.error) {
-        setSourcesError("The check failed. Try again.");
+        setSourcesError(aiErrorMessage(res.status, data.error, "The check failed. Try again."));
         return;
       }
       patchLetter(letterId, { claims: data.claims as LetterClaim[] });
@@ -184,14 +181,19 @@ export default function CoverLetterPanel({
     setViewingLetter((prev) => (prev?.id === id ? { ...prev, ...patch } : prev));
   }
 
+  const editing = edit.value != null && edit.value.letterId === viewingLetter?.id;
+  const draft = editing ? edit.value!.text : "";
+
   async function handleSaveEdit() {
     if (!user || !viewingLetter || !draft.trim()) return;
     setSavingEdit(true);
     try {
       await updateCoverLetterContent(user.uid, viewingLetter.id, draft.trim());
       patchLetter(viewingLetter.id, { content: draft.trim(), edited: true, claims: null });
-      setEditing(false);
+      edit.clear();
       showToast("Changes saved");
+    } catch {
+      showToast("Couldn't save your changes. They're kept here; try again.", { tone: "error" });
     } finally {
       setSavingEdit(false);
     }
@@ -220,21 +222,33 @@ export default function CoverLetterPanel({
         tags: ["cover-letter"],
         jobId: job.id,
       });
-      showToast("Saved to your stories");
+      showToast("Saved to Answers");
     } finally {
       setSavingToBank(false);
     }
   }
 
-  async function handleDelete(id: string) {
+  // Gone from the page at once; really deleted only once the Undo toast has gone.
+  function handleDelete(id: string) {
     if (!user) return;
-    setDeletingId(id);
-    await deleteCoverLetter(user.uid, id);
+    const uid = user.uid;
+    const before = letters;
+    const wasViewing = viewingLetter;
     const next = letters.filter((l) => l.id !== id);
     updateLetters(next);
     if (viewingLetter?.id === id) openLetter(next[0] ?? null);
-    setDeletingId(null);
-    showToast("Deleted");
+    const restore = () => {
+      updateLetters(before);
+      openLetter(wasViewing);
+    };
+    showToast("Letter deleted", {
+      undo: restore,
+      commit: () =>
+        void deleteCoverLetter(uid, id).catch(() => {
+          restore();
+          showToast("Couldn't delete that letter. Try again.", { tone: "error" });
+        }),
+    });
   }
 
   function resumeLabel(resumeId: string) {
@@ -265,14 +279,14 @@ export default function CoverLetterPanel({
 
   return (
     <div className="space-y-4">
-      <Toast message={toast} />
+      <Toast {...toastProps} />
 
       {/* The letter itself comes first once there is one. */}
       {viewingLetter && (
         <div className="surface overflow-hidden">
           <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800 flex items-start justify-between gap-4 flex-wrap">
             <div className="min-w-0">
-              <p className="section-label">Your letter</p>
+              <h2 className="section-label">Your letter</h2>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                 {resumeLabel(viewingLetter.resumeId)} · {formatDate(viewingLetter.createdAt)}
                 {viewingLetter.edited ? " · edited by you" : " · AI draft"}
@@ -281,10 +295,7 @@ export default function CoverLetterPanel({
             <div className="flex items-center gap-2 shrink-0 flex-wrap">
               {!editing && (
                 <button
-                  onClick={() => {
-                    setDraft(viewingLetter.content);
-                    setEditing(true);
-                  }}
+                  onClick={() => edit.setValue({ letterId: viewingLetter.id, text: viewingLetter.content })}
                   className={ghostButton}
                 >
                   <i className="ti ti-pencil text-xs" aria-hidden="true" />
@@ -297,7 +308,7 @@ export default function CoverLetterPanel({
                 ) : (
                   <i className="ti ti-bookmarks text-xs" aria-hidden="true" />
                 )}
-                Save to stories
+                Save to Answers
               </button>
               <button onClick={handleCopy} className={ghostButton}>
                 <i className={`ti ${copied ? "ti-check text-primary-600" : "ti-copy"} text-xs`} aria-hidden="true" />
@@ -305,7 +316,6 @@ export default function CoverLetterPanel({
               </button>
               <button
                 onClick={() => handleDelete(viewingLetter.id)}
-                disabled={deletingId === viewingLetter.id}
                 className="w-8 h-8 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-red-400 transition-colors disabled:opacity-50"
                 aria-label="Delete cover letter"
               >
@@ -316,15 +326,19 @@ export default function CoverLetterPanel({
           <div className="px-5 py-5">
             {editing ? (
               <div className="space-y-3">
+                {edit.restored && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Picked up the edits you hadn&apos;t saved yet.</p>
+                )}
                 <textarea
+                  aria-label="Edit your letter"
                   value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
+                  onChange={(e) => edit.setValue({ letterId: viewingLetter.id, text: e.target.value })}
                   rows={14}
                   className={`${fieldClass} leading-relaxed resize-y`}
                 />
                 <div className="flex items-center justify-end gap-2">
                   <button
-                    onClick={() => setEditing(false)}
+                    onClick={edit.clear}
                     className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 px-4 py-2 rounded-full transition-colors"
                   >
                     Cancel
@@ -362,7 +376,7 @@ export default function CoverLetterPanel({
               <span className="text-xs text-gray-500 dark:text-gray-400">
                 Use as a voice sample for future letters
                 {!viewingLetter.edited && (
-                  <span className="block text-amber-600 dark:text-amber-500 mt-0.5">
+                  <span className="block text-amber-800 dark:text-amber-300 mt-0.5">
                     This is still the AI draft. Edit it into your own words first so your voice doesn&apos;t drift.
                   </span>
                 )}
@@ -375,9 +389,9 @@ export default function CoverLetterPanel({
       {/* Generator */}
       <div className="surface">
         <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
-          <p className="section-label">{letters.length ? "Write another version" : "Write your letter"}</p>
+          <h2 className="section-label">{letters.length ? "Write another version" : "Write your letter"}</h2>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-            Drafted from your resume, your stories and your voice in Me.
+            Drafted from your resume, your experience and your voice in Me.
           </p>
         </div>
         <div className="px-5 py-4">
@@ -393,8 +407,9 @@ export default function CoverLetterPanel({
             <div className="space-y-4">
               {resumes.length > 1 && (
                 <div>
-                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Resume</label>
+                  <label htmlFor="letter-resume" className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Resume</label>
                   <select
+                    id="letter-resume"
                     value={selectedResumeId}
                     onChange={(e) => setSelectedResumeId(e.target.value)}
                     className={fieldClass}
@@ -409,7 +424,7 @@ export default function CoverLetterPanel({
               )}
               <div>
                 <div className="flex items-center justify-between gap-3 mb-1.5">
-                  <label className="block text-xs text-gray-500 dark:text-gray-400">Stories to draw from</label>
+                  <p id="letter-stories" className="text-xs text-gray-500 dark:text-gray-400">Experience to draw from</p>
                   <Link
                     href="/background"
                     className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-primary-600 transition-colors"
@@ -423,7 +438,7 @@ export default function CoverLetterPanel({
                     Write up the stories behind your past jobs once, and every letter will draw from them.
                   </p>
                 ) : (
-                  <div className="flex flex-wrap gap-2">
+                  <div role="group" aria-labelledby="letter-stories" className="flex flex-wrap gap-2">
                     {backgrounds.map((b) => (
                       <label
                         key={b.id}
@@ -446,10 +461,11 @@ export default function CoverLetterPanel({
                 )}
               </div>
               <div>
-                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">
+                <label htmlFor="letter-notes" className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">
                   Notes for this letter <span className="text-gray-500 dark:text-gray-400">(optional)</span>
                 </label>
                 <textarea
+                  id="letter-notes"
                   value={letterNotes}
                   onChange={(e) => setLetterNotes(e.target.value)}
                   rows={2}
@@ -471,7 +487,7 @@ export default function CoverLetterPanel({
                   )}
                   {generating ? "Writing…" : letters.length ? "Write a new version" : "Write my letter"}
                 </button>
-                {generateError && <p className="text-xs text-amber-600 flex-1">{generateError}</p>}
+                {generateError && <p role="alert" className="text-xs text-amber-800 dark:text-amber-300 flex-1">{generateError}</p>}
                 <Link
                   href="/voice"
                   className="ml-auto flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-primary-600 transition-colors"
@@ -489,7 +505,7 @@ export default function CoverLetterPanel({
       {letters.length > 1 && (
         <div className="surface">
           <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
-            <p className="section-label">Earlier versions</p>
+            <h2 className="section-label">Earlier versions</h2>
           </div>
           <div className="divide-y divide-gray-100 dark:divide-gray-800">
             {letters.map((letter) => (
