@@ -6,21 +6,18 @@ import type { UpcomingInterview } from "@/lib/today";
 export default function ComingUp({ interviews, now }: { interviews: UpcomingInterview[]; now: Date }) {
   if (interviews.length === 0) return null;
   return (
-    <section aria-labelledby="coming-up" className="surface p-5">
-      <h2 id="coming-up" className="section-label mb-2">Coming up</h2>
-      <ul className="space-y-1">
+    <section aria-labelledby="coming-up">
+      <h2 id="coming-up" className="mb-2 text-label font-semibold text-ink-soft">Coming up</h2>
+      <ul>
         {interviews.map((i) => (
-          <li key={i.jobId}>
-            <Link
-              href={`/applications/${i.jobId}?step=interview`}
-              className="flex items-center gap-3 px-2 py-2 rounded-2xl hover:bg-white/70 dark:hover:bg-white/5 transition-colors"
-            >
-              <span className="shrink-0 min-w-[4.5rem] text-center text-xs font-semibold px-2 py-1 rounded-full bg-primary-50 text-primary-700 dark:bg-primary-950 dark:text-primary-300">
-                {dayLabel(i.date, now)}
-              </span>
+          <li key={i.jobId} className="border-t border-rule first:border-t-0">
+            <Link href={`/applications/${i.jobId}?step=interview`} className="group flex gap-3 py-2.5 rounded-stamp outline-offset-4">
+              <span className="shrink-0 w-20 text-meta font-semibold text-sun-ink pt-0.5">{dayLabel(i.date, now)}</span>
               <span className="min-w-0">
-                <span className="block text-sm font-medium text-gray-900 dark:text-gray-50 truncate">{i.company}</span>
-                <span className="block text-xs text-gray-500 dark:text-gray-400 truncate">{i.kind} · {i.title}</span>
+                <span className="block font-semibold text-ink group-hover:text-action transition-colors duration-100">{i.company}</span>
+                <span className="block text-meta text-ink-soft">
+                  {i.kind} · {i.title}
+                </span>
               </span>
             </Link>
           </li>

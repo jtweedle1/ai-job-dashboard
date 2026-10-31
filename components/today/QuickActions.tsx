@@ -4,6 +4,8 @@ import { useState } from "react";
 import { dayLabel, FOLLOW_UP_NUDGES, type NextAction } from "@/lib/next-steps";
 import { parseInputDate, toInputDate } from "@/components/job/InterviewDateField";
 import type { Job } from "@/types/job";
+import { buttonClasses } from "@/components/ui/Button";
+import { inputClasses } from "@/components/ui/Field";
 
 // The fields Today is allowed to change on a job. Every one of them can be put back by Undo.
 export type JobPatch = Partial<
@@ -13,10 +15,6 @@ export type Act = (job: Job, patch: JobPatch, message: string) => void;
 
 const SNOOZE_DAYS = 3;
 
-const STYLES = {
-  row: "border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-white/10",
-  hero: "bg-white/60 dark:bg-white/10 text-gray-800 dark:text-gray-100 hover:bg-white/90 dark:hover:bg-white/20",
-};
 
 // One-tap updates for a nudge. Only offers changes that resolve or pause it.
 export default function QuickActions({
@@ -34,7 +32,8 @@ export default function QuickActions({
 }) {
   const [picking, setPicking] = useState<"interview" | "date" | null>(null);
   const [date, setDate] = useState(toInputDate(job.nextInterviewAt));
-  const btn = `inline-flex items-center gap-1 text-xs font-medium px-3 min-h-8 pointer-coarse:min-h-11 rounded-full transition-colors ${STYLES[variant]}`;
+  // In the hero these sit beside a large primary link, so they're secondary; in a row they stay quiet.
+  const btn = buttonClasses({ variant: variant === "hero" ? "secondary" : "quiet", size: variant === "hero" ? "md" : "sm", className: "pointer-coarse:min-h-11" });
   const co = job.company;
 
   if (picking) {
@@ -52,7 +51,7 @@ export default function QuickActions({
           save();
         }}
       >
-        <label className="text-xs text-gray-600 dark:text-gray-300" htmlFor={`date-${job.id}-${variant}`}>
+        <label className="text-meta text-ink-soft" htmlFor={`date-${job.id}-${variant}`}>
           {picking === "interview" ? "When is it? (optional)" : "Interview date"}
         </label>
         <input
@@ -61,9 +60,9 @@ export default function QuickActions({
           value={date}
           autoFocus
           onChange={(e) => setDate(e.target.value)}
-          className="border border-gray-200 dark:border-gray-700 rounded-full px-3 min-h-8 text-sm bg-white dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className={`${inputClasses} h-10 w-auto`}
         />
-        <button type="submit" className="text-xs font-medium px-3 min-h-8 pointer-coarse:min-h-11 rounded-full bg-primary-600 text-white hover:bg-primary-700 transition-colors">
+        <button type="submit" className={buttonClasses({ variant: "primary", size: variant === "hero" ? "md" : "sm", className: "pointer-coarse:min-h-11" })}>
           Save
         </button>
         <button type="button" onClick={() => setPicking(null)} className={btn}>
@@ -114,7 +113,7 @@ export default function QuickActions({
   if (action.kind !== "prep" && action.kind !== "follow_up") buttons.push({ label: "Not now", aria: `Hide ${co} for ${SNOOZE_DAYS} days`, onClick: snooze });
 
   return (
-    <div className="flex items-center gap-1.5 flex-wrap">
+    <div className={`flex items-center flex-wrap ${variant === "hero" ? "gap-2" : "gap-1 -ml-3 sm:ml-0"}`}>
       {buttons.map((b) => (
         <button key={b.label} type="button" onClick={b.onClick} aria-label={b.aria} className={btn}>
           {b.label}
