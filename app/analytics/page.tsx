@@ -105,7 +105,7 @@ export default function AnalyticsPage() {
       <div className="mb-6">
         <h1 className="page-title">Progress</h1>
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          {totalApplied} application{totalApplied !== 1 ? "s" : ""} tracked
+          {totalApplied} application{totalApplied !== 1 ? "s" : ""} sent · saved jobs aren&apos;t counted
         </p>
       </div>
 

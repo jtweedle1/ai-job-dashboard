@@ -435,7 +435,7 @@ export default function AnswerBankPage() {
                       <button
                         onClick={() => handleDelete(entry.id)}
                         disabled={deletingId === entry.id}
-                        className="text-gray-200 dark:text-gray-700 hover:text-red-400 transition-colors disabled:opacity-50"
+                        className="text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50"
                         aria-label="Delete"
                       >
                         <i className="ti ti-trash text-xs" aria-hidden="true" />

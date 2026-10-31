@@ -172,11 +172,17 @@ export default function SettingsPage() {
                   </div>
                 )}
                 <div>
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-50">{user.displayName}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-50">
+                    {user.isAnonymous ? "Demo visitor" : user.displayName}
+                  </p>
+                  {!user.isAnonymous && <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>}
                 </div>
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Signed in with Google</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {user.isAnonymous
+                  ? "Exploring the demo. Nothing here is linked to a real account."
+                  : "Signed in with Google"}
+              </p>
             </>
           ) : (
             <div className="h-8 bg-gray-100 dark:bg-gray-800 rounded w-48 animate-pulse" />

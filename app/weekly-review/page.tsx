@@ -493,8 +493,8 @@ export default function WeeklyReviewPage() {
                         Week of {formatWeek(review.weekOf)}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                        {review.applicationsSent} sent · {review.interviewsBooked} interviews ·{" "}
-                        {review.responsesReceived} responses
+                        {review.applicationsSent} sent · {review.interviewsBooked} interview{review.interviewsBooked !== 1 ? "s" : ""} ·{" "}
+                        {review.responsesReceived} response{review.responsesReceived !== 1 ? "s" : ""}
                         {review.aiSummary && (
                           <span className="ml-1.5 text-primary-600">· AI summary</span>
                         )}
@@ -509,7 +509,7 @@ export default function WeeklyReviewPage() {
                       </button>
                       <button
                         onClick={() => handleDelete(review.id)}
-                        className="text-gray-200 dark:text-gray-700 hover:text-red-400 transition-colors disabled:opacity-50"
+                        className="text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50"
                         aria-label="Delete"
                       >
                         <i className="ti ti-trash text-xs" aria-hidden="true" />
