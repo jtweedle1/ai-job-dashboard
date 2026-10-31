@@ -4,6 +4,7 @@ import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import StoryTabs from "@/components/StoryTabs";
 import DebriefPanel from "@/components/job/DebriefPanel";
+import PageFrame from "@/components/ui/PageFrame";
 
 // Interview notes across every job. Logging happens inside the job, so an old ?jobId= link goes there.
 function DebriefContent() {
@@ -18,16 +19,13 @@ function DebriefContent() {
   if (jobId) return null;
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
-      <StoryTabs />
-      <div className="mb-6">
-        <h1 className="page-title">Interview notes</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          What you learned in each interview. Log a new one from the job&apos;s Debrief step.
-        </p>
-      </div>
+    <PageFrame
+      above={<StoryTabs />}
+      title="Interview notes"
+      intro="What you learned in each interview. Log a new one from the job's Interview notes step."
+    >
       <DebriefPanel />
-    </div>
+    </PageFrame>
   );
 }
 

@@ -4,6 +4,12 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { authedFetch } from "@/lib/api-client";
 import Link from "next/link";
+import { useToast } from "@/lib/use-toast";
+import Toast from "@/components/Toast";
+import PageFrame from "@/components/ui/PageFrame";
+import Button from "@/components/ui/Button";
+import { Input } from "@/components/ui/Field";
+import { InlineMessage, Section, Skeleton } from "@/components/ui/bits";
 
 type KeyStatus = "loading" | "saved" | "none";
 
@@ -15,7 +21,7 @@ export default function SettingsPage() {
   const [savingKey, setSavingKey] = useState(false);
   const [removingKey, setRemovingKey] = useState(false);
   const [keyError, setKeyError] = useState("");
-  const [keyToast, setKeyToast] = useState("");
+  const { show, toastProps } = useToast();
 
 
   useEffect(() => {
@@ -28,10 +34,7 @@ export default function SettingsPage() {
 
   }, [user]);
 
-  function showKeyToast(msg: string) {
-    setKeyToast(msg);
-    setTimeout(() => setKeyToast(""), 3000);
-  }
+  const showKeyToast = (msg: string) => show(msg);
 
 
   async function handleSaveKey() {
@@ -46,9 +49,10 @@ export default function SettingsPage() {
       if (!res.ok) throw new Error();
       setKeyStatus("saved");
       setKeyInput("");
-      showKeyToast("API key saved");
+      setKeyError("");
+      showKeyToast("Key saved");
     } catch {
-      setKeyError("Failed to save. Try again.");
+      setKeyError("Couldn't save the key. Check it and try again.");
     } finally {
       setSavingKey(false);
     }
@@ -63,132 +67,101 @@ export default function SettingsPage() {
         body: JSON.stringify({}),
       });
       setKeyStatus("none");
-      showKeyToast("API key removed");
+      showKeyToast("Key removed");
     } catch {
-      setKeyError("Failed to remove. Try again.");
+      setKeyError("Couldn't remove the key. Try again.");
     } finally {
       setRemovingKey(false);
     }
   }
 
 
-  const inputClass = "border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800 dark:text-gray-100";
-
   return (
-    <div className="p-6 max-w-2xl mx-auto">
-      {keyToast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-full shadow-lg shadow-gray-900/20">
-          <i className="ti ti-circle-check text-primary-400 text-base" aria-hidden="true" />
-          {keyToast}
-        </div>
-      )}
+    <PageFrame title="Settings">
+      <Toast {...toastProps} />
 
-      <h1 className="page-title mb-6">Settings</h1>
-
-      {/* API Key */}
-      <div className="surface mb-4">
-        <div className="px-4 py-3 border-b border-gray-50 dark:border-gray-800">
-          <h2 className="section-label">Anthropic API key</h2>
-        </div>
-        <div className="px-4 py-4 space-y-3">
+      <div className="space-y-12">
+        <Section title="Anthropic API key" serif id="api-key">
           {keyStatus === "loading" ? (
-            <div className="h-4 bg-gray-100 dark:bg-gray-800 rounded w-40 animate-pulse" />
+            <Skeleton className="h-5 w-40" />
           ) : keyStatus === "saved" ? (
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-primary-500" />
-                <span className="text-sm text-gray-700 dark:text-gray-200">Key saved</span>
-              </div>
-              <button
-                onClick={handleRemoveKey}
-                disabled={removingKey}
-                className="text-xs text-red-700 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors disabled:opacity-50"
-              >
-                {removingKey ? "Removing…" : "Remove key"}
-              </button>
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <p className="flex items-center gap-2 text-ink">
+                <i className="ti ti-check text-moss" aria-hidden="true" />
+                Your key is saved. Letters, prep and fit scores are ready.
+              </p>
+              <Button variant="danger" size="sm" onClick={handleRemoveKey} loading={removingKey} loadingLabel="Removing…">
+                Remove key
+              </Button>
             </div>
           ) : (
             <>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Add your{" "}
-                <span className="font-medium text-gray-700 dark:text-gray-200">Anthropic API key</span>{" "}
-                to unlock AI features — JD extraction, cover letter generation, role-fit scoring, and more.
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Your key is encrypted before being stored. It is never returned to the browser after saving.
-              </p>
-              <div className="flex gap-2">
-                <input
+              <InlineMessage tone="info" className="mb-5">
+                Add your Anthropic key to draft letters, build interview prep and score fit.
+              </InlineMessage>
+              <label htmlFor="api-key-input" className="block text-label font-semibold text-ink mb-1.5">
+                Your key
+              </label>
+              <div className="flex gap-2 flex-wrap sm:flex-nowrap">
+                <Input
+                  id="api-key-input"
                   type="password"
+                  autoComplete="off"
+                  aria-describedby="api-key-help"
                   value={keyInput}
                   onChange={(e) => setKeyInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSaveKey()}
-                  placeholder="sk-ant-..."
-                  className={`flex-1 ${inputClass} font-mono placeholder-gray-500 dark:placeholder-gray-400`}
+                  placeholder="sk-ant-…"
+                  className="font-mono flex-1 min-w-0"
                 />
-                <button
-                  onClick={handleSaveKey}
-                  disabled={!keyInput.trim() || savingKey}
-                  className="flex items-center gap-1.5 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
-                >
-                  {savingKey ? (
-                    <i className="ti ti-loader-2 animate-spin text-sm" aria-hidden="true" />
-                  ) : null}
-                  {savingKey ? "Saving…" : "Save key"}
-                </button>
+                <Button variant="primary" size="lg" className="h-11" onClick={handleSaveKey} disabled={!keyInput.trim()} loading={savingKey} loadingLabel="Saving…">
+                  Save key
+                </Button>
               </div>
-            </>
-          )}
-          {keyError && <p role="alert" className="text-xs text-red-700 dark:text-red-300">{keyError}</p>}
-        </div>
-      </div>
-
-      {/* Goals moved */}
-      <Link
-        href="/goals"
-        className="surface mb-4 px-5 py-4 flex items-center justify-between gap-4 hover:shadow-md transition-shadow"
-      >
-        <div>
-          <h2 className="section-label">Career goals</h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Now live in Me, next to your resume, library and voice.</p>
-        </div>
-        <i className="ti ti-arrow-right text-gray-400" aria-hidden="true" />
-      </Link>
-
-      {/* Account */}
-      <div className="surface">
-        <div className="px-4 py-3 border-b border-gray-50 dark:border-gray-800">
-          <h2 className="section-label">Account</h2>
-        </div>
-        <div className="px-4 py-4 space-y-2">
-          {user ? (
-            <>
-              <div className="flex items-center gap-3">
-                {user.photoURL ? (
-                  <img src={user.photoURL} alt="" className="w-8 h-8 rounded-full" />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                    <i className="ti ti-user text-gray-400 dark:text-gray-500 text-sm" aria-hidden="true" />
-                  </div>
-                )}
-                <div>
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-50">
-                    {user.isAnonymous ? "Demo visitor" : user.displayName}
-                  </p>
-                  {!user.isAnonymous && <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>}
-                </div>
-              </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                {user.isAnonymous
-                  ? "Exploring the demo. Nothing here is linked to a real account."
-                  : "Signed in with Google"}
+              <p id="api-key-help" className="mt-2 text-meta text-ink-soft">
+                It&apos;s encrypted before it&apos;s stored and never sent back to your browser.
               </p>
             </>
-          ) : (
-            <div className="h-8 bg-gray-100 dark:bg-gray-800 rounded w-48 animate-pulse" />
           )}
-        </div>
+          {keyError && (
+            <InlineMessage tone="danger" role="alert" className="mt-4">
+              {keyError}
+            </InlineMessage>
+          )}
+        </Section>
+
+        <Section title="Career goals" serif id="goals">
+          <p className="text-ink-soft">
+            Your goals now live in Me, next to your resume, library and voice.{" "}
+            <Link href="/goals" className="font-semibold text-action hover:underline underline-offset-4">
+              Go to Goals
+            </Link>
+          </p>
+        </Section>
+
+        <Section title="Account" serif id="account">
+          {user ? (
+            <div className="flex items-center gap-3">
+              {user.photoURL ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={user.photoURL} alt="" className="w-10 h-10 rounded-full" />
+              ) : (
+                <span className="w-10 h-10 rounded-full bg-well text-ink-soft inline-flex items-center justify-center" aria-hidden="true">
+                  <i className="ti ti-user" />
+                </span>
+              )}
+              <div>
+                <p className="font-semibold text-ink">{user.isAnonymous ? "Demo visitor" : user.displayName}</p>
+                <p className="text-meta text-ink-soft">
+                  {user.isAnonymous ? "Exploring the demo. Nothing here is linked to a real account." : `${user.email} · signed in with Google`}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <Skeleton className="h-10 w-56" />
+          )}
+        </Section>
       </div>
-    </div>
+    </PageFrame>
   );
 }

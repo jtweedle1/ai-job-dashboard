@@ -11,6 +11,9 @@ import { useToast } from "@/lib/use-toast";
 import { useDraft } from "@/lib/use-draft";
 import type { Job } from "@/types/job";
 import type { InterviewPrep } from "@/types/interviewPrep";
+import Button, { IconButton } from "@/components/ui/Button";
+import { TextArea } from "@/components/ui/Field";
+import { InlineMessage, Section, Sheet, Skeleton } from "@/components/ui/bits";
 
 function formatDate(d: Date) {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -125,149 +128,140 @@ export default function InterviewPrepPanel({
   }
 
   if (loading) {
-    return <div className="h-48 bg-white/60 dark:bg-gray-800 rounded-3xl animate-pulse" />;
+    return <Skeleton className="h-56 rounded-sheet" />;
   }
 
+  const form = (
+    <>
+      <div className="flex items-center gap-2 flex-wrap">
+        <label htmlFor="prep-round" className="text-label font-semibold text-ink-soft mr-1">
+          About this round <span className="font-normal">(optional)</span>
+        </label>
+        {ROUND_KINDS.map((k) => (
+          <Button
+            key={k}
+            size="sm"
+            onClick={() => setInterviewProcess((v) => (v.trim() ? `${v.trim()}, ${k.toLowerCase()}` : k))}
+          >
+            {k}
+          </Button>
+        ))}
+      </div>
+      <TextArea
+        id="prep-round"
+        value={interviewProcess}
+        onChange={(e) => setInterviewProcess(e.target.value)}
+        placeholder="e.g. 30 minutes with the hiring manager, mostly about past projects"
+        rows={3}
+        className="mt-3"
+      />
+      <div className="mt-4 flex items-center gap-3 flex-wrap">
+        <Button variant={viewingPrep ? "secondary" : "primary"} icon="ti-wand" loading={generating} loadingLabel="Preparing…" onClick={handleGenerate}>
+          Build my prep
+        </Button>
+      </div>
+      {generateError && (
+        <InlineMessage tone="caution" role="alert" className="mt-4">
+          {generateError}
+        </InlineMessage>
+      )}
+    </>
+  );
+  const formIntro = "Practice questions built from this job description. Telling it about the round helps, but you can skip it.";
+
   return (
-    <div className="space-y-4">
+    <div>
       <Toast {...toastProps} />
 
-      {viewingPrep && (
-        <div className="surface overflow-hidden">
-          <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800 flex items-start justify-between gap-4">
+      {viewingPrep ? (
+        <Sheet as="section" aria-labelledby="prep-heading">
+          <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <h2 className="section-label">Your prep</h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{formatDate(viewingPrep.createdAt)}</p>
+              <h2 id="prep-heading" className="font-serif text-heading font-semibold text-ink">
+                Your prep
+              </h2>
+              <p className="mt-0.5 text-meta text-ink-muted">{formatDate(viewingPrep.createdAt)}</p>
             </div>
-            <button
-              onClick={() => handleDelete(viewingPrep.id)}
-              className="w-8 h-8 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-red-400 transition-colors disabled:opacity-50 shrink-0"
-              aria-label="Delete prep"
-            >
-              <i className="ti ti-trash text-sm" aria-hidden="true" />
-            </button>
+            <IconButton icon="ti-trash" label="Delete prep" onClick={() => handleDelete(viewingPrep.id)} />
           </div>
 
-          <div className="px-5 pt-4">
-            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">The process</p>
-            <p className="text-sm text-gray-600 dark:text-gray-300 italic">{viewingPrep.interviewProcess}</p>
-          </div>
+          <h3 className="mt-6 text-label font-semibold text-ink-soft">The process</h3>
+          <p className="mt-1 font-serif italic text-reading text-ink">{viewingPrep.interviewProcess}</p>
 
-          <div className="px-5 pt-4">
-            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Practice questions</p>
-            <ol className="space-y-2.5">
-              {viewingPrep.mockQuestions.map((q, i) => (
-                <li key={i} className="flex gap-3 group">
-                  <span className="w-6 h-6 rounded-full glow-gradient text-[11px] font-bold text-gray-700 dark:text-gray-100 flex items-center justify-center shrink-0">
-                    {i + 1}
-                  </span>
-                  <p className="text-sm text-gray-700 dark:text-gray-200 flex-1 pt-0.5">{q}</p>
-                  <button
-                    onClick={() => handleSaveQuestion(q, i)}
-                    disabled={savingQuestionIndex === i}
-                    className="w-8 h-8 -mt-1 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-primary-500 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 pointer-coarse:opacity-100 shrink-0 disabled:opacity-50"
-                    aria-label="Save to Answers"
-                    title="Save to Answers"
-                  >
-                    {savingQuestionIndex === i ? (
-                      <i className="ti ti-loader-2 animate-spin text-xs" aria-hidden="true" />
-                    ) : (
-                      <i className="ti ti-bookmarks text-xs" aria-hidden="true" />
-                    )}
-                  </button>
-                </li>
-              ))}
-            </ol>
-          </div>
+          <h3 className="mt-8 text-label font-semibold text-ink-soft">Practice questions</h3>
+          <ol className="mt-2">
+            {viewingPrep.mockQuestions.map((q, i) => (
+              <li key={i} className="flex gap-4 py-3 border-b border-rule last:border-b-0 group">
+                <span className="w-6 shrink-0 pt-0.5 font-serif font-semibold text-ink-soft tabular-nums text-right">{i + 1}</span>
+                <p className="flex-1 text-reading text-ink">{q}</p>
+                <IconButton
+                  icon={savingQuestionIndex === i ? "ti-loader-2 animate-spin" : "ti-bookmarks"}
+                  label="Save to Answers"
+                  size="sm"
+                  disabled={savingQuestionIndex === i}
+                  onClick={() => handleSaveQuestion(q, i)}
+                  className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100 shrink-0"
+                />
+              </li>
+            ))}
+          </ol>
 
           {viewingPrep.studyTips && (
-            <div className="px-5 pt-4 pb-5">
-              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Study tips</p>
-              <div className="space-y-1.5">
-                {viewingPrep.studyTips.split("\n").filter(Boolean).map((tip, i) => (
-                  <div key={i} className="flex gap-2">
-                    <i className="ti ti-sparkles text-primary-400 text-sm shrink-0 mt-0.5" aria-hidden="true" />
-                    <p className="text-sm text-gray-600 dark:text-gray-300">{tip}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <>
+              <h3 className="mt-8 text-label font-semibold text-ink-soft">Study tips</h3>
+              <ul className="mt-2 space-y-2">
+                {viewingPrep.studyTips
+                  .split("\n")
+                  .filter(Boolean)
+                  .map((tip, i) => (
+                    <li key={i} className="flex gap-3">
+                      <span className="mt-2.5 w-1.5 h-1.5 rounded-full bg-sun shrink-0" aria-hidden="true" />
+                      <p className="text-ink">{tip}</p>
+                    </li>
+                  ))}
+              </ul>
+            </>
           )}
-        </div>
+        </Sheet>
+      ) : (
+        <Sheet as="section" aria-labelledby="prep-form-heading">
+          <h2 id="prep-form-heading" className="font-serif text-heading font-semibold text-ink">
+            Prep for the interview
+          </h2>
+          <p className="mt-1 mb-5 text-meta text-ink-soft">{formIntro}</p>
+          {form}
+        </Sheet>
       )}
 
-      <div className="surface">
-        <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
-          <h2 className="section-label">{preps.length ? "Prep for another round" : "Prep for the interview"}</h2>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-            Practice questions built from this job description. Telling it about the round helps, but you can skip it.
-          </p>
-        </div>
-        <div className="px-5 py-4 space-y-3">
-          <div className="flex items-center gap-2 flex-wrap">
-            <label htmlFor="prep-round" className="text-xs text-gray-500 dark:text-gray-400 mr-1">
-              About this round <span className="text-gray-500 dark:text-gray-400">(optional)</span>
-            </label>
-            {ROUND_KINDS.map((k) => (
-              <button
-                key={k}
-                type="button"
-                onClick={() => setInterviewProcess((v) => (v.trim() ? `${v.trim()}, ${k.toLowerCase()}` : k))}
-                className="text-xs font-medium px-3 py-1 rounded-full border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-white/10 transition-colors"
-              >
-                {k}
-              </button>
-            ))}
-          </div>
-          <textarea
-            id="prep-round"
-            value={interviewProcess}
-            onChange={(e) => setInterviewProcess(e.target.value)}
-            placeholder="e.g. 30 minutes with the hiring manager, mostly about past projects"
-            rows={3}
-            className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none bg-white dark:bg-gray-800"
-          />
-          <div className="flex items-center gap-3 flex-wrap">
-            <button
-              onClick={handleGenerate}
-              disabled={generating}
-              className="flex items-center gap-1.5 bg-primary-600 text-white text-sm font-medium px-5 py-2.5 rounded-full shadow-sm shadow-primary-600/20 hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {generating ? (
-                <i className="ti ti-loader-2 animate-spin text-sm" aria-hidden="true" />
-              ) : (
-                <i className="ti ti-wand text-sm" aria-hidden="true" />
-              )}
-              {generating ? "Preparing…" : "Build my prep"}
-            </button>
-            {generateError && <p role="alert" className="text-xs text-amber-800 dark:text-amber-300 flex-1">{generateError}</p>}
-          </div>
-        </div>
-      </div>
+      {viewingPrep && (
+        <Section title="Prep for another round" serif id="prep-again" className="mt-12">
+          <p className="-mt-2 mb-4 text-meta text-ink-soft">{formIntro}</p>
+          {form}
+        </Section>
+      )}
 
       {preps.length > 1 && (
-        <div className="surface">
-          <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
-            <h2 className="section-label">Earlier prep</h2>
-          </div>
-          <div className="divide-y divide-gray-100 dark:divide-gray-800">
-            {preps.map((prep) => (
-              <div key={prep.id} className="px-5 py-3 flex items-center justify-between gap-4">
-                <p className="text-sm text-gray-600 dark:text-gray-300 truncate">
-                  {prep.mockQuestions.length} questions · {formatDate(prep.createdAt)}
-                </p>
-                <button
-                  onClick={() => setViewingPrep(prep)}
-                  className={`text-xs font-medium transition-colors ${
-                    viewingPrep?.id === prep.id ? "text-primary-600" : "text-gray-500 hover:text-primary-600"
-                  }`}
-                >
-                  {viewingPrep?.id === prep.id ? "Viewing" : "View"}
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
+        <Section title="Earlier prep" serif id="prep-earlier" className="mt-12">
+          <ul>
+            {preps.map((prep) => {
+              const viewing = viewingPrep?.id === prep.id;
+              return (
+                <li key={prep.id} className="flex items-center justify-between gap-4 py-3 border-b border-rule last:border-b-0">
+                  <p className="text-ink-soft truncate">
+                    {prep.mockQuestions.length} questions · {formatDate(prep.createdAt)}
+                  </p>
+                  {viewing ? (
+                    <span className="text-meta font-semibold text-ink">Showing above</span>
+                  ) : (
+                    <Button variant="quiet" size="sm" onClick={() => setViewingPrep(prep)}>
+                      Show
+                    </Button>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </Section>
       )}
     </div>
   );

@@ -9,7 +9,7 @@
     "prebuild": "npm run icons",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "node scripts/check-design.mjs && eslint",
     "test": "vitest run"
   },
   "dependencies": {

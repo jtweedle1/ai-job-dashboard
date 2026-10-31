@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { authedFetch, noKeyMessage } from "@/lib/api-client";
 import { useDraft } from "@/lib/use-draft";
@@ -16,6 +16,11 @@ import {
   type JobStage,
   type JobSource,
 } from "@/types/job";
+import Dialog from "./ui/Dialog";
+import Button from "./ui/Button";
+import Select from "./ui/Select";
+import { Field, Input, TextArea, Label, HelpText } from "./ui/Field";
+import { InlineMessage } from "./ui/bits";
 
 interface Props {
   onClose: () => void;
@@ -72,17 +77,6 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [confirmDiscard, setConfirmDiscard] = useState(false);
-
-  const dialogRef = useRef<HTMLDialogElement>(null);
-
-  // A native modal dialog: the page behind goes inert, Tab stays inside, and focus returns to
-  // whatever opened it when it goes away.
-  useEffect(() => {
-    const opener = document.activeElement as HTMLElement | null;
-    const dialog = dialogRef.current;
-    if (dialog && !dialog.open) dialog.showModal();
-    return () => opener?.focus();
-  }, []);
 
   const dirty = [jdText, urlInput, title, company, location, salary, notes].some((v) => v.trim() !== "");
 
@@ -197,302 +191,214 @@ export default function AddJobModal({ onClose, onSaved }: Props) {
 
   const canSave = title.trim().length > 0 && company.trim().length > 0;
 
-  const inputClass =
-    "w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800";
-  const labelClass = "block text-xs text-gray-500 dark:text-gray-400 mb-1.5";
+  const busy = fetching || extracting;
+  const hasDescription = jdText.trim().length > 50;
 
   return (
-    <dialog
-      ref={dialogRef}
-      aria-labelledby="add-job-title"
-      onCancel={(e) => {
-        // Escape: ask first if there's anything to lose.
-        e.preventDefault();
-        requestClose();
-      }}
-      onClick={(e) => {
-        // A click on the dimmed backdrop lands on the dialog element itself.
-        if (e.target === dialogRef.current) requestClose();
-      }}
-      className="m-auto p-0 w-[calc(100%-2rem)] max-w-2xl max-h-[90vh] bg-transparent backdrop:bg-black/40 overflow-visible"
+    <Dialog
+      title="Add a job"
+      description="Paste the description or a link, and the details fill themselves in. You can always edit them."
+      onRequestClose={requestClose}
+      footer={
+        confirmDiscard ? (
+          <div role="alert" className="w-full flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+            <p className="sm:mr-auto text-ink">Discard this job? What you&apos;ve entered will be lost.</p>
+            <Button
+              variant="danger"
+              onClick={() => {
+                form.clear();
+                onClose();
+              }}
+            >
+              Discard
+            </Button>
+            <Button variant="primary" autoFocus onClick={() => setConfirmDiscard(false)}>
+              Keep editing
+            </Button>
+          </div>
+        ) : (
+          <>
+            {saveError && (
+              <p role="alert" className="sm:mr-auto text-meta text-danger">
+                {saveError}
+              </p>
+            )}
+            <Button variant="secondary" onClick={requestClose}>
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={handleSave} disabled={!canSave} loading={saving} loadingLabel="Saving…">
+              Save job
+            </Button>
+          </>
+        )
+      }
     >
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl flex flex-col max-h-[90vh]">
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800 shrink-0">
-          <h2 id="add-job-title" className="text-sm font-semibold text-gray-900 dark:text-gray-50">Add job</h2>
-          <button
-            type="button"
-            onClick={requestClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
-            aria-label="Close"
-          >
-            <i className="ti ti-x text-base" aria-hidden="true" />
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto">
-          {form.restored && (
-            <div className="mx-5 mt-4 flex items-center gap-3 flex-wrap text-xs text-gray-700 dark:text-gray-200 px-4 py-2 rounded-full bg-primary-50 dark:bg-primary-950">
-              <span className="flex-1 min-w-0">Picked up where you left off.</span>
-              <button type="button" onClick={form.clear} className="font-medium text-primary-700 dark:text-primary-300 hover:underline">
+      <div className="space-y-6">
+        {form.restored && (
+          <InlineMessage
+            tone="info"
+            action={
+              <Button variant="quiet" size="sm" onClick={form.clear}>
                 Start over
-              </button>
-            </div>
-          )}
-          {/* JD section */}
-          <div className="px-5 pt-4 pb-2">
-            <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
-              <label htmlFor={jdTab === "paste" ? "job-jd" : "job-fetch-url"} className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                {jdTab === "paste" ? "Job description" : "Link to the posting"}
-              </label>
-              <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-full p-1 w-fit" role="group" aria-label="How to add the description">
-                {(["paste", "url"] as JdTab[]).map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => setJdTab(t)}
-                    aria-pressed={jdTab === t}
-                    className={`text-xs font-medium px-3 py-1.5 rounded-full transition-colors ${
-                      jdTab === t
-                        ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm"
-                        : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-                    }`}
-                  >
-                    {t === "paste" ? "Paste it" : "From a link"}
-                  </button>
-                ))}
-              </div>
-            </div>
+              </Button>
+            }
+          >
+            Picked up where you left off.
+          </InlineMessage>
+        )}
 
-            {jdTab === "paste" ? (
-              <textarea
+        {/* Step one: the description, pasted or fetched. */}
+        <div>
+          <div className="flex items-end justify-between gap-3 mb-2 flex-wrap">
+            <Label htmlFor={jdTab === "paste" ? "job-jd" : "job-fetch-url"} className="mb-0">
+              {jdTab === "paste" ? "Job description" : "Link to the posting"}
+            </Label>
+            <div className="flex gap-4" role="group" aria-label="How to add the description">
+              {(["paste", "url"] as JdTab[]).map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setJdTab(t)}
+                  aria-pressed={jdTab === t}
+                  className={`relative h-8 text-sm font-semibold transition-colors duration-100 ${
+                    jdTab === t ? "text-ink" : "text-ink-soft hover:text-ink"
+                  }`}
+                >
+                  {t === "paste" ? "Paste it" : "From a link"}
+                  {jdTab === t && <span className="absolute left-0 right-0 bottom-0.5 h-0.5 rounded-full bg-ink" aria-hidden="true" />}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {jdTab === "paste" ? (
+            <>
+              <TextArea
                 id="job-jd"
                 value={jdText}
                 onChange={(e) => setJdText(e.target.value)}
                 placeholder="Paste the job description here…"
                 rows={6}
-                className={`${inputClass} resize-none`}
               />
-            ) : (
-              <div className="space-y-2">
-                <div className="flex gap-2">
-                  <input
-                    id="job-fetch-url"
-                    type="url"
-                    value={urlInput}
-                    onChange={(e) => setUrlInput(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleFetch()}
-                    placeholder="https://..."
-                    className={inputClass}
-                  />
-                  <button
-                    type="button"
-                    onClick={handleFetch}
-                    disabled={fetching || extracting || !urlInput.trim()}
-                    className="flex items-center gap-1.5 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
-                  >
-                    {fetching || extracting ? (
-                      <i className="ti ti-loader-2 animate-spin text-sm" aria-hidden="true" />
-                    ) : (
-                      <i className="ti ti-download text-sm" aria-hidden="true" />
-                    )}
-                    {fetching ? "Fetching…" : extracting ? "Filling in…" : "Fetch and fill in"}
-                  </button>
+              {hasDescription && (
+                <div className="mt-3">
+                  <Button variant="secondary" size="sm" icon="ti-wand" onClick={() => handleExtract()} loading={extracting} loadingLabel="Filling in…">
+                    Fill in the details
+                  </Button>
                 </div>
-                {fetchError && <p role="alert" className="text-xs text-red-700 dark:text-red-300">{fetchError}</p>}
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Fetches the page, then uses AI to fill in any empty fields below. Some sites block this; if so, paste the
-                  description instead.
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* AI extraction for pasted text */}
-          {jdTab === "paste" && jdText.trim().length > 50 && (
-            <div className="px-5 pb-3">
-              <div className="flex items-center gap-3 flex-wrap">
-                <button
-                  type="button"
-                  onClick={() => handleExtract()}
-                  disabled={extracting}
-                  className="flex items-center gap-1.5 text-xs font-medium text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-950 hover:bg-primary-100 dark:hover:bg-primary-900 border border-primary-200 dark:border-primary-800 px-3 py-1.5 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              )}
+            </>
+          ) : (
+            <>
+              <div className="flex gap-2">
+                <Input
+                  id="job-fetch-url"
+                  type="url"
+                  value={urlInput}
+                  onChange={(e) => setUrlInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleFetch()}
+                  placeholder="https://…"
+                  aria-describedby="job-fetch-help"
+                />
+                <Button
+                  variant="primary"
+                  className="h-11"
+                  onClick={handleFetch}
+                  disabled={!urlInput.trim()}
+                  loading={busy}
+                  loadingLabel={fetching ? "Fetching…" : "Filling in…"}
                 >
-                  {extracting ? (
-                    <i className="ti ti-loader-2 animate-spin text-xs" aria-hidden="true" />
-                  ) : (
-                    <i className="ti ti-wand text-xs" aria-hidden="true" />
-                  )}
-                  {extracting ? "Filling in…" : "Fill in the details with AI"}
-                </button>
+                  Fetch
+                </Button>
               </div>
-            </div>
+              {fetchError ? (
+                <HelpText id="job-fetch-help" error>
+                  <span role="alert">{fetchError}</span>
+                </HelpText>
+              ) : (
+                <HelpText id="job-fetch-help">
+                  Reads the page and fills in any empty details below. Some sites block this; if so, paste the description instead.
+                </HelpText>
+              )}
+            </>
           )}
           {extractError && (
-            <p role="alert" className="px-5 pb-3 text-xs text-amber-800 dark:text-amber-300">{extractError}</p>
+            <InlineMessage tone="caution" role="alert" className="mt-3">
+              {extractError}
+            </InlineMessage>
           )}
-
-          {/* Details */}
-          <div className="px-5 pt-3 pb-5">
-            <div className="border-t border-gray-100 dark:border-gray-800 pt-4">
-              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-3">Details</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label htmlFor="job-title" className={labelClass}>
-                    Role title <span className="text-red-700 dark:text-red-300" aria-hidden="true">*</span>
-                  </label>
-                  <input
-                    id="job-title"
-                    type="text"
-                    aria-required="true"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="e.g. Senior Product Designer"
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="job-company" className={labelClass}>
-                    Company <span className="text-red-700 dark:text-red-300" aria-hidden="true">*</span>
-                  </label>
-                  <input
-                    id="job-company"
-                    type="text"
-                    aria-required="true"
-                    value={company}
-                    onChange={(e) => setCompany(e.target.value)}
-                    placeholder="e.g. Acme Inc."
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="job-location" className={labelClass}>Location</label>
-                  <input
-                    id="job-location"
-                    type="text"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    placeholder="e.g. Remote, NYC"
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="job-salary" className={labelClass}>Salary</label>
-                  <input
-                    id="job-salary"
-                    type="text"
-                    value={salary}
-                    onChange={(e) => setSalary(e.target.value)}
-                    placeholder="e.g. $120k–$150k"
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="job-stage" className={labelClass}>Stage</label>
-                  <select
-                    id="job-stage"
-                    value={stage}
-                    onChange={(e) => setStage(e.target.value as JobStage)}
-                    className={inputClass}
-                  >
-                    {ALL_STAGES.map((s) => (
-                      <option key={s} value={s}>{STAGE_META[s].label}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label htmlFor="job-source" className={labelClass}>Source</label>
-                  <select
-                    id="job-source"
-                    value={source}
-                    onChange={(e) => setSource(e.target.value as JobSource)}
-                    className={inputClass}
-                  >
-                    {ALL_SOURCES.map((s) => (
-                      <option key={s} value={s}>{SOURCE_LABELS[s]}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="sm:col-span-2">
-                  <label htmlFor="job-url" className={labelClass}>Job URL</label>
-                  <input
-                    id="job-url"
-                    type="url"
-                    value={urlInput}
-                    onChange={(e) => setUrlInput(e.target.value)}
-                    placeholder="https://..."
-                    className={inputClass}
-                  />
-                </div>
-                <div className="sm:col-span-2">
-                  <label htmlFor="job-notes" className={labelClass}>Notes</label>
-                  <textarea
-                    id="job-notes"
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Any notes about this role…"
-                    rows={3}
-                    className={`${inputClass} resize-none`}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
-        {/* Footer */}
-        {confirmDiscard ? (
-          <div role="alert" className="flex items-center gap-2 flex-wrap px-5 py-4 border-t border-gray-100 dark:border-gray-800 shrink-0 bg-amber-50 dark:bg-amber-950/40 rounded-b-2xl">
-            <p className="text-sm text-gray-800 dark:text-gray-100 mr-auto">Discard this job? What you&apos;ve entered will be lost.</p>
-            <button
-              type="button"
-              autoFocus
-              onClick={() => setConfirmDiscard(false)}
-              className="text-sm font-medium bg-primary-600 text-white px-4 py-2 rounded-full hover:bg-primary-700 transition-colors"
-            >
-              Keep editing
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                form.clear();
-                onClose();
-              }}
-              className="text-sm text-red-700 dark:text-red-300 hover:text-red-800 px-4 py-2 rounded-full transition-colors"
-            >
-              Discard
-            </button>
+        {/* Step two: the details, which the step above fills in where it can. */}
+        <fieldset className="pt-6 border-t border-rule">
+          <legend className="sr-only">Details</legend>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-5">
+            <Field id="job-title" label="Role">
+              <Input
+                id="job-title"
+                type="text"
+                aria-required="true"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="e.g. Senior Product Designer"
+              />
+            </Field>
+            <Field id="job-company" label="Company">
+              <Input
+                id="job-company"
+                type="text"
+                aria-required="true"
+                value={company}
+                onChange={(e) => setCompany(e.target.value)}
+                placeholder="e.g. Acme Inc."
+              />
+            </Field>
+            <Field id="job-location" label="Location" optional>
+              <Input
+                id="job-location"
+                type="text"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="e.g. Remote, NYC"
+              />
+            </Field>
+            <Field id="job-salary" label="Salary" optional>
+              <Input
+                id="job-salary"
+                type="text"
+                value={salary}
+                onChange={(e) => setSalary(e.target.value)}
+                placeholder="e.g. $120k–$150k"
+              />
+            </Field>
+            <Field id="job-stage" label="Stage">
+              <Select
+                id="job-stage"
+                value={stage}
+                onChange={setStage}
+                options={ALL_STAGES.map((s) => ({ value: s, label: STAGE_META[s].label }))}
+              />
+            </Field>
+            <Field id="job-source" label="Where you found it">
+              <Select
+                id="job-source"
+                value={source}
+                onChange={setSource}
+                options={ALL_SOURCES.map((s) => ({ value: s, label: SOURCE_LABELS[s] }))}
+              />
+            </Field>
+            <Field id="job-url" label="Link" optional className="sm:col-span-2">
+              <Input id="job-url" type="url" value={urlInput} onChange={(e) => setUrlInput(e.target.value)} placeholder="https://…" />
+            </Field>
+            <Field id="job-notes" label="Notes" optional className="sm:col-span-2">
+              <TextArea id="job-notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Anything to remember about this role" rows={3} />
+            </Field>
           </div>
-        ) : (
-          <div className="flex items-center gap-2 px-5 py-4 border-t border-gray-100 dark:border-gray-800 shrink-0">
-            {saveError && <p role="alert" className="text-xs text-red-700 dark:text-red-300 mr-auto">{saveError}</p>}
-            <div className="flex items-center gap-2 ml-auto">
-              <button
-                type="button"
-                onClick={requestClose}
-                className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 px-4 py-2 rounded-full transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={!canSave || saving}
-                className="flex items-center gap-2 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {saving ? (
-                  <>
-                    <i className="ti ti-loader-2 animate-spin text-sm" aria-hidden="true" />
-                    Saving…
-                  </>
-                ) : (
-                  "Save job"
-                )}
-              </button>
-            </div>
-          </div>
-        )}
+          {!canSave && (title.trim() || company.trim()) && (
+            <p className="mt-4 text-meta text-ink-muted">Add the role and company to save.</p>
+          )}
+        </fieldset>
       </div>
-    </dialog>
+    </Dialog>
   );
 }

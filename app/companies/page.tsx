@@ -1,26 +1,33 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { getCompanies, createCompany, deleteCompany } from "@/lib/companies";
 import { getJobs } from "@/lib/jobs";
 import type { Company } from "@/types/company";
 import type { Job } from "@/types/job";
-
-function formatDate(d: Date) {
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-}
+import { timeAgo } from "@/lib/next-steps";
+import { useToast } from "@/lib/use-toast";
+import Toast from "@/components/Toast";
+import PageFrame from "@/components/ui/PageFrame";
+import Button from "@/components/ui/Button";
+import Dialog from "@/components/ui/Dialog";
+import Select from "@/components/ui/Select";
+import { Field, Input } from "@/components/ui/Field";
+import { Checkbox, EmptyState, Monogram, Skeleton } from "@/components/ui/bits";
 
 export default function CompaniesPage() {
   const { user } = useAuth();
-  const router = useRouter();
 
   const [companies, setCompanies] = useState<Company[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
-  const [toast, setToast] = useState("");
+  const { show: showToast, toastProps } = useToast();
+  const [editing, setEditing] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [now] = useState(() => new Date());
 
   const [newName, setNewName] = useState("");
   const [newJobId, setNewJobId] = useState("");
@@ -67,14 +74,14 @@ export default function CompaniesPage() {
   async function handleDeleteSelected() {
     if (!user || selectedIds.size === 0) return;
     const count = selectedIds.size;
-    if (!confirm(`Delete ${count} compan${count !== 1 ? "ies" : "y"}? This cannot be undone.`)) return;
+    setConfirming(false);
     setDeleting(true);
     await Promise.all([...selectedIds].map((id) => deleteCompany(user.uid, id)));
     setCompanies((prev) => prev.filter((c) => !selectedIds.has(c.id)));
     setSelectedIds(new Set());
     setDeleting(false);
-    setToast(`${count} compan${count !== 1 ? "ies" : "y"} deleted`);
-    setTimeout(() => setToast(""), 3000);
+    setEditing(false);
+    showToast(`${count} compan${count !== 1 ? "ies" : "y"} deleted`);
   }
 
   function jobTitle(jobId: string | null) {
@@ -107,8 +114,7 @@ export default function CompaniesPage() {
       };
       setCompanies((prev) => [newCompany, ...prev]);
       closeModal();
-      setToast("Company added");
-      setTimeout(() => setToast(""), 3000);
+      showToast("Company added");
     } finally {
       setSaving(false);
     }
@@ -120,217 +126,169 @@ export default function CompaniesPage() {
     setNewJobId("");
   }
 
-  const inputClass = "w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800 dark:text-gray-100";
+  const count = selectedIds.size;
+  const doneEditing = () => {
+    setEditing(false);
+    setSelectedIds(new Set());
+  };
+  const jobOptions = [{ value: "", label: "No linked job" }, ...jobs.map((j) => ({ value: j.id, label: `${j.title} at ${j.company}` }))];
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-full shadow-lg shadow-gray-900/20">
-          <i className="ti ti-circle-check text-primary-400 text-base" aria-hidden="true" />
-          {toast}
-        </div>
-      )}
+    <PageFrame
+      width="wide"
+      title="Companies"
+      intro={loading ? undefined : `${companies.length} profile${companies.length !== 1 ? "s" : ""}, made when you add a job or by hand`}
+      action={
+        <Button variant="secondary" icon="ti-plus" onClick={() => setModalOpen(true)}>
+          Add a company
+        </Button>
+      }
+    >
+      <Toast {...toastProps} />
 
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="page-title">Companies</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            {companies.length} profile{companies.length !== 1 ? "s" : ""}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {selectedIds.size > 0 && (
-            <button
-              onClick={handleDeleteSelected}
-              disabled={deleting}
-              className="flex items-center gap-2 bg-red-600 text-white text-sm font-medium px-4 py-2 rounded-xl hover:bg-red-700 disabled:opacity-50 transition-colors"
-            >
-              <i className="ti ti-trash text-sm" aria-hidden="true" />
-              {deleting ? "Deleting…" : `Delete ${selectedIds.size}`}
-            </button>
-          )}
-          <button
-            onClick={() => setModalOpen(true)}
-            className="flex items-center gap-2 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-primary-700 transition-colors"
-          >
-            <i className="ti ti-plus text-sm" aria-hidden="true" />
-            Add company
-          </button>
-        </div>
-      </div>
-
-      {/* Content */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div aria-busy="true" role="status">
+          <span className="sr-only">Loading companies…</span>
           {[1, 2, 3].map((n) => (
-            <div key={n} className="surface p-4 animate-pulse">
-              <div className="h-4 bg-gray-100 dark:bg-gray-800 rounded w-32 mb-2" />
-              <div className="h-3 bg-gray-100 dark:bg-gray-800 rounded w-48 mb-3" />
-              <div className="h-3 bg-gray-100 dark:bg-gray-800 rounded w-24" />
+            <div key={n} className="flex items-center gap-4 py-3.5">
+              <Skeleton className="w-9 h-9" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-3 w-56 max-w-full" />
+              </div>
             </div>
           ))}
         </div>
       ) : companies.length === 0 ? (
-        <div className="surface p-12 text-center">
-          <div className="w-12 h-12 rounded-full glow-gradient flex items-center justify-center mx-auto mb-4">
-            <i className="ti ti-building text-gray-700 dark:text-gray-100 text-2xl" aria-hidden="true" />
-          </div>
-          <h2 className="text-sm font-medium text-gray-900 dark:text-gray-50 mb-1">No company profiles yet</h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-5 max-w-xs mx-auto">
-            Company profiles are created automatically when you add a job, or you can add one manually.
-          </p>
-          <button
-            onClick={() => setModalOpen(true)}
-            className="inline-flex items-center gap-2 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-primary-700 transition-colors"
-          >
-            <i className="ti ti-plus text-sm" aria-hidden="true" />
-            Add company
-          </button>
-        </div>
+        <EmptyState
+          title="No company profiles yet"
+          action={
+            <Button variant="primary" icon="ti-plus" onClick={() => setModalOpen(true)}>
+              Add a company
+            </Button>
+          }
+        >
+          A profile is made for you whenever you add a job. You can also add one by hand.
+        </EmptyState>
       ) : (
-        <>
-          <div className="flex items-center gap-2 mb-3">
-            <input
-              ref={selectAllRef}
-              type="checkbox"
-              checked={allSelected}
-              onChange={handleToggleAll}
-              className="rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500 cursor-pointer"
-              aria-label="Select all companies"
-            />
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              {someSelected ? `${selectedIds.size} selected` : "Select all"}
-            </span>
+        <div className={editing ? "pb-24" : undefined}>
+          <div className="flex items-center justify-between gap-3 mb-2 min-h-9">
+            {editing ? (
+              <label className="inline-flex items-center gap-3 text-ui text-ink-soft cursor-pointer">
+                <Checkbox ref={selectAllRef} checked={allSelected} onChange={handleToggleAll} />
+                Select all {companies.length}
+              </label>
+            ) : (
+              <span />
+            )}
+            <Button variant="quiet" size="sm" aria-pressed={editing} onClick={() => (editing ? doneEditing() : setEditing(true))}>
+              {editing ? "Done" : "Edit"}
+            </Button>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <ul>
             {companies.map((company) => {
               const linked = jobTitle(company.jobId);
-              const isSelected = selectedIds.has(company.id);
+              const selected = selectedIds.has(company.id);
               return (
-                <div
+                <li
                   key={company.id}
-                  onClick={() => router.push(`/companies/${company.id}`)}
-                  className={`bg-white dark:bg-gray-900 border rounded-2xl p-4 cursor-pointer hover:shadow-sm transition-all ${
-                    isSelected
-                      ? "border-primary-400 ring-1 ring-primary-400 bg-primary-50 dark:bg-primary-950"
-                      : "border-gray-100 dark:border-gray-800 hover:border-gray-200 dark:hover:border-gray-700"
-                  }`}
+                  className={`flex items-center gap-3 border-b border-rule last:border-b-0 ${selected ? "bg-action-wash -mx-3 px-3 rounded-field" : ""}`}
                 >
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <div className="w-8 h-8 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden border border-gray-200 dark:border-gray-700">
-                      {company.logoUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={company.logoUrl} alt={company.name} className="w-full h-full object-contain" />
-                      ) : (
-                        <i className="ti ti-building text-gray-500 dark:text-gray-400 text-sm" aria-hidden="true" />
-                      )}
-                    </div>
-                    <div onClick={(e) => e.stopPropagation()}>
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => handleToggleSelect(company.id)}
-                        className="rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500 cursor-pointer"
-                        aria-label={`Select ${company.name}`}
-                      />
-                    </div>
-                  </div>
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-50 mb-1 truncate">{company.name}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate mb-2">
-                    {linked ? (
-                      <span className="flex items-center gap-1">
-                        <i className="ti ti-briefcase text-xs" aria-hidden="true" />
-                        {linked}
-                      </span>
-                    ) : (
-                      "No linked role"
-                    )}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Updated {formatDate(company.updatedAt)}</p>
-                </div>
+                  {editing && <Checkbox checked={selected} onChange={() => handleToggleSelect(company.id)} aria-label={`Select ${company.name}`} />}
+                  <Link
+                    href={`/companies/${company.id}`}
+                    className="group flex-1 min-w-0 flex items-center gap-4 py-3.5 px-3 -mx-3 rounded-field hover:bg-well transition-colors duration-100"
+                  >
+                    <Monogram name={company.name} logoUrl={company.logoUrl} />
+                    <span className="flex-1 min-w-0">
+                      <span className="block font-semibold text-ink truncate">{company.name}</span>
+                      <span className="block text-meta text-ink-soft truncate">{linked ?? "No linked role"}</span>
+                    </span>
+                    <span className="shrink-0 text-note text-ink-muted">
+                      <span className="sr-only">Updated </span>
+                      {timeAgo(company.updatedAt, now)}
+                    </span>
+                  </Link>
+                </li>
               );
             })}
-          </div>
-        </>
+          </ul>
+        </div>
       )}
 
-      {/* Add company modal */}
-      {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/40" onClick={closeModal} aria-hidden="true" />
-          <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800">
-              <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-50">Add company</h2>
-              <button
-                onClick={closeModal}
-                className="text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                aria-label="Close"
-              >
-                <i className="ti ti-x text-base" aria-hidden="true" />
-              </button>
-            </div>
-            <div className="px-5 py-4 space-y-3">
-              <div>
-                <label htmlFor="company-new-name" className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">
-                  Company name <span className="text-red-700 dark:text-red-300" aria-hidden="true">*</span>
-                </label>
-                <input
-                  id="company-new-name"
-                  type="text"
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSave()}
-                  placeholder="e.g. Acme Inc."
-                  autoFocus
-                  className={inputClass}
-                />
-              </div>
-              {jobs.length > 0 && (
-                <div>
-                  <label htmlFor="company-new-job" className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Link to job (optional)</label>
-                  <select
-                    id="company-new-job"
-                    value={newJobId}
-                    onChange={(e) => setNewJobId(e.target.value)}
-                    className={inputClass}
-                  >
-                    <option value="">No linked job</option>
-                    {jobs.map((j) => (
-                      <option key={j.id} value={j.id}>
-                        {j.title} — {j.company}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-            </div>
-            <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-gray-100 dark:border-gray-800">
-              <button
-                onClick={closeModal}
-                className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 px-4 py-2 rounded-xl transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={!newName.trim() || saving}
-                className="flex items-center gap-2 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {saving ? (
-                  <>
-                    <i className="ti ti-loader-2 animate-spin text-sm" aria-hidden="true" />
-                    Saving…
-                  </>
-                ) : (
-                  "Add company"
-                )}
-              </button>
-            </div>
+      {editing && (
+        <div className="fixed bottom-0 inset-x-0 md:left-[232px] z-30 px-4 sm:px-6 lg:px-10 pb-4 pointer-events-none">
+          <div
+            role="region"
+            aria-label="Bulk actions"
+            className="pointer-events-auto mx-auto max-w-[65rem] flex items-center gap-3 flex-wrap px-5 py-3 rounded-sheet bg-raised shadow-overlay animate-[sheet-up_200ms_var(--ease-out)]"
+          >
+            <span className="flex-1 text-ui text-ink" aria-live="polite">
+              {count === 0 ? "None selected" : `${count} selected`}
+            </span>
+            <Button variant="quiet" onClick={doneEditing}>
+              Done
+            </Button>
+            <Button variant="danger-solid" icon="ti-trash" disabled={count === 0} loading={deleting} loadingLabel="Deleting…" onClick={() => setConfirming(true)}>
+              Delete{count > 0 ? ` ${count}` : ""}
+            </Button>
           </div>
         </div>
       )}
-    </div>
+
+      {confirming && (
+        <Dialog
+          title={`Delete ${count} compan${count !== 1 ? "ies" : "y"}?`}
+          description="Their research notes go too. Your jobs stay. This can't be undone."
+          onRequestClose={() => setConfirming(false)}
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setConfirming(false)}>
+                Cancel
+              </Button>
+              <Button variant="danger-solid" onClick={handleDeleteSelected}>
+                Delete
+              </Button>
+            </>
+          }
+        />
+      )}
+
+      {modalOpen && (
+        <Dialog
+          title="Add a company"
+          onRequestClose={closeModal}
+          footer={
+            <>
+              <Button variant="secondary" onClick={closeModal}>
+                Cancel
+              </Button>
+              <Button variant="primary" onClick={handleSave} disabled={!newName.trim()} loading={saving} loadingLabel="Saving…">
+                Add company
+              </Button>
+            </>
+          }
+        >
+          <div className="space-y-5">
+            <Field id="company-new-name" label="Company name">
+              <Input
+                id="company-new-name"
+                type="text"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSave()}
+                placeholder="e.g. Acme Inc."
+                autoFocus
+              />
+            </Field>
+            {jobs.length > 0 && (
+              <Field id="company-new-job" label="Link to a job" optional>
+                <Select id="company-new-job" value={newJobId} options={jobOptions} onChange={setNewJobId} />
+              </Field>
+            )}
+          </div>
+        </Dialog>
+      )}
+    </PageFrame>
   );
 }

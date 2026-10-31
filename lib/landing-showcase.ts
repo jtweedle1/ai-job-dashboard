@@ -63,16 +63,15 @@ const debrief = docData("debriefs", "demo-debrief-northwind");
 
 // Everything attached to the one demo job, in the order it happened.
 export const JOURNEY = [
-  { icon: "ti-target", label: "Fit score", detail: "86 out of 100. Strong match, with a note on the senior gap." },
-  { icon: "ti-feather", label: "Cover letter", detail: `Opens with: "${letterParagraphs[1].split(".")[0]}."` },
+  { label: "Fit score", detail: "86 out of 100. Strong match, with a note on the senior gap." },
+  { label: "Cover letter", detail: `Opens with: "${letterParagraphs[1].split(".")[0]}."` },
   {
-    icon: "ti-microphone",
     label: "Interview prep",
     detail: `${(prep.mockQuestions as string[] | undefined)?.length ?? 0} questions for this role, like "${
       (prep.mockQuestions as string[] | undefined)?.[0] ?? ""
     }"`,
   },
-  { icon: "ti-notes", label: "Interview notes", detail: String(debrief.wentWell ?? "") },
+  { label: "Interview notes", detail: String(debrief.wentWell ?? "") },
 ];
 
 // Wraps every occurrence of the given phrases, case-insensitively, so the page can highlight them.

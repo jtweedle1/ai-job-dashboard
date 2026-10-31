@@ -32,15 +32,16 @@ Per-user Anthropic keys (bring-your-own) — no shared key pool; rate-limit per-
 - One `lib/<entity>.ts` CRUD module + one `types/<entity>.ts` per domain entity.
 - API route shape: `requireAuth → checkRateLimit → callAI`.
 - Changing an API route signature? Update both the route and its client caller.
-- **Design system:** `DESIGN.md` (Trailhead) is the approved system. New or restyled UI follows it
-  and its migration order; the Calm theme below describes the code until that migration lands.
-- Calm theme (`app/globals.css`): `primary-*` (soft iris) for actions and links; `gray-*` is a
-  lavender neutral that deepens to night indigo in dark mode; `emerald` = good, `amber` = check
-  this, `red` = error. Cards use `surface`, headings `page-title` / `section-label`, warm accents
-  `glow-gradient` / `sun-orb`. Buttons are pills (`rounded-full`). Fonts: Figtree body, Nunito
-  (`font-display`) for headings.
+- **Design system:** `DESIGN.md` (Trailhead): paper and ink, one action color, one sun. Use the
+  semantic tokens in `app/globals.css` (`canvas`/`sheet`/`well` surfaces, `ink`/`ink-soft`/`ink-muted`
+  text, `rule`, `control`, `action`, `sun`, and `sky`/`moss`/`stone`/`caution`/`danger` with `-wash`
+  pairs); they switch with `.dark`, so no `dark:` twins. Type scale `text-display|title|heading|reading|ui|meta|note|label`.
+  Fraunces (`font-serif`) for headings, Figtree body. Build screens from `components/ui/*`
+  (`PageFrame`, `Section`, `Sheet`, `Button`, `Field`, `Select`, `Menu`, `Dialog`, `Trail`); at most one
+  `Sheet` level, sections are not boxes. `npm run lint` runs `scripts/check-design.mjs`, which bans
+  retired patterns (gradients, blur, stock hue/gray scales, `text-xs`, large shadows, uppercase).
 - Navigation lives in `components/navigation.ts`: Today, Jobs, Me, Settings, each with tabs
-  rendered by `SectionTabs` in `<AppShell>`. Letter, prep and debrief live inside a job
+  rendered by `SectionTabs` in `<PageFrame>`. Letter, prep and debrief live inside a job
   (`components/job/*`, steps in `lib/next-steps.ts`); `/cover-letters` and `/interview-prep`
   only redirect.
 

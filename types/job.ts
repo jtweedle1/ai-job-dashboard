@@ -49,14 +49,26 @@ export interface Job {
   updatedAt: Date;
 }
 
-export const STAGE_META: Record<JobStage, { label: string; badge: string }> = {
-  saved:        { label: "Saved",        badge: "bg-gray-100 text-gray-600" },
-  applied:      { label: "Applied",      badge: "bg-blue-50 text-blue-700" },
-  phone_screen: { label: "Phone screen", badge: "bg-violet-50 text-violet-700" },
-  interview:    { label: "Interview",    badge: "bg-amber-50 text-amber-700" },
-  offer:        { label: "Offer",        badge: "bg-emerald-50 text-emerald-700" },
-  rejected:     { label: "Rejected",     badge: "bg-red-50 text-red-600" },
-  withdrawn:    { label: "Withdrawn",    badge: "bg-gray-100 text-gray-500" },
+// The stretch of the trail a job is on (DESIGN.md §8): how the Pipeline groups jobs.
+export type TrailGroup = "exploring" | "applied" | "talking" | "decided";
+// Stage tone: the Trailhead color that marks the stage. Always shown with the label, never alone.
+export type StageTone = "stone" | "sky" | "sun" | "moss";
+
+export const TRAIL_GROUPS: { id: TrailGroup; label: string }[] = [
+  { id: "exploring", label: "Exploring" },
+  { id: "applied", label: "Applied" },
+  { id: "talking", label: "Talking" },
+  { id: "decided", label: "Decided" },
+];
+
+export const STAGE_META: Record<JobStage, { label: string; group: TrailGroup; tone: StageTone; hollow?: boolean }> = {
+  saved:        { label: "Saved",          group: "exploring", tone: "stone", hollow: true },
+  applied:      { label: "Applied",        group: "applied",   tone: "sky" },
+  phone_screen: { label: "Phone screen",   group: "talking",   tone: "sun" },
+  interview:    { label: "Interview",      group: "talking",   tone: "sun" },
+  offer:        { label: "Offer",          group: "decided",   tone: "moss" },
+  rejected:     { label: "Not this time",  group: "decided",   tone: "stone" },
+  withdrawn:    { label: "Stepped away",   group: "decided",   tone: "stone" },
 };
 
 export const SOURCE_LABELS: Record<JobSource, string> = {
@@ -91,4 +103,12 @@ export function matchesStageFilter(stage: JobStage, filter: StageFilter): boolea
   return filter in STAGE_GROUPS
     ? (STAGE_GROUPS[filter as StageGroup].stages as readonly JobStage[]).includes(stage)
     : stage === filter;
+}
+
+// A fit score in words (DESIGN.md: job listings). Display only; the score itself is unchanged.
+export type FitWord = { word: "Strong" | "Possible" | "Long shot"; tone: "moss" | "ink-soft" | "stone" };
+export function fitWord(score: number): FitWord {
+  if (score >= 75) return { word: "Strong", tone: "moss" };
+  if (score >= 55) return { word: "Possible", tone: "ink-soft" };
+  return { word: "Long shot", tone: "stone" };
 }

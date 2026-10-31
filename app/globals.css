@@ -1,61 +1,162 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
-/*
- * Wayfinder's calm palette. "gray" is a soft lavender neutral that deepens into a
- * night-sky indigo (dark mode surfaces), and "primary" is a gentle iris used for
- * actions and links. Emerald, amber and red keep their stock meanings (good,
- * check this, error). Warm peach, rose and sky only appear in the backdrop and
- * the sun mark, never as status colors.
- */
-@theme {
-  --color-gray-50: #f8f6fc;
-  --color-gray-100: #f1eef8;
-  --color-gray-200: #e4dff0;
-  --color-gray-300: #cbc5dc;
-  --color-gray-400: #8f88a8;
-  --color-gray-500: #6f6889;
-  --color-gray-600: #5e5878;
-  --color-gray-700: #474260;
-  --color-gray-800: #2f2b48;
-  --color-gray-900: #221f3a;
-  --color-gray-950: #17142b;
-
-  --color-primary-50: #f3f2ff;
-  --color-primary-100: #e8e6fe;
-  --color-primary-200: #d3d0fc;
-  --color-primary-300: #b5b0f7;
-  --color-primary-400: #948df0;
-  --color-primary-500: #766fe4;
-  --color-primary-600: #5f57d2;
-  --color-primary-700: #4d45b5;
-  --color-primary-800: #3e3891;
-  --color-primary-900: #332f73;
-  --color-primary-950: #1f1c46;
-
-  --color-peach-200: #ffd9c2;
-  --color-peach-400: #ffab7a;
-  --color-rose-200: #fbd3e4;
-  --color-sky-200: #cfe4fb;
-
-  --radius-4xl: 2rem;
-}
-
 @theme inline {
   --font-sans: var(--font-figtree);
-  --font-display: var(--font-nunito);
   --font-mono: var(--font-geist-mono);
 }
 
-body {
-  background: #fbf9fe;
-  color: var(--color-gray-900);
-  font-family: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
+/*
+ * Trailhead (DESIGN.md): paper and ink, one action color, one sun. These are semantic tokens: each
+ * one switches with the .dark class, so `text-ink` or `bg-sheet` never needs a `dark:` twin.
+ * Every text token passes WCAG AA on the backgrounds it's allowed on (lib/design-tokens.test.ts).
+ */
+:root {
+  --canvas: #f6f0e6;
+  --sheet: #fffbf5;
+  --well: #efe7da;
+  --ink: #2b2645;
+  --ink-soft: #57516b;
+  --ink-muted: #67616f;
+  --rule: #e4dacb;
+  --control: #8c8173;
+  --action: #5f57d2;
+  --action-hover: #4d45b5;
+  --action-wash: #eceafb;
+  /* Chart marks: the action hue, stepped per theme so it sits in the readable lightness band. */
+  --chart: #5f57d2;
+  --on-action: #ffffff;
+  --sun: #e8772e;
+  --sun-ink: #a24a15;
+  --sun-wash: #fce3cf;
+  --sky: #3a6696;
+  --sky-wash: #e3ecf6;
+  --moss: #3f7350;
+  --moss-wash: #e2eee3;
+  --stone: #6f655e;
+  --stone-wash: #ece6de;
+  --caution: #8a5a0a;
+  --caution-wash: #f8ebcf;
+  --danger: #a63a2e;
+  --danger-wash: #f7e1dd;
+  --raised: #fffbf5;
+  --scrim: rgb(43 38 69 / 0.4);
+  --sheet-shadow: 0 1px 0 rgb(43 38 69 / 0.04), 0 12px 32px -20px rgb(43 38 69 / 0.25);
+  --overlay-shadow: 0 24px 48px -16px rgb(22 19 42 / 0.35);
+  color-scheme: light;
 }
 
-.dark body {
-  background: var(--color-gray-950);
-  color: var(--color-gray-50);
+.dark {
+  --canvas: #16132a;
+  --sheet: #221f38;
+  --well: #1c1932;
+  --ink: #f3eee6;
+  --ink-soft: #c9c2d6;
+  --ink-muted: #a39cb4;
+  --rule: #37324f;
+  --control: #7a7394;
+  --action: #a7a1f5;
+  --action-hover: #c3befa;
+  --action-wash: rgb(167 161 245 / 0.16);
+  --chart: #8a83ec;
+  --on-action: #16132a;
+  --sun: #f59a52;
+  --sun-ink: #f59a52;
+  --sun-wash: rgb(245 154 82 / 0.16);
+  --sky: #8db6e6;
+  --sky-wash: rgb(141 182 230 / 0.16);
+  --moss: #7fbf8e;
+  --moss-wash: rgb(127 191 142 / 0.16);
+  --stone: #b3a9a0;
+  --stone-wash: rgb(179 169 160 / 0.16);
+  --caution: #e8b45a;
+  --caution-wash: rgb(232 180 90 / 0.16);
+  --danger: #f08a7e;
+  --danger-wash: rgb(240 138 126 / 0.16);
+  --raised: #2c2846;
+  --scrim: rgb(0 0 0 / 0.6);
+  --sheet-shadow: 0 0 0 1px #37324f;
+  --overlay-shadow: 0 0 0 1px #37324f, 0 24px 48px -16px rgb(0 0 0 / 0.6);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-sheet: var(--sheet);
+  --color-well: var(--well);
+  --color-raised: var(--raised);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-muted: var(--ink-muted);
+  --color-rule: var(--rule);
+  --color-control: var(--control);
+  --color-action: var(--action);
+  --color-action-hover: var(--action-hover);
+  --color-chart: var(--chart);
+  --color-action-wash: var(--action-wash);
+  --color-on-action: var(--on-action);
+  --color-sun: var(--sun);
+  --color-sun-ink: var(--sun-ink);
+  --color-sun-wash: var(--sun-wash);
+  --color-sky: var(--sky);
+  --color-sky-wash: var(--sky-wash);
+  --color-moss: var(--moss);
+  --color-moss-wash: var(--moss-wash);
+  --color-stone: var(--stone);
+  --color-stone-wash: var(--stone-wash);
+  --color-caution: var(--caution);
+  --color-caution-wash: var(--caution-wash);
+  --color-danger: var(--danger);
+  --color-danger-wash: var(--danger-wash);
+  --color-scrim: var(--scrim);
+
+  --font-serif: var(--font-fraunces), ui-serif, Georgia, serif;
+
+  --shadow-sheet: var(--sheet-shadow);
+  --shadow-overlay: var(--overlay-shadow);
+}
+
+@theme {
+  --text-display-xl: 3.5rem;
+  --text-display-xl--line-height: 1.07;
+  --text-display: 2.5rem;
+  --text-display--line-height: 1.1;
+  --text-title: 1.875rem;
+  --text-title--line-height: 1.2;
+  --text-heading: 1.375rem;
+  --text-heading--line-height: 1.3;
+  --text-reading: 1.0625rem;
+  --text-reading--line-height: 1.65;
+  --text-label: 0.8125rem;
+  --text-label--line-height: 1.4;
+  --text-meta: 0.8125rem;
+  --text-meta--line-height: 1.4;
+  --text-note: 0.875rem;
+  --text-note--line-height: 1.4;
+  /* Buttons, tabs and the nav rail. */
+  /* Controls (buttons, tabs, selects). Not "control": that name is the border color. */
+  --text-ui: 0.9375rem;
+  --text-ui--line-height: 1.4;
+
+  --radius-mark: 4px;
+  --radius-stamp: 8px;
+  --radius-field: 12px;
+  --radius-sheet: 20px;
+  --radius-dialog: 24px;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* Fraunces with its soft axis turned up: friendly, not literary. Inherited by everything inside. */
+.font-serif {
+  font-variation-settings: "SOFT" 100;
+}
+
+body {
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
 }
 
 /*
@@ -63,7 +164,7 @@ body {
  * specificity, so inputs that draw their own focus:ring with outline-none still win.
  */
 :where(a, button, summary, select, [role="button"], [role="switch"], [role="tab"], [tabindex]:not([tabindex="-1"])):focus-visible {
-  outline: 2px solid var(--color-primary-500);
+  outline: 2px solid var(--action);
   outline-offset: 2px;
 }
 
@@ -79,85 +180,61 @@ body {
   }
 }
 
-/* The soft sunrise behind every page. Fixed so it stays put while content scrolls. */
-@utility app-backdrop {
-  background-color: #fbf9fe;
-  background-image:
-    radial-gradient(60rem 40rem at -10% -10%, rgb(255 217 194 / 0.75), transparent 60%),
-    radial-gradient(50rem 36rem at 110% 0%, rgb(211 208 252 / 0.8), transparent 60%),
-    radial-gradient(56rem 40rem at 50% 120%, rgb(207 228 251 / 0.75), transparent 60%),
-    radial-gradient(36rem 28rem at 85% 70%, rgb(251 211 228 / 0.55), transparent 60%);
-  background-attachment: fixed;
-
-  &:where(.dark, .dark *) {
-    background-color: var(--color-gray-950);
-    background-image:
-      radial-gradient(60rem 40rem at -10% -10%, rgb(95 87 210 / 0.28), transparent 60%),
-      radial-gradient(50rem 36rem at 110% 0%, rgb(160 90 170 / 0.22), transparent 60%),
-      radial-gradient(56rem 40rem at 50% 120%, rgb(40 90 160 / 0.25), transparent 60%);
+/* A small text link keeps its look but gets a finger-sized target (44px tall) around it. */
+@utility hit {
+  position: relative;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: max(-12px, calc((100% - 44px) / 2)) -6px;
   }
 }
 
-/* The same sunrise without a dark version, for the always-light landing page. */
-@utility sunrise {
-  background-color: #fbf9fe;
-  background-image:
-    radial-gradient(60rem 40rem at -10% -10%, rgb(255 217 194 / 0.75), transparent 60%),
-    radial-gradient(50rem 36rem at 110% 0%, rgb(211 208 252 / 0.8), transparent 60%),
-    radial-gradient(56rem 40rem at 50% 120%, rgb(207 228 251 / 0.75), transparent 60%),
-    radial-gradient(36rem 28rem at 85% 70%, rgb(251 211 228 / 0.55), transparent 60%);
+/*
+ * Trailhead motion (DESIGN.md §10). Motion explains a change or rewards a step; nothing loops.
+ * Every animation's end state is the element's natural state, so the reduced-motion rule above
+ * (which collapses durations) always leaves things fully drawn and in place.
+ */
+@keyframes pop-in {
+  from { opacity: 0; transform: translateY(4px); }
 }
 
-/* A card: frosted white on the backdrop, generous corners, a whisper of shadow. */
-@utility surface {
-  background-color: rgb(255 255 255 / 0.78);
-  border: 1px solid rgb(255 255 255 / 0.9);
-  border-radius: var(--radius-3xl);
-  box-shadow: 0 1px 2px rgb(47 43 72 / 0.04), 0 8px 24px -12px rgb(47 43 72 / 0.12);
-  backdrop-filter: blur(12px);
-
-  &:where(.dark, .dark *) {
-    background-color: rgb(34 31 58 / 0.72);
-    border-color: rgb(255 255 255 / 0.06);
-    box-shadow: 0 8px 24px -12px rgb(0 0 0 / 0.5);
-  }
+@keyframes fade-in {
+  from { opacity: 0; }
 }
 
-@utility page-title {
-  font-family: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
-  font-size: var(--text-2xl);
-  line-height: var(--text-2xl--line-height);
-  font-weight: 800;
-  letter-spacing: -0.01em;
-  color: var(--color-gray-900);
-
-  &:where(.dark, .dark *) {
-    color: var(--color-gray-50);
-  }
+@keyframes sheet-up {
+  from { opacity: 0; transform: translateY(16px); }
 }
 
-@utility section-label {
-  font-family: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
-  font-size: var(--text-sm);
-  line-height: var(--text-sm--line-height);
-  font-weight: 700;
-  color: var(--color-gray-700);
-
-  &:where(.dark, .dark *) {
-    color: var(--color-gray-200);
-  }
+/* A trail segment or check drawing itself. Needs pathLength="1" on the SVG shape. */
+@keyframes draw {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
 }
 
-/* The sun mark: Wayfinder's logo and the warm accent on Today. */
-@utility sun-orb {
-  background-image: radial-gradient(circle at 30% 30%, #ffd9a8, #ff9f6e 45%, #f07aa8 100%);
+/* The "Sent" stamp pressing onto a row. */
+@keyframes stamp {
+  from { opacity: 0; transform: scale(1.06); }
 }
 
-/* Stage chips on the step rail and Today glow with this soft gradient when active. */
-@utility glow-gradient {
-  background-image: linear-gradient(135deg, var(--color-peach-200), var(--color-rose-200) 45%, var(--color-primary-200));
-
-  &:where(.dark, .dark *) {
-    background-image: linear-gradient(135deg, rgb(255 171 122 / 0.25), rgb(240 122 168 / 0.22) 45%, rgb(118 111 228 / 0.35));
-  }
+/* A newly added row: a sun wash that fades back to the page. */
+@keyframes arrive {
+  from { background-color: var(--sun-wash); }
 }
+
+/* A row leaving after "Not now". */
+@keyframes leave {
+  to { opacity: 0; transform: translateX(16px); }
+}
+
+/* The sun rising a little at a milestone. */
+@keyframes rise {
+  from { transform: translateY(12px); }
+}
+
+.draw-in {
+  stroke-dasharray: 1;
+  animation: draw 400ms var(--ease-in-out) both;
+}
+

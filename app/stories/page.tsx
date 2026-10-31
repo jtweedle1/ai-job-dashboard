@@ -9,26 +9,13 @@ import { getAnswers } from "@/lib/answerBank";
 import { getDebriefs } from "@/lib/debriefs";
 import { buildStoryItems, searchStories, STORY_KIND_META, type StoryItem, type StoryKind } from "@/lib/stories";
 import StoryTabs from "@/components/StoryTabs";
+import PageFrame from "@/components/ui/PageFrame";
+import { buttonClasses } from "@/components/ui/Button";
+import { inputClasses } from "@/components/ui/Field";
+import { EmptyState, LoadingBlocks } from "@/components/ui/bits";
+import { ContourMap } from "@/components/illustrations";
 
 const KINDS = Object.keys(STORY_KIND_META) as StoryKind[];
-
-const USES: { icon: string; title: string; body: string }[] = [
-  {
-    icon: "ti-mail",
-    title: "Cover letters",
-    body: "Letters tell your experience stories in your voice, and every claim is traced back to them.",
-  },
-  {
-    icon: "ti-message-2",
-    title: "Application questions",
-    body: "In Answers, draft a reply to any question (“Why us?”, “Tell me about a conflict”) from the story that fits best.",
-  },
-  {
-    icon: "ti-microphone",
-    title: "Interviews",
-    body: "Your interview notes sit next to your prepared answers, so you can see what to tell better next time.",
-  },
-];
 
 export default function StoriesPage() {
   const { user } = useAuth();
@@ -59,123 +46,93 @@ export default function StoriesPage() {
   }, [items]);
   const filtered = useMemo(() => searchStories(items, search, kind), [items, search, kind]);
 
-  if (loading) {
-    return (
-      <div className="p-6 max-w-3xl mx-auto animate-pulse space-y-4">
-        <div className="h-7 bg-gray-100 dark:bg-gray-800 rounded w-48" />
-        <div className="h-48 bg-gray-100 dark:bg-gray-800 rounded-2xl" />
-      </div>
+  const frame = (children: React.ReactNode) => (
+    <PageFrame
+      above={<StoryTabs />}
+      title="Your library"
+      intro="Everything you've told Wayfinder about your work. Letters, application answers and interview prep all draw from it."
+    >
+      {children}
+    </PageFrame>
+  );
+
+  if (loading) return frame(<LoadingBlocks rows={3} label="Loading your library" />);
+
+  if (items.length === 0)
+    return frame(
+      <EmptyState
+        art={<ContourMap />}
+        title="Your stories live here"
+        action={
+          <Link href="/background" className={buttonClasses({ variant: "primary" })}>
+            Add a past position
+          </Link>
+        }
+      >
+        Add a past position and answer a few questions about what you did there. Every letter draws from it.
+      </EmptyState>
     );
-  }
 
-  return (
-    <div className="p-6 max-w-3xl mx-auto">
-      <StoryTabs />
-
-      <div className="mb-6">
-        <h1 className="page-title">Your library</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          Everything you&apos;ve told Wayfinder about your work, in one place. Write a story once and use it everywhere.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-        {USES.map((u) => (
-          <div key={u.title} className="surface p-4">
-            <div className="flex items-center gap-2 mb-1.5">
-              <i className={`ti ${u.icon} text-primary-600 text-base`} aria-hidden="true" />
-              <p className="text-sm font-medium text-gray-900 dark:text-gray-50">{u.title}</p>
-            </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">{u.body}</p>
-          </div>
-        ))}
-      </div>
-
-      {items.length === 0 ? (
-        <div className="surface p-10 text-center">
-          <div className="w-10 h-10 rounded-full glow-gradient flex items-center justify-center mx-auto mb-3">
-            <i className="ti ti-books text-gray-700 dark:text-gray-100 text-xl" aria-hidden="true" />
-          </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            No stories yet.{" "}
-            <Link href="/background" className="text-primary-600 hover:underline">
-              Add a past position
-            </Link>{" "}
-            and answer a few questions about what you did there.
-          </p>
+  return frame(
+    <>
+      <div className="flex flex-wrap items-center gap-2 mb-6">
+        <div className="relative flex-1 min-w-[min(100%,16rem)]">
+          <i className="ti ti-search absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-muted" aria-hidden="true" />
+          <input
+            aria-label="Search stories"
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search, e.g. onboarding, conflict, Figma…"
+            className={`${inputClasses} h-10 pl-10 rounded-full`}
+          />
         </div>
-      ) : (
-        <>
-          <div className="flex flex-wrap items-center gap-2 mb-4">
-            <div className="relative flex-1 min-w-48">
-              <i
-                className="ti ti-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm"
-                aria-hidden="true"
-              />
-              <input
-                aria-label="Search stories"
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search every story, e.g. onboarding, conflict, Figma…"
-                className="w-full border border-gray-200 dark:border-gray-700 rounded-xl pl-8 pr-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-800"
-              />
-            </div>
-            {KINDS.map((k) => (
-              <button
-                key={k}
-                onClick={() => setKind(kind === k ? null : k)}
-                className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full border transition-colors ${
-                  kind === k
-                    ? "bg-primary-600 text-white border-primary-600"
-                    : "bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500"
-                }`}
-              >
-                <i className={`ti ${STORY_KIND_META[k].icon} text-xs`} aria-hidden="true" />
-                {STORY_KIND_META[k].label} {counts[k]}
-              </button>
-            ))}
-          </div>
+        <div role="group" aria-label="Show only" className="flex flex-wrap gap-1">
+          {KINDS.map((k) => (
+            <button
+              key={k}
+              onClick={() => setKind(kind === k ? null : k)}
+              aria-pressed={kind === k}
+              className={`inline-flex items-center gap-1.5 h-10 px-4 rounded-full border text-ui font-semibold transition-colors duration-100 ${
+                kind === k ? "border-ink bg-ink text-canvas" : "border-control text-ink hover:bg-well"
+              }`}
+            >
+              {STORY_KIND_META[k].label}
+              <span className={`tabular-nums font-normal ${kind === k ? "text-canvas" : "text-ink-muted"}`}>{counts[k]}</span>
+            </button>
+          ))}
+        </div>
+      </div>
 
-          {filtered.length === 0 ? (
-            <div className="surface p-8 text-center">
-              <p className="text-sm text-gray-500 dark:text-gray-400">No stories match your search.</p>
-            </div>
-          ) : (
-            <div className="surface divide-y divide-gray-50 dark:divide-gray-800">
-              {filtered.map((item) => {
-                const open = expandedId === item.id;
-                return (
-                  <div key={item.id} className="px-4 py-3">
-                    <div className="flex items-start justify-between gap-4">
-                      <button onClick={() => setExpandedId(open ? null : item.id)} className="flex-1 min-w-0 text-left">
-                        <p className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 mb-0.5">
-                          <i className={`ti ${STORY_KIND_META[item.kind].icon} text-xs`} aria-hidden="true" />
-                          <span className="truncate">{item.context || STORY_KIND_META[item.kind].label}</span>
-                        </p>
-                        <p className="text-sm font-medium text-gray-900 dark:text-gray-50">{item.title}</p>
-                        <p
-                          className={`text-sm text-gray-600 dark:text-gray-400 mt-1 whitespace-pre-wrap leading-relaxed ${
-                            open ? "" : "line-clamp-2"
-                          }`}
-                        >
-                          {item.text || <span className="italic text-gray-500 dark:text-gray-400">No answer yet</span>}
-                        </p>
-                      </button>
-                      <Link
-                        href={item.href}
-                        className="shrink-0 text-xs text-gray-500 dark:text-gray-400 hover:text-primary-600 transition-colors"
-                      >
-                        Open
-                      </Link>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </>
+      {filtered.length === 0 ? (
+        <EmptyState title="Nothing matches that search" />
+      ) : (
+        <ul>
+          {filtered.map((item) => {
+            const open = expandedId === item.id;
+            return (
+              <li key={item.id} className="py-4 border-b border-rule last:border-b-0">
+                <div className="flex items-start justify-between gap-4">
+                  <button
+                    onClick={() => setExpandedId(open ? null : item.id)}
+                    aria-expanded={open}
+                    className="flex-1 min-w-0 text-left rounded-stamp outline-offset-4 group"
+                  >
+                    <span className="block text-meta text-ink-muted truncate">{item.context || STORY_KIND_META[item.kind].label}</span>
+                    <span className="block font-semibold text-ink group-hover:text-action transition-colors duration-100">{item.title}</span>
+                    <span className={`mt-1 text-ink-soft whitespace-pre-wrap ${open ? "block" : "line-clamp-2"}`}>
+                      {item.text || <span className="text-ink-muted">No answer yet</span>}
+                    </span>
+                  </button>
+                  <Link href={item.href} className="hit shrink-0 text-meta font-semibold text-action hover:underline underline-offset-4">
+                    Open
+                  </Link>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
       )}
-    </div>
+    </>
   );
 }

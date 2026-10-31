@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface EditableFieldProps {
   value: string | null;
@@ -16,7 +16,7 @@ interface EditableFieldProps {
 export default function EditableField({
   value,
   onSave,
-  placeholder = "—",
+  placeholder = "Add…",
   multiline = false,
   rows = 5,
   className = "",
@@ -24,10 +24,19 @@ export default function EditableField({
 }: EditableFieldProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value ?? "");
+  // A quiet "Saved" after a real change, gone after two seconds (DESIGN.md §10).
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (!saved) return;
+    const t = setTimeout(() => setSaved(false), 2000);
+    return () => clearTimeout(t);
+  }, [saved]);
 
   function commit() {
     onSave(draft);
     setEditing(false);
+    if (draft !== (value ?? "")) setSaved(true);
   }
 
   function cancel() {
@@ -36,7 +45,7 @@ export default function EditableField({
   }
 
   const inputClass =
-    "w-full border border-primary-300 dark:border-primary-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-800";
+    "w-full rounded-field bg-sheet border border-action px-3 py-2 text-base text-ink focus:outline-2 focus:outline-offset-2 focus:outline-action";
 
   if (editing) {
     return multiline ? (
@@ -68,23 +77,33 @@ export default function EditableField({
   }
 
   return (
-    <button
-      onClick={() => {
-        setDraft(value ?? "");
-        setEditing(true);
-      }}
-      className={`w-full text-left px-3 py-2 rounded-xl text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group ${className}`}
-    >
-      {label && <span className="sr-only">Edit {label}: </span>}
-      {value ? (
-        <span className="text-gray-900 dark:text-gray-100 whitespace-pre-wrap">{value}</span>
-      ) : (
-        <span className="text-gray-500 dark:text-gray-400">{placeholder}</span>
-      )}
-      <i
-        className="ti ti-pencil text-gray-400 dark:text-gray-500 text-xs ml-2 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 pointer-coarse:opacity-100 transition-opacity"
-        aria-hidden="true"
-      />
-    </button>
+    <div className="relative">
+      <button
+        onClick={() => {
+          setDraft(value ?? "");
+          setEditing(true);
+        }}
+        className={`w-full text-left px-3 py-2 rounded-field text-base hover:bg-well transition-colors duration-100 group ${className}`}
+      >
+        {label && <span className="sr-only">Edit {label}: </span>}
+        {value ? (
+          <span className="text-ink whitespace-pre-wrap">{value}</span>
+        ) : (
+          <span className="text-ink-muted">{placeholder}</span>
+        )}
+        <i
+          className="ti ti-pencil text-ink-muted text-sm ml-2 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 pointer-coarse:opacity-100 transition-opacity"
+          aria-hidden="true"
+        />
+      </button>
+      <span
+        role="status"
+        className="absolute right-3 top-2.5 text-note font-semibold text-moss pointer-events-none"
+      >
+        {saved && (
+          <span className="animate-[fade-in_160ms_var(--ease-out)]">Saved</span>
+        )}
+      </span>
+    </div>
   );
 }

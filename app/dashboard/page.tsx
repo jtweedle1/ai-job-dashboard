@@ -16,6 +16,10 @@ import { nextActions, type JobActivity } from "@/lib/next-steps";
 import { comingUp, trailStations, weekSummary } from "@/lib/today";
 import AddJobModal from "@/components/AddJobModal";
 import Toast from "@/components/Toast";
+import { useToast } from "@/lib/use-toast";
+import PageFrame from "@/components/ui/PageFrame";
+import { buttonClasses } from "@/components/ui/Button";
+import { EmptyState, Skeleton } from "@/components/ui/bits";
 import { NextStepHero, CaughtUpHero, FirstJobHero, SetupHero, type SetupStep } from "@/components/today/TodayHero";
 import ActionQueue from "@/components/today/ActionQueue";
 import ComingUp from "@/components/today/ComingUp";
@@ -49,14 +53,6 @@ interface TodayData {
   setup: { resume: boolean; voice: boolean; key: boolean };
 }
 
-interface ToastState {
-  message: string;
-  undo?: () => void;
-  tone?: "done" | "error";
-}
-
-const TOAST_MS = 6000;
-
 export default function TodayPage() {
   const { user } = useAuth();
   const router = useRouter();
@@ -64,8 +60,7 @@ export default function TodayPage() {
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
-  const [toast, setToast] = useState<ToastState>({ message: "" });
-  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { show: showToast, toastProps } = useToast();
   const queueHeading = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
@@ -112,23 +107,6 @@ export default function TodayPage() {
     };
   }, [user, attempt]);
 
-  useEffect(() => () => {
-    if (toastTimer.current) clearTimeout(toastTimer.current);
-  }, []);
-
-  const hideToastIn = useCallback((ms: number) => {
-    if (toastTimer.current) clearTimeout(toastTimer.current);
-    toastTimer.current = setTimeout(() => setToast({ message: "" }), ms);
-  }, []);
-
-  const showToast = useCallback(
-    (message: string, undo?: () => void, tone?: ToastState["tone"]) => {
-      setToast({ message, undo, tone });
-      hideToastIn(TOAST_MS);
-    },
-    [hideToastIn]
-  );
-
   // Refreshed whenever the tab comes back into view, so "today" and "tomorrow" stay right overnight.
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
@@ -169,19 +147,22 @@ export default function TodayPage() {
         await updateJob(user.uid, job.id, patch);
       } catch {
         apply(before);
-        showToast("Couldn't save that. Check your connection and try again.", undefined, "error");
+        showToast("Couldn't save that. Check your connection and try again.", { tone: "error" });
         return;
       }
-      showToast(message, async () => {
-        apply(before);
-        setToast({ message: "" });
-        try {
-          await updateJob(user.uid, job.id, before);
-          showToast("Undone");
-        } catch {
-          apply(patch);
-          showToast("Couldn't undo that. Try again from the job page.", undefined, "error");
-        }
+      // Already saved, so there's nothing to commit; Undo writes the old values back.
+      showToast(message, {
+        commit: () => {},
+        undo: async () => {
+          apply(before);
+          try {
+            await updateJob(user.uid, job.id, before);
+            showToast("Undone");
+          } catch {
+            apply(patch);
+            showToast("Couldn't undo that. Try again from the job page.", { tone: "error" });
+          }
+        },
       });
     },
     [user, showToast, topId]
@@ -194,39 +175,52 @@ export default function TodayPage() {
 
   if (failed) {
     return (
-      <div className="p-6 max-w-4xl mx-auto">
-        <div className="surface p-8 text-center" role="alert">
-          <div className="w-12 h-12 rounded-full glow-gradient flex items-center justify-center mx-auto mb-4">
-            <i className="ti ti-cloud-off text-2xl text-gray-700 dark:text-gray-100" aria-hidden="true" />
-          </div>
-          <h1 className="page-title mb-1">We couldn&apos;t load your day</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">Your jobs didn&apos;t come through. Check your connection and try again.</p>
-          <button
-            onClick={() => {
-              setFailed(false);
-              setAttempt((n) => n + 1);
-            }}
-            className="inline-flex items-center gap-1.5 bg-primary-600 text-white text-sm font-medium px-5 py-2.5 rounded-full shadow-sm shadow-primary-600/20 hover:bg-primary-700 transition-colors"
+      <PageFrame width="wide">
+        <div role="alert">
+          <EmptyState
+            art={<i className="ti ti-cloud-off text-4xl text-ink-soft" aria-hidden="true" />}
+            title="We couldn't load your day"
+            action={
+              <button
+                onClick={() => {
+                  setFailed(false);
+                  setAttempt((n) => n + 1);
+                }}
+                className={buttonClasses({ variant: "primary" })}
+              >
+                <i className="ti ti-refresh" aria-hidden="true" />
+                Try again
+              </button>
+            }
           >
-            <i className="ti ti-refresh text-sm" aria-hidden="true" />
-            Try again
-          </button>
+            Your jobs didn&apos;t come through. Check your connection and try again.
+          </EmptyState>
         </div>
-      </div>
+      </PageFrame>
     );
   }
 
   if (!data || !week) {
     return (
-      <div className="p-6 max-w-4xl mx-auto animate-pulse space-y-4" aria-busy="true">
-        <span className="sr-only">Loading your day</span>
-        <div className="h-6 w-56 bg-white/60 dark:bg-gray-800 rounded-full" />
-        <div className="h-44 bg-white/60 dark:bg-gray-800 rounded-4xl" />
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="h-56 lg:col-span-2 bg-white/60 dark:bg-gray-800 rounded-3xl" />
-          <div className="h-40 bg-white/60 dark:bg-gray-800 rounded-3xl" />
+      <PageFrame width="wide">
+        <div aria-busy="true" role="status">
+          <span className="sr-only">Loading your day…</span>
+          <Skeleton className="h-4 w-40" />
+          <Skeleton className="mt-3 h-10 w-72 max-w-full rounded-field" />
+          <Skeleton className="mt-10 h-56 rounded-sheet" />
+          <div className="mt-12 grid grid-cols-1 lg:grid-cols-12 gap-x-12 gap-y-8">
+            <div className="lg:col-span-8 space-y-3">
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-14" />
+              <Skeleton className="h-14" />
+            </div>
+            <div className="lg:col-span-4 space-y-3">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-20" />
+            </div>
+          </div>
         </div>
-      </div>
+      </PageFrame>
     );
   }
 
@@ -244,38 +238,26 @@ export default function TodayPage() {
   const topJob = top && jobsById.get(top.jobId);
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-4">
+    <PageFrame width="wide">
       {modalOpen && <AddJobModal onClose={() => setModalOpen(false)} onSaved={handleSaved} />}
-      <Toast
-        message={toast.message}
-        tone={toast.tone}
-        action={toast.undo && { label: "Undo", onClick: toast.undo }}
-        onHold={() => toastTimer.current && clearTimeout(toastTimer.current)}
-        onRelease={() => hideToastIn(3000)}
-      />
+      <Toast {...toastProps} />
 
-      <header className="flex items-center justify-between gap-3 flex-wrap">
+      <header className="flex items-end justify-between gap-x-6 gap-y-4 flex-wrap pt-2 mb-8 sm:mb-10">
         <div className="min-w-0">
-          <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
+          <p className="text-meta font-semibold text-ink-soft">
             {now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
           </p>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <h1 className="mt-1 font-serif text-title sm:text-display font-semibold text-ink text-balance">
             {greeting(now)}
-            {firstName ? `, ${firstName}` : ""}.
-          </p>
+            {firstName ? `, ${firstName}` : ""}
+          </h1>
+          {!setupAsHero && nextSetup && <SetupLink done={setupDone} total={setupSteps.length} step={nextSetup} />}
         </div>
-        <button
-          onClick={() => setModalOpen(true)}
-          className="inline-flex items-center gap-1.5 bg-primary-600 text-white text-sm font-medium px-5 min-h-10 pointer-coarse:min-h-11 rounded-full shadow-sm shadow-primary-600/20 hover:bg-primary-700 transition-colors"
-        >
-          <i className="ti ti-plus text-sm" aria-hidden="true" />
+        <button onClick={() => setModalOpen(true)} className={buttonClasses({ variant: "secondary", className: "pointer-coarse:min-h-11" })}>
+          <i className="ti ti-plus" aria-hidden="true" />
           Add a job
         </button>
       </header>
-
-      {!setupAsHero && nextSetup && (
-        <SetupPill done={setupDone} total={setupSteps.length} step={nextSetup} />
-      )}
 
       {setupAsHero ? (
         <SetupHero steps={setupSteps} />
@@ -289,42 +271,48 @@ export default function TodayPage() {
 
       {jobs.length > 0 && (
         <>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+          <div className="mt-12 grid grid-cols-1 lg:grid-cols-12 gap-x-12 gap-y-10 items-start">
             {rest.length > 0 && (
-              <div className="lg:col-span-2">
+              <div className="lg:col-span-8">
                 <ActionQueue ref={queueHeading} actions={rest} jobs={jobsById} onAct={act} now={now} />
               </div>
             )}
             {/* On phones the aside dissolves into the grid so Coming up can sit above the queue. */}
-            <div className="contents lg:block lg:col-start-3 lg:space-y-4">
+            <div className={`contents ${rest.length > 0 ? "lg:block lg:col-span-4 lg:space-y-10" : "lg:grid lg:col-span-12 lg:grid-cols-2 lg:gap-12"}`}>
               <div className="order-first lg:order-none empty:hidden">
                 <ComingUp interviews={upcoming} now={now} />
               </div>
               <WeekCard week={week} />
             </div>
           </div>
-          <SearchTrail stations={trail.stations} closed={trail.closed} />
+          <div className="mt-14 pt-8 border-t border-rule">
+            <SearchTrail stations={trail.stations} closed={trail.closed} />
+          </div>
         </>
       )}
-    </div>
+    </PageFrame>
   );
 }
 
-function SetupPill({ done, total, step }: { done: number; total: number; step: SetupStep }) {
-  const cls =
-    "inline-flex items-center gap-2 max-w-full text-sm px-4 py-2 rounded-full bg-white/70 dark:bg-white/5 border border-white/80 dark:border-white/5 text-gray-700 dark:text-gray-200 hover:bg-white dark:hover:bg-white/10 transition-colors";
+// Once the essentials are in, the rest of setup shrinks to one line under the greeting.
+function SetupLink({ done, total, step }: { done: number; total: number; step: SetupStep }) {
+  const cls = "mt-3 inline-flex items-center gap-1.5 max-w-full text-meta text-ink-soft hover:text-ink group";
   const body = (
     <>
-      <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 tabular-nums">
-        Setup {done} of {total}
+      <span className="tabular-nums">
+        Setup {done} of {total} ·
       </span>
-      <span className="truncate">{step.label}</span>
-      <i className="ti ti-arrow-right text-sm text-gray-500 dark:text-gray-400" aria-hidden="true" />
+      <span className="font-semibold text-action group-hover:underline underline-offset-4">{step.label}</span>
+      <i className="ti ti-arrow-right text-action" aria-hidden="true" />
     </>
   );
   return step.href ? (
-    <Link href={step.href} className={cls}>{body}</Link>
+    <Link href={step.href} className={cls}>
+      {body}
+    </Link>
   ) : (
-    <button onClick={step.onClick} className={cls}>{body}</button>
+    <button onClick={step.onClick} className={cls}>
+      {body}
+    </button>
   );
 }

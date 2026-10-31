@@ -93,6 +93,17 @@ export function dayLabel(day: Date, now: Date): string {
   return day.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
+// How long ago something happened, for lists: "Today", "Yesterday", "3 days ago", then "Oct 29",
+// with the year only when it isn't this year.
+export function timeAgo(day: Date, now: Date): string {
+  const n = -daysUntil(day, now);
+  if (n <= 0) return "Today";
+  if (n === 1) return "Yesterday";
+  if (n < 7) return `${n} days ago`;
+  const sameYear = day.getFullYear() === now.getFullYear();
+  return day.toLocaleDateString("en-US", { month: "short", day: "numeric", ...(sameYear ? {} : { year: "numeric" }) });
+}
+
 // For mid-sentence use: "today", "tomorrow", "on Thursday", "on Nov 12".
 export function dayPhrase(day: Date, now: Date): string {
   const label = dayLabel(day, now);

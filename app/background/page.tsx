@@ -14,16 +14,15 @@ import Toggle from "@/components/Toggle";
 import { BACKGROUND_QUESTIONS, backgroundHeading, hasBackgroundContent } from "@/types/background";
 import type { Background } from "@/types/background";
 import StoryTabs from "@/components/StoryTabs";
+import Toast from "@/components/Toast";
+import { useToast } from "@/lib/use-toast";
+import PageFrame from "@/components/ui/PageFrame";
+import Button from "@/components/ui/Button";
+import Menu from "@/components/ui/Menu";
+import Dialog from "@/components/ui/Dialog";
+import { Field, Input, TextArea } from "@/components/ui/Field";
+import { EmptyState, LoadingBlocks, Sheet } from "@/components/ui/bits";
 
-const cardClass = "surface mb-4";
-const cardHeaderClass = "px-4 py-3 border-b border-gray-50 dark:border-gray-800";
-const cardTitleClass = "section-label";
-const inputClass =
-  "w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800";
-const primaryButtonClass =
-  "flex items-center gap-1.5 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-xl hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
-const secondaryButtonClass =
-  "flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 px-3 py-1.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50";
 
 const EMPTY_FORM: BackgroundInput = { title: "", company: "", startDate: "", endDate: "", answers: {} };
 
@@ -42,7 +41,7 @@ export default function BackgroundPage() {
   const [saving, setSaving] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const [toast, setToast] = useState("");
+  const { show: showToast, toastProps } = useToast();
 
   useEffect(() => {
     if (!user) return;
@@ -52,10 +51,6 @@ export default function BackgroundPage() {
     });
   }, [user]);
 
-  function showToast(msg: string) {
-    setToast(msg);
-    setTimeout(() => setToast(""), 3000);
-  }
 
   function openNew() {
     setForm(EMPTY_FORM);
@@ -123,215 +118,156 @@ export default function BackgroundPage() {
     showToast("Deleted");
   }
 
-  if (loading) {
-    return (
-      <div className="p-6 max-w-3xl mx-auto animate-pulse space-y-4">
-        <div className="h-7 bg-gray-100 dark:bg-gray-800 rounded w-48" />
-        <div className="h-48 bg-gray-100 dark:bg-gray-800 rounded-2xl" />
-      </div>
-    );
-  }
+  const frame = (children: React.ReactNode, action?: React.ReactNode) => (
+    <PageFrame
+      above={<StoryTabs />}
+      title="Experience"
+      intro="The real stories behind each job. Letters draw from the positions you switch on, so you don't have to retell them every time."
+      action={action}
+    >
+      <Toast {...toastProps} />
+      {children}
+    </PageFrame>
+  );
+
+  if (loading) return frame(<LoadingBlocks rows={3} label="Loading your experience" />);
 
   const includedCount = backgrounds.filter((b) => b.included).length;
+  const confirming = backgrounds.find((b) => b.id === deleteConfirm);
+  const field = (id: keyof typeof form, label: string, placeholder: string) => (
+    <Field id={`bg-${id}`} label={label}>
+      <Input
+        id={`bg-${id}`}
+        value={form[id] as string}
+        onChange={(e) => setForm({ ...form, [id]: e.target.value })}
+        placeholder={placeholder}
+      />
+    </Field>
+  );
 
-  return (
-    <div className="p-6 max-w-3xl mx-auto">
-      {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-full shadow-lg shadow-gray-900/20">
-          <i className="ti ti-circle-check text-primary-400 text-base" aria-hidden="true" />
-          {toast}
-        </div>
-      )}
-
-      <StoryTabs />
-
-      <div className="mb-6 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="page-title">Experience</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            The real stories behind each job. Cover letters draw from the positions you switch on, so you
-            don&apos;t have to retell them every time.
-          </p>
-        </div>
-        {editingId === null && (
-          <button onClick={openNew} className={`${primaryButtonClass} shrink-0`}>
-            <i className="ti ti-plus text-sm" aria-hidden="true" />
-            Add position
-          </button>
-        )}
-      </div>
-
-      {/* Add / edit form */}
+  return frame(
+    <>
       {editingId !== null && (
-        <div className={cardClass}>
-          <div className={cardHeaderClass}>
-            <h2 className={cardTitleClass}>{editingId === "new" ? "New position" : "Edit position"}</h2>
+        <Sheet as="section" aria-labelledby="bg-form-heading" className="mb-12">
+          <h2 id="bg-form-heading" className="font-serif text-heading font-semibold text-ink">
+            {editingId === "new" ? "A new position" : "Edit this position"}
+          </h2>
+          <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-5">
+            {field("title", "Job title", "e.g. Product Designer")}
+            {field("company", "Company", "e.g. Acme Co")}
+            {field("startDate", "Started", "e.g. Mar 2021")}
+            {field("endDate", "Ended", "e.g. Present")}
           </div>
-          <div className="px-4 py-4 space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label htmlFor="bg-title" className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Job title</label>
-                <input
-                  id="bg-title"
-                  value={form.title}
-                  onChange={(e) => setForm({ ...form, title: e.target.value })}
-                  placeholder="e.g. Product Designer"
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label htmlFor="bg-company" className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Company</label>
-                <input
-                  id="bg-company"
-                  value={form.company}
-                  onChange={(e) => setForm({ ...form, company: e.target.value })}
-                  placeholder="e.g. Acme Co"
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label htmlFor="bg-start" className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Start</label>
-                <input
-                  id="bg-start"
-                  value={form.startDate}
-                  onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-                  placeholder="e.g. Mar 2021"
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label htmlFor="bg-end" className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">End</label>
-                <input
-                  id="bg-end"
-                  value={form.endDate}
-                  onChange={(e) => setForm({ ...form, endDate: e.target.value })}
-                  placeholder="e.g. Present"
-                  className={inputClass}
-                />
-              </div>
-            </div>
-
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Answer as many as you like, in bullets or paragraphs. Skip anything that doesn&apos;t apply. Only
-              write what&apos;s true; the AI treats this as fact.
-            </p>
-
+          <p className="mt-8 mb-5 text-ink-soft">
+            Answer as many as you like, in bullets or paragraphs. Skip anything that doesn&apos;t apply. Only write
+            what&apos;s true: letters treat this as fact.
+          </p>
+          <div className="space-y-6">
             {BACKGROUND_QUESTIONS.map((q) => (
-              <div key={q.id}>
-                <label htmlFor={`bg-q-${q.id}`} className="block text-sm font-medium text-gray-900 dark:text-gray-100">{q.label}</label>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1.5">{q.hint}</p>
-                <textarea
-                  id={`bg-q-${q.id}`}
-                  value={form.answers[q.id] ?? ""}
-                  onChange={(e) => setAnswer(q.id, e.target.value)}
-                  rows={4}
-                  className={`${inputClass} resize-y`}
-                />
-              </div>
+              <Field key={q.id} id={`bg-q-${q.id}`} label={q.label} help={q.hint} optional>
+                <TextArea id={`bg-q-${q.id}`} value={form.answers[q.id] ?? ""} onChange={(e) => setAnswer(q.id, e.target.value)} rows={4} />
+              </Field>
             ))}
-
-            <div className="flex items-center justify-end gap-2">
-              <button
-                onClick={() => setEditingId(null)}
-                className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 px-4 py-2 rounded-xl transition-colors"
-              >
-                Cancel
-              </button>
-              <button onClick={handleSave} disabled={saving || !canSave} className={primaryButtonClass}>
-                {saving ? "Saving…" : "Save position"}
-              </button>
-            </div>
-            {!canSave && (
-              <p className="text-xs text-gray-500 dark:text-gray-400 text-right">
-                Add a title or company and answer at least one question to save.
-              </p>
-            )}
           </div>
-        </div>
+          <div className="mt-8 flex items-center justify-end gap-2 flex-wrap">
+            {!canSave && <p className="mr-auto text-meta text-ink-soft">Add a title or company and answer one question to save.</p>}
+            <Button variant="quiet" onClick={() => setEditingId(null)}>
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={handleSave} disabled={!canSave} loading={saving} loadingLabel="Saving…">
+              Save position
+            </Button>
+          </div>
+        </Sheet>
       )}
 
-      {/* Saved positions */}
       {backgrounds.length > 0 ? (
-        <div className={cardClass}>
-          <div className={`${cardHeaderClass} flex items-center justify-between gap-4`}>
-            <h2 className={cardTitleClass}>Positions</h2>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              {includedCount} of {backgrounds.length} used in cover letters
+        <section aria-labelledby="positions-heading">
+          <div className="flex items-baseline justify-between gap-4 mb-2">
+            <h2 id="positions-heading" className="font-serif text-heading font-semibold text-ink">
+              Positions
+            </h2>
+            <p className="text-meta text-ink-soft">
+              {includedCount} of {backgrounds.length} used in letters
             </p>
           </div>
-          <div className="divide-y divide-gray-50 dark:divide-gray-800">
-            {backgrounds.map((b) => (
-              <div key={b.id} className="px-4 py-3">
-                <div className="flex items-center justify-between gap-4">
-                  <button
-                    onClick={() => setExpandedId(expandedId === b.id ? null : b.id)}
-                    className="min-w-0 flex-1 text-left"
-                  >
-                    <p className="text-sm font-medium text-gray-900 dark:text-gray-50 truncate">
-                      {backgroundHeading(b)}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {answeredCount(b)} of {BACKGROUND_QUESTIONS.length} questions answered
-                    </p>
-                  </button>
-                  <div className="flex items-center gap-3 shrink-0">
-                    <button onClick={() => openEdit(b)} className={secondaryButtonClass}>
-                      <i className="ti ti-pencil text-xs" aria-hidden="true" />
-                      Edit
-                    </button>
-                    {deleteConfirm === b.id ? (
-                      <span className="flex items-center gap-2 text-xs">
-                        <button onClick={() => handleDelete(b.id)} className="text-red-700 dark:text-red-400 font-medium">
-                          Delete
-                        </button>
-                        <button onClick={() => setDeleteConfirm(null)} className="text-gray-500">
-                          Cancel
-                        </button>
+          <ul>
+            {backgrounds.map((b) => {
+              const open = expandedId === b.id;
+              return (
+                <li key={b.id} className="py-3 border-b border-rule last:border-b-0">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setExpandedId(open ? null : b.id)}
+                      aria-expanded={open}
+                      className="min-w-0 flex-1 text-left py-1 px-3 -mx-3 rounded-field hover:bg-well transition-colors duration-100"
+                    >
+                      <span className="block font-semibold text-ink truncate">{backgroundHeading(b)}</span>
+                      <span className="block text-meta text-ink-soft">
+                        {answeredCount(b)} of {BACKGROUND_QUESTIONS.length} questions answered
                       </span>
-                    ) : (
-                      <button
-                        onClick={() => setDeleteConfirm(b.id)}
-                        className="text-gray-500 dark:text-gray-400 hover:text-red-400 transition-colors"
-                        aria-label="Delete position"
-                      >
-                        <i className="ti ti-trash text-sm" aria-hidden="true" />
-                      </button>
-                    )}
-                    <Toggle
-                      checked={b.included}
-                      onChange={(v) => handleToggle(b, v)}
-                      label={`Use ${backgroundHeading(b)} in cover letters`}
+                    </button>
+                    <Toggle checked={b.included} onChange={(v) => handleToggle(b, v)} label={`Use ${backgroundHeading(b)} in letters`} />
+                    <Menu
+                      label={`More actions for ${backgroundHeading(b)}`}
+                      items={[
+                        { label: "Edit", icon: "ti-pencil", onSelect: () => openEdit(b) },
+                        { label: "Delete position", icon: "ti-trash", danger: true, onSelect: () => setDeleteConfirm(b.id) },
+                      ]}
                     />
                   </div>
-                </div>
-                {expandedId === b.id && (
-                  <div className="mt-3 space-y-3">
-                    {BACKGROUND_QUESTIONS.filter((q) => (b.answers[q.id] ?? "").trim()).map((q) => (
-                      <div key={q.id}>
-                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400">{q.label}</p>
-                        <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
-                          {b.answers[q.id]}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
+                  {open && (
+                    <div className="mt-3 mb-2 space-y-4 animate-[fade-in_200ms_var(--ease-out)]">
+                      {BACKGROUND_QUESTIONS.filter((q) => (b.answers[q.id] ?? "").trim()).map((q) => (
+                        <div key={q.id}>
+                          <p className="text-label font-semibold text-ink-soft">{q.label}</p>
+                          <p className="mt-1 text-ink whitespace-pre-wrap">{b.answers[q.id]}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
       ) : (
         editingId === null && (
-          <div className={`${cardClass} p-10 text-center`}>
-            <div className="w-10 h-10 rounded-full glow-gradient flex items-center justify-center mx-auto mb-3">
-            <i className="ti ti-briefcase text-gray-700 dark:text-gray-100 text-xl" aria-hidden="true" />
-            </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              No positions yet. Add one and answer a few questions about what you did there.
-            </p>
-          </div>
+          <EmptyState
+            title="No positions yet"
+            action={
+              <Button variant="primary" icon="ti-plus" onClick={openNew}>
+                Add a position
+              </Button>
+            }
+          >
+            Add one and answer a few questions about what you did there.
+          </EmptyState>
         )
       )}
-    </div>
+
+      {confirming && (
+        <Dialog
+          title={`Delete ${backgroundHeading(confirming)}?`}
+          description="Letters you already wrote keep their text. This can't be undone."
+          onRequestClose={() => setDeleteConfirm(null)}
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setDeleteConfirm(null)}>
+                Keep it
+              </Button>
+              <Button variant="danger-solid" onClick={() => handleDelete(confirming.id)}>
+                Delete position
+              </Button>
+            </>
+          }
+        />
+      )}
+    </>,
+    editingId === null && backgrounds.length > 0 ? (
+      <Button variant="primary" icon="ti-plus" onClick={openNew}>
+        Add a position
+      </Button>
+    ) : undefined
   );
 }

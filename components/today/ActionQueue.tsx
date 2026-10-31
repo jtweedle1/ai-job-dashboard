@@ -3,41 +3,45 @@
 import { forwardRef, useState } from "react";
 import Link from "next/link";
 import QuickActions, { type Act } from "./QuickActions";
-import { JOB_STEPS, type NextAction } from "@/lib/next-steps";
+import { type NextAction } from "@/lib/next-steps";
 import { groupActions } from "@/lib/today";
 import type { Job } from "@/types/job";
 
 const VISIBLE = 5;
 
+// Acting on a row resolves it, so it slides away first (DESIGN.md §10), then the change lands.
+const LEAVE_MS = 200;
+
 function ActionRow({ action, job, onAct, now }: { action: NextAction; job: Job; onAct: Act; now: Date }) {
-  const step = JOB_STEPS.find((s) => s.id === action.step)!;
+  const [leaving, setLeaving] = useState(false);
+  const act: Act = (j, patch, message) => {
+    setLeaving(true);
+    setTimeout(() => onAct(j, patch, message), LEAVE_MS);
+  };
   return (
-    <li className="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-2 py-2 rounded-2xl hover:bg-white/70 dark:hover:bg-white/5 transition-colors">
-      <Link href={`/applications/${action.jobId}?step=${action.step}`} className="group flex items-center gap-3 basis-full sm:basis-0 sm:min-w-[14rem] flex-1 min-w-0 rounded-2xl">
-        <span className="w-9 h-9 rounded-2xl bg-gray-100 dark:bg-white/5 flex items-center justify-center shrink-0">
-          <i className={`ti ${step.icon} text-base text-gray-500 dark:text-gray-400`} aria-hidden="true" />
-        </span>
-        <span className="flex-1 min-w-0">
-          <span className="block text-sm font-medium text-gray-900 dark:text-gray-50">{action.action}</span>
-          <span className="block text-xs text-gray-500 dark:text-gray-400 truncate">
+    <li
+      className={`flex flex-wrap items-center gap-x-4 gap-y-2 py-3.5 border-t border-rule first:border-t-0 ${
+        leaving ? "pointer-events-none animate-[leave_200ms_var(--ease-out)_forwards]" : ""
+      }`}
+    >
+      <Link
+        href={`/applications/${action.jobId}?step=${action.step}`}
+        className="group flex-1 basis-full sm:basis-0 sm:min-w-[16rem] min-w-0 rounded-stamp outline-offset-4"
+      >
+        <span className="block font-semibold text-ink group-hover:text-action transition-colors duration-100">{action.action}</span>
+        <span className="mt-0.5 flex items-center gap-x-2 flex-wrap text-meta text-ink-soft">
+          <span>
             {action.company} · {action.title}
           </span>
+          {action.chip && (
+            <span className={`font-semibold ${action.chip.overdue ? "text-caution" : "text-sun-ink"}`}>
+              {action.chip.overdue && <i className="ti ti-alert-triangle mr-1" aria-hidden="true" />}
+              {action.chip.text}
+            </span>
+          )}
         </span>
-        {action.chip && (
-          <span
-            className={`shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full ${
-              action.chip.overdue
-                ? "bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
-                : "bg-primary-50 text-primary-700 dark:bg-primary-950 dark:text-primary-300"
-            }`}
-          >
-            {action.chip.text}
-          </span>
-        )}
       </Link>
-      <div className="pl-12 sm:pl-0">
-        <QuickActions action={action} job={job} onAct={onAct} now={now} />
-      </div>
+      <QuickActions action={action} job={job} onAct={act} now={now} />
     </li>
   );
 }
@@ -50,17 +54,17 @@ const ActionQueue = forwardRef<HTMLHeadingElement, { actions: NextAction[]; jobs
     const groups = groupActions(shown);
 
     return (
-      <section aria-labelledby="up-next" className="surface p-5">
+      <section aria-labelledby="up-next">
         <div className="flex items-baseline justify-between gap-3 mb-2">
-          <h2 id="up-next" ref={headingRef} tabIndex={-1} className="section-label">
+          <h2 id="up-next" ref={headingRef} tabIndex={-1} className="font-serif text-heading font-semibold text-ink outline-offset-4">
             Up next
           </h2>
-          <span className="text-xs text-gray-500 dark:text-gray-400">{actions.length} more</span>
+          <span className="text-meta text-ink-muted">{actions.length} more</span>
         </div>
-        <div className="space-y-3">
+        <div className="space-y-6">
           {groups.map((g) => (
             <div key={g.id}>
-              <h3 className="px-2 mb-0.5 text-xs font-medium text-gray-500 dark:text-gray-400">{g.label}</h3>
+              <h3 className="mb-1 text-label font-semibold text-ink-soft">{g.label}</h3>
               <ul>
                 {g.actions.map((a) => {
                   const job = jobs.get(a.jobId);
@@ -74,7 +78,7 @@ const ActionQueue = forwardRef<HTMLHeadingElement, { actions: NextAction[]; jobs
           <button
             onClick={() => setShowAll((v) => !v)}
             aria-expanded={showAll}
-            className="mt-2 ml-2 text-xs font-medium text-primary-700 dark:text-primary-300 hover:underline"
+            className="mt-4 text-ui font-semibold text-action hover:underline underline-offset-4"
           >
             {showAll ? "Show fewer" : `Show all ${actions.length}`}
           </button>

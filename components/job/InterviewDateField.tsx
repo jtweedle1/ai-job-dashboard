@@ -1,6 +1,8 @@
 "use client";
 
 import { useId } from "react";
+import { inputClasses } from "@/components/ui/Field";
+import { buttonClasses } from "@/components/ui/Button";
 
 // <input type="date"> speaks yyyy-mm-dd in local time; keep it that way in both directions.
 export function toInputDate(d: Date | null): string {
@@ -19,7 +21,7 @@ export default function InterviewDateField({
   value,
   onSave,
   label = "Interview date",
-  labelClassName = "text-xs text-gray-500 dark:text-gray-400",
+  labelClassName = "text-label font-semibold text-ink-soft",
 }: {
   value: Date | null;
   onSave: (date: Date | null) => void;
@@ -28,7 +30,7 @@ export default function InterviewDateField({
 }) {
   const id = useId();
   return (
-    <div className="flex items-center gap-2 flex-wrap">
+    <div className="flex items-center gap-x-3 gap-y-2 flex-wrap">
       <label htmlFor={id} className={labelClassName}>
         {label}
       </label>
@@ -40,13 +42,13 @@ export default function InterviewDateField({
           const next = parseInputDate(e.target.value);
           if (next || e.target.value === "") onSave(next);
         }}
-        className="border border-gray-200 dark:border-gray-700 rounded-full px-3 py-1.5 text-sm bg-white/80 dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+        className={`${inputClasses} max-w-[13rem]`}
       />
       {value && (
         <button
           type="button"
           onClick={() => onSave(null)}
-          className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+          className={buttonClasses({ variant: "quiet", size: "sm" })}
         >
           Clear
         </button>

@@ -1,39 +1,46 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { isActive, sectionFor } from "./navigation";
 
-// The tabs across the top of a section (Today, Jobs, Me). Hidden where a section has only one page.
+// The tabs across the top of a section (Today, Jobs, Me): plain text, with a short trail stroke under
+// the current one. Hidden where a section has only one page. Rendered inside <PageFrame> so the tabs
+// line up with the column they control.
 export default function SectionTabs() {
   const pathname = usePathname();
   const section = sectionFor(pathname);
+  const activeRef = useRef<HTMLAnchorElement>(null);
+
+  useEffect(() => {
+    activeRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [pathname]);
+
   if (!section || section.tabs.length < 2) return null;
 
   return (
-    <div className="px-4 md:px-6 pt-5">
-      <nav
-        className="inline-flex max-w-full overflow-x-auto gap-1 p-1 rounded-full bg-white/60 dark:bg-white/5 border border-white/80 dark:border-white/5 backdrop-blur"
-        aria-label={section.label}
-      >
+    <nav className="-mx-1 mb-6 overflow-x-auto" aria-label={section.label}>
+      <ul className="flex gap-6 px-1 min-w-max">
         {section.tabs.map((t) => {
           const active = isActive(pathname, t);
           return (
-            <Link
-              key={t.href}
-              href={t.href}
-              aria-current={active ? "page" : undefined}
-              className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-display font-bold transition-all ${
-                active
-                  ? "bg-white dark:bg-white/15 text-gray-900 dark:text-white shadow-sm shadow-gray-900/5"
-                  : "text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
-              }`}
-            >
-              {t.label}
-            </Link>
+            <li key={t.href}>
+              <Link
+                ref={active ? activeRef : undefined}
+                href={t.href}
+                aria-current={active ? "page" : undefined}
+                className={`relative inline-flex items-center h-10 text-ui font-semibold whitespace-nowrap transition-colors duration-100 ${
+                  active ? "text-ink" : "text-ink-soft hover:text-ink"
+                }`}
+              >
+                {t.label}
+                {active && <span className="absolute left-0 right-0 bottom-1 h-0.5 rounded-full bg-ink" aria-hidden="true" />}
+              </Link>
+            </li>
           );
         })}
-      </nav>
-    </div>
+      </ul>
+    </nav>
   );
 }
