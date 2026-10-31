@@ -74,7 +74,7 @@ export default function QuickActions({
 
   const snooze = () => {
     const until = new Date(now.getFullYear(), now.getMonth(), now.getDate() + SNOOZE_DAYS);
-    onAct(job, { snoozedUntil: until }, `${co} hidden until ${dayLabel(until, now)}`);
+    onAct(job, { snoozedUntil: until }, `${co} is back on ${dayLabel(until, now)}`);
   };
 
   const buttons: { label: string; aria: string; onClick: () => void }[] = [];

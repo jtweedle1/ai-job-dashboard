@@ -334,9 +334,7 @@ body {
 
 /* The "Sent" stamp pressing onto a row. */
 @keyframes stamp {
-  0% { opacity: 0; transform: scale(1.25) rotate(-4deg); }
-  60% { opacity: 1; transform: scale(0.98) rotate(-4deg); }
-  100% { transform: scale(1) rotate(-4deg); }
+  from { opacity: 0; transform: scale(1.06); }
 }
 
 /* A newly added row: a sun wash that fades back to the page. */

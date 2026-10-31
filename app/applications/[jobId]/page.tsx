@@ -197,6 +197,8 @@ function JobWorkspace({ jobId }: { jobId: string }) {
   const [scoring, setScoring] = useState(false);
   const [scoreError, setScoreError] = useState("");
   const { show, toastProps } = useToast();
+  // Bumped each time the job is marked applied, so the "Sent" stamp presses on again.
+  const [sentStamp, setSentStamp] = useState(0);
 
   useEffect(() => {
     if (!user) return;
@@ -253,7 +255,10 @@ function JobWorkspace({ jobId }: { jobId: string }) {
   async function handleStageChange(stage: JobStage) {
     const patch: Partial<Job> = { stage };
     if (stage === "applied" && !job?.appliedAt) patch.appliedAt = new Date();
-    if (await save(patch)) showToast(`Moved to ${STAGE_META[stage].label}`);
+    if (await save(patch)) {
+      showToast(`Moved to ${STAGE_META[stage].label}`);
+      if (stage === "applied") setSentStamp((n) => n + 1);
+    }
   }
 
   async function handleSourceChange(source: JobSource) {
@@ -367,6 +372,15 @@ function JobWorkspace({ jobId }: { jobId: string }) {
         </div>
         <div className="mt-4 flex items-center gap-x-5 gap-y-3 flex-wrap">
           <Select look="pill" prefix="Stage:" value={job.stage} options={STAGE_OPTIONS} onChange={handleStageChange} ariaLabel="Stage" />
+          {sentStamp > 0 && job.stage === "applied" && (
+            <span
+              key={sentStamp}
+              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-stamp border-2 border-sky text-sky font-serif font-semibold -rotate-3 animate-[stamp_160ms_var(--ease-out)]"
+            >
+              <i className="ti ti-send" aria-hidden="true" />
+              Sent
+            </span>
+          )}
         </div>
         <JobFacts job={job} now={new Date()} onSave={save} />
       </header>

@@ -9,9 +9,21 @@ import type { Job } from "@/types/job";
 
 const VISIBLE = 5;
 
+// Acting on a row resolves it, so it slides away first (DESIGN.md §10), then the change lands.
+const LEAVE_MS = 200;
+
 function ActionRow({ action, job, onAct, now }: { action: NextAction; job: Job; onAct: Act; now: Date }) {
+  const [leaving, setLeaving] = useState(false);
+  const act: Act = (j, patch, message) => {
+    setLeaving(true);
+    setTimeout(() => onAct(j, patch, message), LEAVE_MS);
+  };
   return (
-    <li className="flex flex-wrap items-center gap-x-4 gap-y-2 py-3.5 border-t border-rule first:border-t-0">
+    <li
+      className={`flex flex-wrap items-center gap-x-4 gap-y-2 py-3.5 border-t border-rule first:border-t-0 ${
+        leaving ? "pointer-events-none animate-[leave_200ms_var(--ease-out)_forwards]" : ""
+      }`}
+    >
       <Link
         href={`/applications/${action.jobId}?step=${action.step}`}
         className="group flex-1 basis-full sm:basis-0 sm:min-w-[16rem] min-w-0 rounded-stamp outline-offset-4"
@@ -29,7 +41,7 @@ function ActionRow({ action, job, onAct, now }: { action: NextAction; job: Job; 
           )}
         </span>
       </Link>
-      <QuickActions action={action} job={job} onAct={onAct} now={now} />
+      <QuickActions action={action} job={job} onAct={act} now={now} />
     </li>
   );
 }
