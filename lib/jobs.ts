@@ -3,11 +3,12 @@ import {
   addDoc,
   getDocs,
   getDoc,
-  deleteDoc,
   doc,
   updateDoc,
   query,
   orderBy,
+  where,
+  writeBatch,
   serverTimestamp,
   Timestamp,
 } from "firebase/firestore";
@@ -94,6 +95,29 @@ export async function updateJob(
   });
 }
 
+// The work made for one job: it goes when the job goes. Companies and saved Answers stay; they
+// stand on their own, so a company just loses its link to the role.
+const OWNED_BY_JOB = ["coverLetters", "interviewPreps", "debriefs"] as const;
+// Firestore caps a write batch at 500 operations.
+const BATCH_LIMIT = 500;
+
 export async function deleteJob(uid: string, jobId: string): Promise<void> {
-  await deleteDoc(doc(db, "users", uid, "jobs", jobId));
+  const snaps = await Promise.all(
+    [...OWNED_BY_JOB, "companies"].map((name) =>
+      getDocs(query(collection(db, "users", uid, name), where("jobId", "==", jobId)))
+    )
+  );
+  const companies = snaps.pop()!;
+  const owned = snaps.flatMap((s) => s.docs.map((d) => d.ref));
+
+  // The job itself goes in the last batch, so if anything fails partway the job is still there to retry.
+  for (let i = 0; i < owned.length; i += BATCH_LIMIT) {
+    const batch = writeBatch(db);
+    for (const ref of owned.slice(i, i + BATCH_LIMIT)) batch.delete(ref);
+    await batch.commit();
+  }
+  const last = writeBatch(db);
+  for (const c of companies.docs) last.update(c.ref, { jobId: null });
+  last.delete(doc(db, "users", uid, "jobs", jobId));
+  await last.commit();
 }
