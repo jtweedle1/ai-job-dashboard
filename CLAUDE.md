@@ -32,6 +32,8 @@ Per-user Anthropic keys (bring-your-own) — no shared key pool; rate-limit per-
 - One `lib/<entity>.ts` CRUD module + one `types/<entity>.ts` per domain entity.
 - API route shape: `requireAuth → checkRateLimit → callAI`.
 - Changing an API route signature? Update both the route and its client caller.
+- **Design system:** `DESIGN.md` (Trailhead) is the approved system. New or restyled UI follows it
+  and its migration order; the Calm theme below describes the code until that migration lands.
 - Calm theme (`app/globals.css`): `primary-*` (soft iris) for actions and links; `gray-*` is a
   lavender neutral that deepens to night indigo in dark mode; `emerald` = good, `amber` = check
   this, `red` = error. Cards use `surface`, headings `page-title` / `section-label`, warm accents
