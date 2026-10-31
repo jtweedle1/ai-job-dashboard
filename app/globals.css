@@ -64,6 +64,8 @@
   --action: #5f57d2;
   --action-hover: #4d45b5;
   --action-wash: #eceafb;
+  /* Chart marks: the action hue, stepped per theme so it sits in the readable lightness band. */
+  --chart: #5f57d2;
   --on-action: #ffffff;
   --sun: #e8772e;
   --sun-ink: #a24a15;
@@ -97,6 +99,7 @@
   --action: #a7a1f5;
   --action-hover: #c3befa;
   --action-wash: rgb(167 161 245 / 0.16);
+  --chart: #8a83ec;
   --on-action: #16132a;
   --sun: #f59a52;
   --sun-ink: #f59a52;
@@ -130,6 +133,7 @@
   --color-control: var(--control);
   --color-action: var(--action);
   --color-action-hover: var(--action-hover);
+  --color-chart: var(--chart);
   --color-action-wash: var(--action-wash);
   --color-on-action: var(--on-action);
   --color-sun: var(--sun);
