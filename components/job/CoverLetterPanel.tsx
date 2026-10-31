@@ -217,7 +217,7 @@ export default function CoverLetterPanel({
     setSavingToBank(true);
     try {
       await createAnswer(user.uid, {
-        question: `Cover letter — ${job.title}`,
+        question: `Cover letter for ${job.title}`,
         answer: viewingLetter.content,
         tags: ["cover-letter"],
         jobId: job.id,

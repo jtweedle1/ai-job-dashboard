@@ -22,7 +22,7 @@ export default function PageFrame({
   children: React.ReactNode;
 }) {
   return (
-    <div className="page-frame px-4 sm:px-6 lg:px-10 pt-4 sm:pt-6 pb-20">
+    <div className="px-4 sm:px-6 lg:px-10 pt-4 sm:pt-6 pb-20">
       <div className={`mx-auto ${width === "wide" ? "max-w-[65rem]" : "max-w-[45rem]"}`}>
         <SectionTabs />
         {title && (

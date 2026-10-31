@@ -18,6 +18,43 @@ import type { WeeklyReview } from "@/types/weeklyReview";
 import Toast from "@/components/Toast";
 import { useToast } from "@/lib/use-toast";
 import { useDraft } from "@/lib/use-draft";
+import PageFrame from "@/components/ui/PageFrame";
+import Button, { IconButton } from "@/components/ui/Button";
+import { Field, Input, TextArea } from "@/components/ui/Field";
+import { EmptyState, InlineMessage, LoadingBlocks, Section, Sheet } from "@/components/ui/bits";
+import { Notebook } from "@/components/illustrations";
+
+// What a week added up to, with the zeros left out: "2 sent, 1 interview".
+function weekLine(r: Pick<WeeklyReview, "applicationsSent" | "interviewsBooked" | "responsesReceived">): string {
+  const parts = [
+    r.applicationsSent && `${r.applicationsSent} sent`,
+    r.interviewsBooked && `${r.interviewsBooked} interview${r.interviewsBooked !== 1 ? "s" : ""}`,
+    r.responsesReceived && `${r.responsesReceived} response${r.responsesReceived !== 1 ? "s" : ""}`,
+  ].filter(Boolean);
+  return parts.length ? parts.join(", ") : "A quiet week";
+}
+
+function Summary({ text }: { text: string }) {
+  const parsed = parseAiSummary(text);
+  return (
+    <div>
+      <p className="text-reading text-ink">{parsed.summary}</p>
+      {parsed.steps.length > 0 && (
+        <>
+          <h4 className="mt-5 text-label font-semibold text-ink-soft">Next steps</h4>
+          <ul className="mt-2 space-y-2">
+            {parsed.steps.map((step, i) => (
+              <li key={i} className="flex gap-3">
+                <span className="mt-2.5 w-1.5 h-1.5 rounded-full bg-sun shrink-0" aria-hidden="true" />
+                <p className="text-ink">{step}</p>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </div>
+  );
+}
 
 function weekStartOf(d: Date): Date {
   const s = new Date(d);
@@ -242,7 +279,6 @@ export default function WeeklyReviewPage() {
   const thisWeekStart = weekStartOf(new Date());
   const activeReview = reviews.find((r) => r.id === activeId) ?? null;
   const aiSummary = activeReview?.aiSummary ?? null;
-  const parsedSummary = aiSummary ? parseAiSummary(aiSummary) : null;
 
   const thisWeekReview = reviews.find(
     (r) => r.weekOf.getTime() === thisWeekStart.getTime()
@@ -250,328 +286,163 @@ export default function WeeklyReviewPage() {
 
   if (loading) {
     return (
-      <div className="p-6 max-w-3xl mx-auto animate-pulse space-y-4">
-        <div className="h-7 bg-gray-100 dark:bg-gray-800 rounded w-40" />
-        <div className="h-64 bg-gray-100 dark:bg-gray-800 rounded-2xl" />
-      </div>
+      <PageFrame title="Weekly review">
+        <LoadingBlocks rows={2} label="Loading your reviews" />
+      </PageFrame>
     );
   }
 
+  const editing = activeId !== null || composing;
+  const past = reviews.filter((r) => r.id !== activeId);
+  const startButton = (
+    <Button
+      variant="primary"
+      icon={thisWeekReview ? "ti-pencil" : "ti-plus"}
+      onClick={thisWeekReview ? () => loadReview(thisWeekReview) : () => startNewReview()}
+    >
+      {thisWeekReview ? "Continue this week" : "Start this week's review"}
+    </Button>
+  );
+
   return (
-    <div className="p-6 max-w-3xl mx-auto">
+    <PageFrame
+      title="Weekly review"
+      intro="Ten minutes on Friday: what happened, what worked, and the one thing to change next week."
+      action={!editing && reviews.length > 0 ? startButton : undefined}
+    >
       <Toast {...toastProps} />
 
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4 mb-6">
-        <div>
-          <h1 className="page-title">Weekly review</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            {reviews.length} review{reviews.length !== 1 ? "s" : ""} logged
-          </p>
-        </div>
-        {!activeId && !composing && (
-          <button
-            onClick={
-              thisWeekReview ? () => loadReview(thisWeekReview) : () => startNewReview()
-            }
-            className="flex items-center gap-2 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-primary-700 transition-colors shrink-0"
-          >
-            <i className="ti ti-plus text-sm" aria-hidden="true" />
-            {thisWeekReview ? "Continue this week" : "Start this week's review"}
-          </button>
-        )}
-      </div>
+      {editing && (
+        <Sheet as="section" aria-labelledby="wr-heading">
+          <div className="flex items-start justify-between gap-4">
+            <h2 id="wr-heading" className="font-serif text-heading font-semibold text-ink">
+              Week of {formatWeek(activeId ? activeReview!.weekOf : thisWeekStart)}
+            </h2>
+            {activeId && <IconButton icon="ti-trash" label="Delete review" onClick={() => handleDelete(activeId)} />}
+          </div>
 
-      {/* Active form */}
-      {(activeId !== null || composing) && (
-        <div className="surface mb-4">
-          <div className="px-4 py-3 border-b border-gray-50 dark:border-gray-800 flex items-center justify-between">
-            <div>
-              <h2 className="section-label">
-                {activeId
-                  ? `Week of ${formatWeek(activeReview!.weekOf)}`
-                  : `Week of ${formatWeek(thisWeekStart)}`}
-              </h2>
-            </div>
+          <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-5">
+            {(
+              [
+                { key: "applicationsSent", label: "Applications sent" },
+                { key: "interviewsBooked", label: "Interviews booked" },
+                { key: "responsesReceived", label: "Replies received" },
+              ] as { key: keyof Fields; label: string }[]
+            ).map(({ key, label }) => (
+              <Field key={key} id={`wr-${key}`} label={label}>
+                <Input
+                  id={`wr-${key}`}
+                  type="number"
+                  min={0}
+                  value={fields[key] as number}
+                  onChange={(e) => setField(key, Math.max(0, parseInt(e.target.value) || 0))}
+                  className="font-serif text-heading tabular-nums"
+                />
+              </Field>
+            ))}
+          </div>
+          {prefilled && (
+            <p className="mt-3 text-meta text-ink-soft">Applications and interviews are counted from your jobs. Change them if they&apos;re off.</p>
+          )}
+
+          <div className="mt-8 space-y-6">
+            {(
+              [
+                { key: "bestResumeVersion", label: "Which resume worked best?", placeholder: "Which version got the most replies?" },
+                { key: "rolesToDeprioritize", label: "What to let go of", placeholder: "Any role types or companies you're moving away from?" },
+                { key: "nextWeekFocus", label: "Next week's focus", placeholder: "What's the one thing you want to do differently?" },
+              ] as { key: keyof Fields; label: string; placeholder: string }[]
+            ).map(({ key, label, placeholder }) => (
+              <Field key={key} id={`wr-${key}`} label={label} optional>
+                <TextArea id={`wr-${key}`} value={fields[key] as string} onChange={(e) => setField(key, e.target.value)} placeholder={placeholder} rows={2} />
+              </Field>
+            ))}
+          </div>
+
+          <div className="mt-8 flex items-center gap-2 flex-wrap">
+            <Button variant="primary" onClick={handleSave} loading={saving} loadingLabel="Saving…">
+              {activeId ? "Save changes" : "Save review"}
+            </Button>
             {activeId && (
-              <button
-                onClick={() => handleDelete(activeId)}
-                className="text-gray-500 dark:text-gray-400 hover:text-red-400 transition-colors disabled:opacity-50"
-                aria-label="Delete review"
-              >
-                <i className="ti ti-trash text-sm" aria-hidden="true" />
-              </button>
+              <Button icon="ti-wand" onClick={handleGenerateSummary} loading={generatingSummary} loadingLabel="Reading your week…">
+                {aiSummary ? "Summarize again" : "Summarize my week"}
+              </Button>
             )}
+            <Button variant="quiet" onClick={closeForm}>
+              Close
+            </Button>
           </div>
+          {summaryError && (
+            <InlineMessage tone="caution" role="alert" className="mt-4">
+              {summaryError}
+            </InlineMessage>
+          )}
 
-          <div className="px-4 py-4 space-y-4">
-            {/* Numbers */}
-            <div className="grid grid-cols-3 gap-3">
-              {(
-                [
-                  { key: "applicationsSent", label: "Applications sent" },
-                  { key: "interviewsBooked", label: "Interviews booked" },
-                  { key: "responsesReceived", label: "Responses received" },
-                ] as { key: keyof Fields; label: string }[]
-              ).map(({ key, label }) => (
-                <div key={key}>
-                  <label htmlFor={`wr-${key}`} className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">{label}</label>
-                  <input
-                    id={`wr-${key}`}
-                    type="number"
-                    min={0}
-                    value={fields[key] as number}
-                    onChange={(e) =>
-                      setField(key, Math.max(0, parseInt(e.target.value) || 0))
-                    }
-                    className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800"
-                  />
-                </div>
-              ))}
-            </div>
-            {prefilled && (
-              <p className="-mt-2 text-xs text-gray-500 dark:text-gray-400">
-                <i className="ti ti-sparkles text-xs mr-1" aria-hidden="true" />
-                Applications and interviews are counted from your tracker. Change them if they&apos;re off.
-              </p>
-            )}
-
-            {/* Text fields */}
-            <div className="space-y-3">
-              {(
-                [
-                  {
-                    key: "bestResumeVersion",
-                    label: "Best-performing resume version",
-                    placeholder: "Which resume version got the most responses?",
-                  },
-                  {
-                    key: "rolesToDeprioritize",
-                    label: "Roles to deprioritize",
-                    placeholder: "Any role types or companies you're moving away from?",
-                  },
-                  {
-                    key: "nextWeekFocus",
-                    label: "Next week focus",
-                    placeholder: "What's the one thing you want to do differently next week?",
-                  },
-                ] as { key: keyof Fields; label: string; placeholder: string }[]
-              ).map(({ key, label, placeholder }) => (
-                <div key={key}>
-                  <label htmlFor={`wr-${key}`} className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">{label}</label>
-                  <textarea
-                    id={`wr-${key}`}
-                    value={fields[key] as string}
-                    onChange={(e) => setField(key, e.target.value)}
-                    placeholder={placeholder}
-                    rows={2}
-                    className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none dark:bg-gray-800"
-                  />
-                </div>
-              ))}
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center gap-3 flex-wrap pt-1">
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="flex items-center gap-1.5 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-primary-700 transition-colors disabled:opacity-50"
-              >
-                {saving ? (
-                  <i className="ti ti-loader-2 animate-spin text-sm" aria-hidden="true" />
-                ) : null}
-                {saving ? "Saving…" : activeId ? "Save changes" : "Save review"}
-              </button>
-
-              {activeId && (
-                <button
-                  onClick={handleGenerateSummary}
-                  disabled={generatingSummary}
-                  className="flex items-center gap-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 px-4 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
-                >
-                  {generatingSummary ? (
-                    <i className="ti ti-loader-2 animate-spin text-sm" aria-hidden="true" />
-                  ) : (
-                    <i className="ti ti-wand text-sm" aria-hidden="true" />
-                  )}
-                  {generatingSummary
-                    ? "Generating…"
-                    : aiSummary
-                    ? "Regenerate summary"
-                    : "Generate AI summary"}
-                </button>
-              )}
-
-              {(activeId || composing) && (
-                <button
-                  onClick={closeForm}
-                  className="text-sm text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                >
-                  Close
-                </button>
-              )}
-
-              {summaryError && (
-                <p role="alert" className="text-xs text-amber-800 dark:text-amber-300 w-full">{summaryError}</p>
-              )}
-            </div>
-          </div>
-
-          {/* AI summary */}
-          {parsedSummary && (
-            <div className="border-t border-gray-50 dark:border-gray-800 px-4 py-4 space-y-3">
-              <h3 className="section-label">
-                AI summary
-              </h3>
-              <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-                {parsedSummary.summary}
-              </p>
-              {parsedSummary.steps.length > 0 && (
-                <div className="space-y-1.5 pt-1">
-                  <h3 className="section-label">
-                    Next steps
-                  </h3>
-                  {parsedSummary.steps.map((step, i) => (
-                    <div key={i} className="flex gap-2">
-                      <i
-                        className="ti ti-arrow-right text-primary-500 text-sm shrink-0 mt-0.5"
-                        aria-hidden="true"
-                      />
-                      <p className="text-sm text-gray-600 dark:text-gray-300">{step}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
+          {aiSummary && (
+            <div className="mt-8 pt-6 border-t border-rule">
+              <h3 className="mb-2 text-label font-semibold text-ink-soft">Your week, summed up</h3>
+              <Summary text={aiSummary} />
             </div>
           )}
-        </div>
+        </Sheet>
       )}
 
-      {/* No reviews + not editing */}
-      {reviews.length === 0 && activeId === null && !composing && (
-        <div className="surface p-10 text-center">
-          <div className="w-10 h-10 rounded-full glow-gradient flex items-center justify-center mx-auto mb-3">
-            <i className="ti ti-calendar-week text-gray-700 dark:text-gray-100 text-xl" aria-hidden="true" />
-          </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-            No weekly reviews yet. Start your first one above.
-          </p>
-          <button
-            onClick={() => startNewReview()}
-            className="inline-flex items-center gap-2 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-primary-700 transition-colors"
-          >
-            <i className="ti ti-plus text-sm" aria-hidden="true" />
-            Start this week&apos;s review
-          </button>
-        </div>
+      {reviews.length === 0 && !editing && (
+        <EmptyState art={<Notebook />} title="Your first review" action={startButton}>
+          Look back at the week while it&apos;s fresh. Wayfinder fills in the numbers for you.
+        </EmptyState>
       )}
 
-      {/* Past reviews */}
-      {reviews.filter((r) => r.id !== activeId).length > 0 && (
-        <div className="surface">
-          <div className="px-4 py-3 border-b border-gray-50 dark:border-gray-800">
-            <h2 className="section-label">
-              Past reviews
-            </h2>
-          </div>
-          <div className="divide-y divide-gray-50 dark:divide-gray-800">
-            {reviews
-              .filter((r) => r.id !== activeId)
-              .map((review) => (
-                <div key={review.id}>
-                  <div className="flex items-center justify-between px-4 py-3 gap-4">
+      {past.length > 0 && (
+        <Section title="Past reviews" serif id="past" className={editing ? "mt-12" : undefined}>
+          <ul>
+            {past.map((review) => {
+              const open = expandedArchiveId === review.id;
+              return (
+                <li key={review.id} className="py-3 border-b border-rule last:border-b-0">
+                  <div className="flex items-center gap-2">
                     <button
-                      onClick={() =>
-                        setExpandedArchiveId(
-                          expandedArchiveId === review.id ? null : review.id
-                        )
-                      }
-                      className="flex-1 text-left"
+                      onClick={() => setExpandedArchiveId(open ? null : review.id)}
+                      aria-expanded={open}
+                      className="flex-1 min-w-0 text-left py-1 px-3 -mx-3 rounded-field hover:bg-well transition-colors duration-100"
                     >
-                      <p className="text-sm font-medium text-gray-900 dark:text-gray-50">
-                        Week of {formatWeek(review.weekOf)}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                        {review.applicationsSent} sent · {review.interviewsBooked} interview{review.interviewsBooked !== 1 ? "s" : ""} ·{" "}
-                        {review.responsesReceived} response{review.responsesReceived !== 1 ? "s" : ""}
-                        {review.aiSummary && (
-                          <span className="ml-1.5 text-primary-600">· AI summary</span>
-                        )}
-                      </p>
+                      <span className="block font-semibold text-ink">Week of {formatWeek(review.weekOf)}</span>
+                      <span className="block text-meta text-ink-soft">{weekLine(review)}</span>
                     </button>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button
-                        onClick={() => loadReview(review)}
-                        className="text-xs font-medium text-gray-500 hover:text-primary-600 transition-colors"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(review.id)}
-                        className="text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50"
-                        aria-label="Delete"
-                      >
-                        <i className="ti ti-trash text-xs" aria-hidden="true" />
-                      </button>
-                      <i
-                        className={`ti ${
-                          expandedArchiveId === review.id
-                            ? "ti-chevron-up"
-                            : "ti-chevron-down"
-                        } text-gray-500 dark:text-gray-400 text-sm`}
-                        aria-hidden="true"
-                      />
-                    </div>
+                    <Button variant="quiet" size="sm" onClick={() => loadReview(review)}>
+                      Edit
+                    </Button>
+                    <IconButton icon="ti-trash" label={`Delete the week of ${formatWeek(review.weekOf)}`} size="sm" onClick={() => handleDelete(review.id)} />
                   </div>
 
-                  {expandedArchiveId === review.id && (
-                    <div className="px-4 pb-4 border-t border-gray-50 dark:border-gray-800 pt-3 space-y-3">
+                  {open && (
+                    <div className="mt-3 mb-2 space-y-4 animate-[fade-in_200ms_var(--ease-out)]">
                       {[
-                        { label: "Best resume version", value: review.bestResumeVersion },
-                        { label: "Roles to deprioritize", value: review.rolesToDeprioritize },
-                        { label: "Next week focus", value: review.nextWeekFocus },
+                        { label: "Which resume worked best", value: review.bestResumeVersion },
+                        { label: "What to let go of", value: review.rolesToDeprioritize },
+                        { label: "Next week's focus", value: review.nextWeekFocus },
                       ]
                         .filter((f) => f.value)
                         .map((f) => (
                           <div key={f.label}>
-                            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">
-                              {f.label}
-                            </p>
-                            <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-                              {f.value}
-                            </p>
+                            <p className="text-label font-semibold text-ink-soft">{f.label}</p>
+                            <p className="mt-0.5 text-ink whitespace-pre-wrap">{f.value}</p>
                           </div>
                         ))}
-                      {review.aiSummary && (() => {
-                        const parsed = parseAiSummary(review.aiSummary);
-                        return (
-                          <div className="pt-2 border-t border-gray-50 dark:border-gray-800 space-y-2">
-                            <h3 className="section-label">
-                              AI summary
-                            </h3>
-                            <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-                              {parsed.summary}
-                            </p>
-                            {parsed.steps.map((step, i) => (
-                              <div key={i} className="flex gap-2">
-                                <i
-                                  className="ti ti-arrow-right text-primary-500 text-sm shrink-0 mt-0.5"
-                                  aria-hidden="true"
-                                />
-                                <p className="text-sm text-gray-600 dark:text-gray-300">{step}</p>
-                              </div>
-                            ))}
-                          </div>
-                        );
-                      })()}
+                      {review.aiSummary && (
+                        <div className="pt-3 border-t border-rule">
+                          <p className="mb-2 text-label font-semibold text-ink-soft">Summed up</p>
+                          <Summary text={review.aiSummary} />
+                        </div>
+                      )}
                     </div>
                   )}
-                </div>
-              ))}
-          </div>
-        </div>
+                </li>
+              );
+            })}
+          </ul>
+        </Section>
       )}
-    </div>
+    </PageFrame>
   );
 }

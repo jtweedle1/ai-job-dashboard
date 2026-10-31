@@ -6,7 +6,6 @@ import { useAuth } from "@/lib/auth-context";
 import { useTheme } from "@/lib/theme-context";
 import { signOutUser } from "@/lib/auth";
 import Sidebar, { Logo } from "./Sidebar";
-import SectionTabs from "./SectionTabs";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -78,11 +77,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         }} />}
 
         <main id="main" tabIndex={-1} className="flex-1 overflow-y-auto focus:outline-none">
-          {/* Migration bridge: pages not yet on <PageFrame> still get their tabs here. Hidden once a
-              page renders its own frame; removed when every page has moved over. */}
-          <div className="legacy-tabs px-4 sm:px-6 lg:px-10 pt-6">
-            <SectionTabs />
-          </div>
           {children}
         </main>
       </div>

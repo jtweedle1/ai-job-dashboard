@@ -16,7 +16,7 @@ interface EditableFieldProps {
 export default function EditableField({
   value,
   onSave,
-  placeholder = "—",
+  placeholder = "Add…",
   multiline = false,
   rows = 5,
   className = "",

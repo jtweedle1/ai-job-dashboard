@@ -4,35 +4,36 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const tabs = [
-  { label: "Everything", href: "/stories", icon: "ti-books" },
-  { label: "Experience", href: "/background", icon: "ti-briefcase" },
-  { label: "Answers", href: "/answer-bank", icon: "ti-bookmarks" },
-  { label: "Interview notes", href: "/debrief", icon: "ti-clipboard-list" },
+  { label: "Everything", href: "/stories" },
+  { label: "Experience", href: "/background" },
+  { label: "Answers", href: "/answer-bank" },
+  { label: "Interview notes", href: "/debrief" },
 ];
 
-// The Library: your experience, answers and interview notes. Shared header for the pages that hold them.
+// The Library: your experience, answers and interview notes. A second, quieter row of tabs under the
+// section's own, shared by the pages that hold them.
 export default function StoryTabs() {
   const pathname = usePathname();
   return (
-    <nav className="flex gap-2 overflow-x-auto mb-6" aria-label="Library">
-      {tabs.map((t) => {
-        const active = pathname === t.href;
-        return (
-          <Link
-            key={t.href}
-            href={t.href}
-            aria-current={active ? "page" : undefined}
-            className={`flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-full text-sm border transition-colors ${
-              active
-                ? "border-primary-200 dark:border-primary-800 bg-primary-50 dark:bg-primary-950 text-primary-700 dark:text-primary-300 font-medium"
-                : "border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-white/70 dark:hover:bg-white/5"
-            }`}
-          >
-            <i className={`ti ${t.icon} text-sm`} aria-hidden="true" />
-            {t.label}
-          </Link>
-        );
-      })}
+    <nav className="-ml-3.5 -mr-1 mb-4 overflow-x-auto" aria-label="Library">
+      <ul className="flex gap-1 pr-1 min-w-max">
+        {tabs.map((t) => {
+          const active = pathname === t.href;
+          return (
+            <li key={t.href}>
+              <Link
+                href={t.href}
+                aria-current={active ? "page" : undefined}
+                className={`inline-flex items-center h-9 px-3.5 rounded-full text-meta font-semibold whitespace-nowrap transition-colors duration-100 ${
+                  active ? "bg-well text-ink" : "text-ink-soft hover:text-ink hover:bg-well"
+                }`}
+              >
+                {t.label}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
     </nav>
   );
 }

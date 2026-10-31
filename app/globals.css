@@ -359,7 +359,3 @@ body {
   animation: draw 400ms var(--ease-in-out) both;
 }
 
-/* Migration bridge for the section tabs (see AppShell). */
-main:has(.page-frame) .legacy-tabs {
-  display: none;
-}

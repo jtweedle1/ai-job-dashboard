@@ -24,6 +24,14 @@ import type { WritingSample, WritingSampleKind, VoiceSettings, LetterFormat } fr
 import type { CoverLetter } from "@/types/coverLetter";
 import type { AnswerEntry } from "@/types/answerBank";
 import type { Job } from "@/types/job";
+import Toast from "@/components/Toast";
+import { useToast } from "@/lib/use-toast";
+import PageFrame from "@/components/ui/PageFrame";
+import Button, { IconButton } from "@/components/ui/Button";
+import Select from "@/components/ui/Select";
+import Dialog from "@/components/ui/Dialog";
+import { Field, Input, TextArea } from "@/components/ui/Field";
+import { InlineMessage, LoadingBlocks, Section } from "@/components/ui/bits";
 
 type Tab = "paste" | "pdf";
 
@@ -31,27 +39,14 @@ function formatDate(d: Date) {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-function Badge({ tone, children }: { tone: "emerald" | "amber"; children: React.ReactNode }) {
-  const cls =
-    tone === "emerald"
-      ? "text-primary-700 dark:text-primary-400 bg-primary-50 dark:bg-primary-950"
-      : "text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950";
-  return (
-    <span className={`inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full ${cls}`}>
-      {children}
-    </span>
+// A short note on where a piece of writing came from. Words, not color, carry the meaning.
+function Origin({ edited }: { edited: boolean }) {
+  return edited ? (
+    <span className="text-meta font-semibold text-moss">Edited by you</span>
+  ) : (
+    <span className="text-meta font-semibold text-caution">First draft</span>
   );
 }
-
-const cardClass = "surface mb-4";
-const cardHeaderClass = "px-4 py-3 border-b border-gray-50 dark:border-gray-800";
-const cardTitleClass = "section-label";
-const inputClass =
-  "w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800";
-const primaryButtonClass =
-  "flex items-center gap-1.5 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-xl hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
-const secondaryButtonClass =
-  "flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 px-3 py-1.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50";
 
 export default function VoicePage() {
   const { user } = useAuth();
@@ -82,7 +77,7 @@ export default function VoicePage() {
   const [parseError, setParseError] = useState("");
   const [savingSample, setSavingSample] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const [toast, setToast] = useState("");
+  const { show: showToast, toastProps } = useToast();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -108,14 +103,10 @@ export default function VoicePage() {
     });
   }, [user]);
 
-  function showToast(msg: string) {
-    setToast(msg);
-    setTimeout(() => setToast(""), 3000);
-  }
 
   function jobLabel(jobId: string | null) {
     const job = jobs.find((j) => j.id === jobId);
-    return job ? `${job.title} — ${job.company}` : "Unknown job";
+    return job ? `${job.title} at ${job.company}` : "Unknown job";
   }
 
   const includedCount =
@@ -252,15 +243,14 @@ export default function VoicePage() {
     await deleteWritingSample(user.uid, id);
     setSamples((prev) => prev.filter((s) => s.id !== id));
     setDeleteConfirm(null);
+    showToast("Sample deleted");
   }
 
   if (loading) {
     return (
-      <div className="p-6 max-w-3xl mx-auto animate-pulse space-y-4">
-        <div className="h-7 bg-gray-100 dark:bg-gray-800 rounded w-48" />
-        <div className="h-40 bg-gray-100 dark:bg-gray-800 rounded-2xl" />
-        <div className="h-48 bg-gray-100 dark:bg-gray-800 rounded-2xl" />
-      </div>
+      <PageFrame title="Your voice">
+        <LoadingBlocks rows={3} label="Loading your voice" />
+      </PageFrame>
     );
   }
 
@@ -275,364 +265,315 @@ export default function VoicePage() {
   ];
   const stats = includedLetterTexts.length ? computeVoiceStats(includedLetterTexts) : null;
 
+  const confirming = samples.find((x) => x.id === deleteConfirm);
+  const row = "flex items-center gap-4 py-3 border-b border-rule last:border-b-0";
+
   return (
-    <div className="p-6 max-w-3xl mx-auto">
-      {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-full shadow-lg shadow-gray-900/20">
-          <i className="ti ti-circle-check text-primary-400 text-base" aria-hidden="true" />
-          {toast}
-        </div>
-      )}
+    <PageFrame title="Your voice" intro="Letters are written to sound like you, based only on the writing you include here.">
+      <Toast {...toastProps} />
 
-      <div className="mb-6">
-        <h1 className="page-title">Your voice</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          Cover letters are written to sound like you, based only on the writing you include here.
-        </p>
-      </div>
-
-      {/* Voice profile */}
-      <div className={cardClass}>
-        <div className={`${cardHeaderClass} flex items-center justify-between gap-4`}>
-          <h2 className={cardTitleClass}>Voice profile</h2>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            {includedCount} sample{includedCount !== 1 ? "s" : ""} included
-            {profileUpdatedAt && ` · updated ${formatDate(profileUpdatedAt)}`}
-          </p>
-        </div>
-        <div className="px-4 py-4 space-y-3">
-          <textarea
+      <div className="space-y-14">
+        <Section
+          title="Voice profile"
+          serif
+          id="profile"
+          action={
+            <span className="text-meta text-ink-muted">
+              {includedCount} sample{includedCount !== 1 ? "s" : ""} included
+              {profileUpdatedAt && ` · updated ${formatDate(profileUpdatedAt)}`}
+            </span>
+          }
+        >
+          <TextArea
             aria-label="Your voice profile"
             value={profile}
             onChange={(e) => setProfile(e.target.value)}
             placeholder="Add a few writing samples below, then build your profile. You can edit it afterwards."
             rows={profile ? 10 : 4}
-            className={`${inputClass} resize-y`}
+            className="text-reading"
           />
-          <div className="flex items-center gap-3 flex-wrap">
-            <button
+          <div className="mt-4 flex items-center gap-3 flex-wrap">
+            <Button
+              variant={savedProfile ? "secondary" : "primary"}
+              icon="ti-wand"
               onClick={handleGenerateProfile}
-              disabled={generating || includedCount === 0}
-              className={primaryButtonClass}
+              disabled={includedCount === 0}
+              loading={generating}
+              loadingLabel="Reading your samples…"
             >
-              <i
-                className={`ti ${generating ? "ti-loader-2 animate-spin" : "ti-wand"} text-sm`}
-                aria-hidden="true"
-              />
-              {generating ? "Reading your samples…" : savedProfile ? "Rebuild from samples" : "Build profile"}
-            </button>
+              {savedProfile ? "Rebuild from samples" : "Build my profile"}
+            </Button>
             {profileDirty && (
-              <button onClick={handleSaveProfile} disabled={savingProfile} className={secondaryButtonClass}>
-                {savingProfile ? "Saving…" : "Save edits"}
-              </button>
+              <Button variant="primary" onClick={handleSaveProfile} loading={savingProfile} loadingLabel="Saving…">
+                Save edits
+              </Button>
             )}
-            {profileError && <p role="alert" className="text-xs text-amber-800 dark:text-amber-300 flex-1">{profileError}</p>}
           </div>
-          {savedProfile && (
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Rebuilding replaces your edits. Rebuild after you change which samples are included.
-            </p>
+          {savedProfile && <p className="mt-3 text-meta text-ink-soft">Rebuilding replaces your edits. Rebuild after you change which samples are included.</p>}
+          {profileError && (
+            <InlineMessage tone="caution" role="alert" className="mt-4">
+              {profileError}
+            </InlineMessage>
           )}
-        </div>
-      </div>
+        </Section>
 
-      {/* Preferences */}
-      <div className={cardClass}>
-        <div className={`${cardHeaderClass} flex items-center justify-between gap-4`}>
-          <h2 className={cardTitleClass}>Preferences</h2>
-          {stats && (
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Your letters: ~{stats.medianWords} words · {stats.medianParagraphs} paragraphs ·{" "}
-              {stats.contractionsPer100Words >= 1 ? "uses contractions" : "few contractions"}
-            </p>
-          )}
-        </div>
-        <div className="px-4 py-4 space-y-3">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label htmlFor="voice-length" className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Length (words)</label>
-              <input
-                id="voice-length"
-                type="number"
-                min={50}
-                max={800}
-                value={settings.targetWords ?? ""}
-                onChange={(e) =>
-                  setSettings({ ...settings, targetWords: e.target.value ? Number(e.target.value) : null })
-                }
-                placeholder={stats ? `Match my letters (~${stats.medianWords})` : "Match my letters"}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label htmlFor="voice-format" className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Format</label>
-              <select
-                id="voice-format"
-                value={settings.format}
-                onChange={(e) => setSettings({ ...settings, format: e.target.value as LetterFormat })}
-                className={inputClass}
-              >
-                <option value="full">Full letter (greeting and sign-off)</option>
-                <option value="body">Body only</option>
-              </select>
-            </div>
-          </div>
-          <div>
-            <label htmlFor="voice-weave" className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">
-              Things to weave in when relevant
-            </label>
-            <textarea
-              id="voice-weave"
-              value={settings.alwaysMention}
-              onChange={(e) => setSettings({ ...settings, alwaysMention: e.target.value })}
-              rows={3}
-              placeholder="Side projects, a story about how you got started, values you want to come through, a closing line you love…"
-              className={`${inputClass} resize-y`}
-            />
-          </div>
-          <div>
-            <label htmlFor="voice-guidelines" className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Guidelines</label>
-            <textarea
-              id="voice-guidelines"
-              value={settings.guidelines}
-              onChange={(e) => setSettings({ ...settings, guidelines: e.target.value })}
-              rows={settings.guidelines ? 8 : 3}
-              placeholder={"How every letter should be written. For example:\n* Open with how I found the role, not with excitement\n* Back every trait with a concrete example\n* End with a specific ask, not a generic closing"}
-              className={`${inputClass} resize-y`}
-            />
-          </div>
-          <div>
-            <div className="flex items-baseline justify-between gap-2 mb-1.5">
-              <label htmlFor="voice-avoid" className="block text-xs text-gray-500 dark:text-gray-400">Words to avoid</label>
-              {bannedCount > 0 && (
-                <span className="text-xs text-gray-500 dark:text-gray-400">
-                  {bannedCount} phrase{bannedCount !== 1 ? "s" : ""} checked after every letter
-                </span>
-              )}
-            </div>
-            <textarea
-              id="voice-avoid"
-              value={settings.neverSay}
-              onChange={(e) => setSettings({ ...settings, neverSay: e.target.value })}
-              rows={settings.neverSay ? 8 : 3}
-              placeholder={"Comma lists, one per line, or under headings. For example:\nOverused words:\nleverage, synergy, passionate, thrilled"}
-              className={`${inputClass} resize-y`}
-            />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              If a letter still uses one, it&apos;s automatically rewritten once without it.
-            </p>
-          </div>
-          {settingsDirty && (
-            <div className="flex justify-end">
-              <button onClick={handleSaveSettings} disabled={savingSettings} className={primaryButtonClass}>
-                {savingSettings ? "Saving…" : "Save preferences"}
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Writing samples */}
-      <div className={cardClass}>
-        <div className={`${cardHeaderClass} flex items-center justify-between gap-4`}>
-          <h2 className={cardTitleClass}>Writing samples</h2>
-          {!adding && (
-            <button onClick={() => setAdding(true)} className={secondaryButtonClass}>
-              <i className="ti ti-plus text-xs" aria-hidden="true" />
-              Add sample
-            </button>
-          )}
-        </div>
-
-        {adding && (
-          <div className="px-4 py-4 space-y-3 border-b border-gray-50 dark:border-gray-800">
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Cover letters you wrote yourself work best. Emails, essays, or posts help too.
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <input
-                aria-label="Sample name"
-                type="text"
-                value={label}
-                onChange={(e) => setLabel(e.target.value)}
-                placeholder="e.g. Letter to Acme, 2025"
-                className={inputClass}
-              />
-              <select
-                aria-label="Sample type"
-                value={kind}
-                onChange={(e) => setKind(e.target.value as WritingSampleKind)}
-                className={inputClass}
-              >
-                <option value="cover_letter">Cover letter</option>
-                <option value="other">Other writing</option>
-              </select>
-            </div>
-            <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
-              {(["paste", "pdf"] as Tab[]).map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setTab(t)}
-                  className={`flex-1 flex items-center justify-center gap-1.5 text-xs font-medium py-1.5 rounded-md transition-colors ${
-                    tab === t
-                      ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm"
-                      : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-                  }`}
-                >
-                  <i className={`ti ${t === "paste" ? "ti-align-left" : "ti-file-type-pdf"} text-sm`} aria-hidden="true" />
-                  {t === "paste" ? "Paste text" : "Upload PDF"}
-                </button>
-              ))}
-            </div>
-            {tab === "pdf" && (
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl p-5 text-center cursor-pointer hover:border-primary-300 hover:bg-primary-50/30 dark:hover:bg-primary-950/30 transition-colors"
-              >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="application/pdf"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) handlePdfSelect(file);
-                  }}
+        <Section
+          title="Preferences"
+          serif
+          id="preferences"
+          action={
+            stats && (
+              <span className="text-meta text-ink-muted text-right">
+                Your letters: about {stats.medianWords} words, {stats.medianParagraphs} paragraphs,{" "}
+                {stats.contractionsPer100Words >= 1 ? "uses contractions" : "few contractions"}
+              </span>
+            )
+          }
+        >
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-5">
+              <Field id="voice-length" label="Length in words" optional>
+                <Input
+                  id="voice-length"
+                  type="number"
+                  min={50}
+                  max={800}
+                  value={settings.targetWords ?? ""}
+                  onChange={(e) => setSettings({ ...settings, targetWords: e.target.value ? Number(e.target.value) : null })}
+                  placeholder={stats ? `Match my letters (about ${stats.medianWords})` : "Match my letters"}
                 />
-                <i className="ti ti-upload text-2xl text-gray-400 dark:text-gray-500 mb-2 block" aria-hidden="true" />
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {parsing ? "Extracting text…" : pdfName || "Click to select a PDF"}
-                </p>
-              </div>
-            )}
-            {parseError && <p role="alert" className="text-xs text-red-700 dark:text-red-300">{parseError}</p>}
-            {(tab === "paste" || content) && (
-              <textarea
-                aria-label="Writing sample"
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="Paste something you wrote…"
-                rows={8}
-                className={`${inputClass} resize-y`}
-              />
-            )}
-            <div className="flex items-center justify-end gap-2">
-              <button
-                onClick={resetForm}
-                className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 px-4 py-2 rounded-xl transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleAddSample}
-                disabled={savingSample || !label.trim() || !content.trim()}
-                className={primaryButtonClass}
-              >
-                {savingSample ? "Saving…" : "Add sample"}
-              </button>
+              </Field>
+              <Field id="voice-format" label="Format">
+                <Select
+                  id="voice-format"
+                  value={settings.format}
+                  options={[
+                    { value: "full" as LetterFormat, label: "Full letter, with greeting and sign-off" },
+                    { value: "body" as LetterFormat, label: "Body only" },
+                  ]}
+                  onChange={(format) => setSettings({ ...settings, format })}
+                />
+              </Field>
             </div>
-          </div>
-        )}
-
-        {samples.length === 0 && !adding ? (
-          <p className="px-4 py-4 text-sm text-gray-500 dark:text-gray-400">
-            No samples yet. Add two or three things you&apos;ve written to get started.
-          </p>
-        ) : (
-          <div className="divide-y divide-gray-50 dark:divide-gray-800">
-            {samples.map((s) => (
-              <div key={s.id} className="px-4 py-3 flex items-center justify-between gap-4">
-                <div className="min-w-0 flex-1">
-                  <p className={`text-sm font-medium truncate ${s.included ? "text-gray-900 dark:text-gray-50" : "text-gray-500 dark:text-gray-400"}`}>
-                    {s.label}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                    {s.kind === "cover_letter" ? "Cover letter" : "Other writing"} · {formatDate(s.createdAt)}
-                  </p>
-                </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  {deleteConfirm === s.id ? (
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs text-gray-500 dark:text-gray-400">Delete?</span>
-                      <button onClick={() => handleDeleteSample(s.id)} className="text-xs font-medium text-red-700 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">
-                        Yes
-                      </button>
-                      <button onClick={() => setDeleteConfirm(null)} className="text-xs text-gray-500 hover:text-gray-600">
-                        No
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => setDeleteConfirm(s.id)}
-                      className="text-gray-500 dark:text-gray-400 hover:text-red-400 transition-colors"
-                      aria-label="Delete sample"
-                    >
-                      <i className="ti ti-trash text-sm" aria-hidden="true" />
-                    </button>
-                  )}
-                  <Toggle checked={s.included} onChange={(v) => toggleSample(s, v)} label={`Include ${s.label}`} />
-                </div>
+            <Field id="voice-weave" label="Things to weave in when they fit" optional>
+              <TextArea
+                id="voice-weave"
+                value={settings.alwaysMention}
+                onChange={(e) => setSettings({ ...settings, alwaysMention: e.target.value })}
+                rows={3}
+                placeholder="Side projects, a story about how you got started, values you want to come through, a closing line you love…"
+              />
+            </Field>
+            <Field id="voice-guidelines" label="Guidelines" optional>
+              <TextArea
+                id="voice-guidelines"
+                value={settings.guidelines}
+                onChange={(e) => setSettings({ ...settings, guidelines: e.target.value })}
+                rows={settings.guidelines ? 8 : 3}
+                placeholder={"How every letter should be written. For example:\n* Open with how I found the role, not with excitement\n* Back every trait with a concrete example\n* End with a specific ask, not a generic closing"}
+              />
+            </Field>
+            <Field
+              id="voice-avoid"
+              label="Words to avoid"
+              optional
+              help={
+                bannedCount > 0
+                  ? `${bannedCount} phrase${bannedCount !== 1 ? "s" : ""} checked after every letter. If one slips in, the letter is rewritten once without it.`
+                  : "If a letter still uses one, it's rewritten once without it."
+              }
+            >
+              <TextArea
+                id="voice-avoid"
+                value={settings.neverSay}
+                onChange={(e) => setSettings({ ...settings, neverSay: e.target.value })}
+                rows={settings.neverSay ? 8 : 3}
+                placeholder={"Comma lists, one per line, or under headings. For example:\nOverused words:\nleverage, synergy, passionate, thrilled"}
+              />
+            </Field>
+            {settingsDirty && (
+              <div className="flex justify-end">
+                <Button variant="primary" onClick={handleSaveSettings} loading={savingSettings} loadingLabel="Saving…">
+                  Save preferences
+                </Button>
               </div>
-            ))}
+            )}
           </div>
-        )}
-      </div>
+        </Section>
 
-      {/* Past cover letters (opt-in) */}
-      <div className={cardClass}>
-        <div className={cardHeaderClass}>
-          <h2 className={cardTitleClass}>Past cover letters</h2>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 normal-case">
-            Off by default. Only include letters you&apos;ve edited into your own words, so AI drafts don&apos;t drift your voice.
-          </p>
-        </div>
-        {letters.length === 0 ? (
-          <p className="px-4 py-4 text-sm text-gray-500 dark:text-gray-400">No cover letters yet.</p>
-        ) : (
-          <div className="divide-y divide-gray-50 dark:divide-gray-800">
-            {letters.map((l) => (
-              <div key={l.id} className="px-4 py-3 flex items-center justify-between gap-4">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium text-gray-900 dark:text-gray-50 truncate">{jobLabel(l.jobId)}</p>
-                    {l.edited ? <Badge tone="emerald">Edited by you</Badge> : <Badge tone="amber">AI draft</Badge>}
+        <Section
+          title="Writing samples"
+          serif
+          id="samples"
+          action={
+            !adding && (
+              <Button size="sm" icon="ti-plus" onClick={() => setAdding(true)}>
+                Add a sample
+              </Button>
+            )
+          }
+        >
+          {adding && (
+            <div className="mb-6 pb-6 border-b border-rule space-y-5 animate-[fade-in_200ms_var(--ease-out)]">
+              <p className="text-ink-soft">Letters you wrote yourself work best. Emails, essays or posts help too.</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-5">
+                <Field id="sample-name" label="Name">
+                  <Input id="sample-name" value={label} onChange={(e) => setLabel(e.target.value)} placeholder="e.g. Letter to Acme, 2025" />
+                </Field>
+                <Field id="sample-kind" label="Kind">
+                  <Select
+                    id="sample-kind"
+                    value={kind}
+                    options={[
+                      { value: "cover_letter" as WritingSampleKind, label: "Cover letter" },
+                      { value: "other" as WritingSampleKind, label: "Other writing" },
+                    ]}
+                    onChange={setKind}
+                  />
+                </Field>
+              </div>
+              <div role="tablist" aria-label="How to add it" className="flex gap-6 border-b border-rule">
+                {(["paste", "pdf"] as Tab[]).map((t) => (
+                  <button
+                    key={t}
+                    role="tab"
+                    aria-selected={tab === t}
+                    onClick={() => setTab(t)}
+                    className={`relative h-10 text-ui font-semibold transition-colors duration-100 ${tab === t ? "text-ink" : "text-ink-soft hover:text-ink"}`}
+                  >
+                    {t === "paste" ? "Paste text" : "Upload a PDF"}
+                    {tab === t && <span className="absolute left-0 right-0 -bottom-px h-0.5 rounded-full bg-ink" aria-hidden="true" />}
+                  </button>
+                ))}
+              </div>
+              {tab === "pdf" && (
+                <>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="application/pdf"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handlePdfSelect(file);
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full rounded-field border-[1.5px] border-dashed border-control p-5 text-center hover:bg-well transition-colors duration-100"
+                  >
+                    <i className="ti ti-upload text-2xl text-ink-soft block mb-2" aria-hidden="true" />
+                    <span className="font-semibold text-ink">{parsing ? "Reading the text…" : pdfName || "Choose a PDF"}</span>
+                  </button>
+                </>
+              )}
+              {parseError && (
+                <InlineMessage tone="caution" role="alert">
+                  {parseError}
+                </InlineMessage>
+              )}
+              {(tab === "paste" || content) && (
+                <TextArea aria-label="Writing sample" value={content} onChange={(e) => setContent(e.target.value)} placeholder="Paste something you wrote…" rows={8} />
+              )}
+              <div className="flex items-center justify-end gap-2">
+                <Button variant="quiet" onClick={resetForm}>
+                  Cancel
+                </Button>
+                <Button variant="primary" onClick={handleAddSample} disabled={!label.trim() || !content.trim()} loading={savingSample} loadingLabel="Saving…">
+                  Add sample
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {samples.length === 0 && !adding ? (
+            <p className="text-ink-soft">No samples yet. Add two or three things you&apos;ve written to get started.</p>
+          ) : (
+            <ul>
+              {samples.map((x) => (
+                <li key={x.id} className={row}>
+                  <div className="min-w-0 flex-1">
+                    <p className={`font-semibold truncate ${x.included ? "text-ink" : "text-ink-muted"}`}>{x.label}</p>
+                    <p className="text-meta text-ink-soft truncate">
+                      {x.kind === "cover_letter" ? "Cover letter" : "Other writing"} · {formatDate(x.createdAt)}
+                    </p>
                   </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{formatDate(l.createdAt)}</p>
-                </div>
-                <Toggle checked={l.useAsVoiceSample} onChange={(v) => toggleLetter(l, v)} label="Use as voice sample" />
-              </div>
-            ))}
-          </div>
-        )}
+                  <IconButton icon="ti-trash" label={`Delete ${x.label}`} size="sm" onClick={() => setDeleteConfirm(x.id)} />
+                  <Toggle checked={x.included} onChange={(v) => toggleSample(x, v)} label={`Include ${x.label}`} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </Section>
+
+        <Section title="Past cover letters" serif id="past-letters">
+          <p className="-mt-2 mb-3 text-meta text-ink-soft">
+            Off by default. Only include letters you&apos;ve edited into your own words, so drafts don&apos;t pull your voice off course.
+          </p>
+          {letters.length === 0 ? (
+            <p className="text-ink-soft">No letters yet.</p>
+          ) : (
+            <ul>
+              {letters.map((l) => (
+                <li key={l.id} className={row}>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-ink truncate">{jobLabel(l.jobId)}</p>
+                    <p className="text-meta text-ink-soft">
+                      {formatDate(l.createdAt)} · <Origin edited={l.edited} />
+                    </p>
+                  </div>
+                  <Toggle checked={l.useAsVoiceSample} onChange={(v) => toggleLetter(l, v)} label={`Use the ${jobLabel(l.jobId)} letter as a voice sample`} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </Section>
+
+        <Section title="Saved answers" serif id="past-answers">
+          <p className="-mt-2 mb-3 text-meta text-ink-soft">Off by default. Turn on answers you wrote yourself.</p>
+          {answers.length === 0 ? (
+            <p className="text-ink-soft">No saved answers yet.</p>
+          ) : (
+            <ul>
+              {answers.map((a) => (
+                <li key={a.id} className={row}>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-ink truncate">{a.question}</p>
+                    <p className="text-meta text-ink-soft truncate">
+                      {a.tags.includes("cover-letter") && (
+                        <>
+                          <Origin edited={false} /> ·{" "}
+                        </>
+                      )}
+                      {a.answer}
+                    </p>
+                  </div>
+                  <Toggle checked={a.useAsVoiceSample} onChange={(v) => toggleAnswer(a, v)} label={`Use “${a.question}” as a voice sample`} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </Section>
       </div>
 
-      {/* Answer bank (opt-in) */}
-      <div className={cardClass}>
-        <div className={cardHeaderClass}>
-          <h2 className={cardTitleClass}>Saved answers</h2>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 normal-case">
-            Off by default. Turn on answers you wrote yourself.
-          </p>
-        </div>
-        {answers.length === 0 ? (
-          <p className="px-4 py-4 text-sm text-gray-500 dark:text-gray-400">No saved answers yet.</p>
-        ) : (
-          <div className="divide-y divide-gray-50 dark:divide-gray-800">
-            {answers.map((a) => (
-              <div key={a.id} className="px-4 py-3 flex items-center justify-between gap-4">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium text-gray-900 dark:text-gray-50 truncate">{a.question}</p>
-                    {a.tags.includes("cover-letter") && <Badge tone="amber">AI draft</Badge>}
-                  </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{a.answer}</p>
-                </div>
-                <Toggle checked={a.useAsVoiceSample} onChange={(v) => toggleAnswer(a, v)} label="Use as voice sample" />
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
+      {confirming && (
+        <Dialog
+          title={`Delete “${confirming.label}”?`}
+          description="Rebuild your profile afterwards so it stops drawing on it. This can't be undone."
+          onRequestClose={() => setDeleteConfirm(null)}
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setDeleteConfirm(null)}>
+                Keep it
+              </Button>
+              <Button variant="danger-solid" onClick={() => handleDeleteSample(confirming.id)}>
+                Delete sample
+              </Button>
+            </>
+          }
+        />
+      )}
+    </PageFrame>
   );
 }

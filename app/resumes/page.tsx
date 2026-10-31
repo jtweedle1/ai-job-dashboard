@@ -8,12 +8,17 @@ import { db, storage } from "@/lib/firebase";
 import { authedFetch } from "@/lib/api-client";
 import { getResumes, createResume, deleteResume, setActiveResume } from "@/lib/resumes";
 import type { Resume } from "@/types/resume";
+import { timeAgo } from "@/lib/next-steps";
+import { useToast } from "@/lib/use-toast";
+import Toast from "@/components/Toast";
+import PageFrame from "@/components/ui/PageFrame";
+import Button from "@/components/ui/Button";
+import Menu from "@/components/ui/Menu";
+import Dialog from "@/components/ui/Dialog";
+import { Field, Input, TextArea } from "@/components/ui/Field";
+import { EmptyState, InlineMessage, Skeleton } from "@/components/ui/bits";
 
 type Tab = "paste" | "pdf";
-
-function formatDate(date: Date) {
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-}
 
 export default function ResumesPage() {
   const { user } = useAuth();
@@ -32,7 +37,8 @@ export default function ResumesPage() {
   const [saving, setSaving] = useState(false);
   const [parseError, setParseError] = useState("");
   const [saveError, setSaveError] = useState("");
-  const [toast, setToast] = useState("");
+  const { show: showToast, toastProps } = useToast();
+  const [now] = useState(() => new Date());
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -53,7 +59,7 @@ export default function ResumesPage() {
 
   async function handlePdfSelect(file: File) {
     if (file.size > 5 * 1024 * 1024) {
-      setParseError("File exceeds the 5 MB limit. Please use a smaller PDF.");
+      setParseError("That file is over 5 MB. Try a smaller PDF, or paste the text instead.");
       return;
     }
     setPdfFile(file);
@@ -70,10 +76,10 @@ export default function ResumesPage() {
       if (data.text) {
         setPdfText(data.text);
       } else {
-        setParseError(data.error ?? "Could not extract text from PDF.");
+        setParseError(data.error ?? "We couldn't read text from that PDF. Try pasting it instead.");
       }
     } catch {
-      setParseError("Failed to contact the parser. Try pasting text instead.");
+      setParseError("We couldn't reach the PDF reader. Try pasting the text instead.");
     } finally {
       setParsing(false);
     }
@@ -114,14 +120,13 @@ export default function ResumesPage() {
 
       setResumes((prev) => [newResume, ...prev]);
       closeModal();
-      setToast("Resume added successfully");
-      setTimeout(() => setToast(""), 3000);
+      showToast("Resume added");
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       if (msg.includes("storage") || msg.includes("Storage") || msg.includes("bucket")) {
-        setSaveError("Firebase Storage is not enabled. Go to Firebase Console → Storage → Get started, then try again.");
+        setSaveError("File storage isn't set up for this app yet, so the PDF couldn't be kept. Paste the text instead.");
       } else {
-        setSaveError("Failed to save resume. Check your connection and try again.");
+        setSaveError("Couldn't save your resume. Check your connection and try again.");
       }
     } finally {
       setSaving(false);
@@ -132,6 +137,7 @@ export default function ResumesPage() {
     if (!user) return;
     await setActiveResume(user.uid, resumeId);
     setActiveResumeId(resumeId);
+    showToast("Now your main resume");
   }
 
   async function handleDelete(resumeId: string) {
@@ -143,6 +149,7 @@ export default function ResumesPage() {
     }
     setResumes((prev) => prev.filter((r) => r.id !== resumeId));
     setDeleteConfirm(null);
+    showToast("Resume deleted");
   }
 
   function closeModal() {
@@ -160,266 +167,183 @@ export default function ResumesPage() {
     label.trim().length > 0 &&
     (tab === "paste" ? content.trim().length > 0 : pdfText.trim().length > 0);
 
-  const inputClass = "w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800";
+  const confirming = resumes.find((r) => r.id === deleteConfirm);
+  const addButton = (
+    <Button variant="primary" icon="ti-plus" onClick={() => setModalOpen(true)}>
+      Add a resume
+    </Button>
+  );
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
-      {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-full shadow-lg shadow-gray-900/20 animate-fade-in">
-          <i className="ti ti-circle-check text-primary-400 text-base" aria-hidden="true" />
-          {toast}
-        </div>
-      )}
-
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="page-title">Resume</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Manage your resume versions</p>
-        </div>
-        <button
-          onClick={() => setModalOpen(true)}
-          className="flex items-center gap-2 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-primary-700 transition-colors"
-        >
-          <i className="ti ti-plus text-sm" aria-hidden="true" />
-          Add resume
-        </button>
-      </div>
+    <PageFrame title="Resume" intro="Letters and fit scores start from your main resume. Keep other versions here too." action={resumes.length > 0 ? addButton : undefined}>
+      <Toast {...toastProps} />
 
       {loading ? (
-        <div className="space-y-3">
+        <div aria-busy="true" role="status" className="space-y-4">
+          <span className="sr-only">Loading your resumes…</span>
           {[1, 2].map((n) => (
-            <div key={n} className="surface p-4 animate-pulse">
-              <div className="h-4 bg-gray-100 dark:bg-gray-800 rounded w-48 mb-2" />
-              <div className="h-3 bg-gray-100 dark:bg-gray-800 rounded w-24" />
+            <div key={n} className="space-y-2 py-2">
+              <Skeleton className="h-5 w-48" />
+              <Skeleton className="h-3 w-24" />
             </div>
           ))}
         </div>
       ) : resumes.length === 0 ? (
-        <div className="surface p-12 text-center">
-          <div className="w-12 h-12 rounded-full glow-gradient flex items-center justify-center mx-auto mb-4">
-            <i className="ti ti-file-cv text-gray-700 dark:text-gray-100 text-2xl" aria-hidden="true" />
-          </div>
-          <h2 className="text-sm font-medium text-gray-900 dark:text-gray-50 mb-1">No resumes yet</h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-5 max-w-xs mx-auto">
-            Add a resume version to use with cover letters, fit scoring, and more.
-          </p>
-          <button
-            onClick={() => setModalOpen(true)}
-            className="inline-flex items-center gap-2 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-primary-700 transition-colors"
-          >
-            <i className="ti ti-plus text-sm" aria-hidden="true" />
-            Add resume
-          </button>
-        </div>
+        <EmptyState title="Start with your resume" action={addButton}>
+          Paste it or upload a PDF. Every letter and fit score is built from it.
+        </EmptyState>
       ) : (
-        <div className="space-y-3">
+        <ul>
           {resumes.map((resume) => {
             const isActive = resume.id === activeResumeId;
-            const confirmingDelete = deleteConfirm === resume.id;
-
             return (
-              <div
-                key={resume.id}
-                className={`bg-white dark:bg-gray-900 border rounded-2xl p-4 flex items-start justify-between gap-4 ${
-                  isActive ? "border-primary-200 dark:border-primary-800" : "border-gray-100 dark:border-gray-800"
-                }`}
-              >
+              <li key={resume.id} className="flex items-center gap-4 py-4 border-b border-rule last:border-b-0">
+                <span
+                  className={`w-3 h-3 shrink-0 rounded-full ${isActive ? "bg-sun ring-4 ring-sun-wash" : "border-[1.5px] border-control"}`}
+                  aria-hidden="true"
+                />
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-medium text-gray-900 dark:text-gray-50 truncate">
-                      {resume.label}
-                    </span>
-                    {isActive && (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-primary-700 dark:text-primary-400 bg-primary-50 dark:bg-primary-950 px-2 py-0.5 rounded-full">
-                        <i className="ti ti-check text-xs" aria-hidden="true" />
-                        Active
-                      </span>
+                  <p className="font-semibold text-ink truncate">
+                    {resume.label}
+                    {isActive && <span className="ml-2 text-meta font-semibold text-sun-ink">Main resume</span>}
+                  </p>
+                  <p className="text-meta text-ink-soft">
+                    Added {timeAgo(resume.createdAt, now).replace(/^(Today|Yesterday)$/, (m) => m.toLowerCase())}
+                    {resume.fileUrl && (
+                      <>
+                        {" · "}
+                        <a href={resume.fileUrl} target="_blank" rel="noopener noreferrer" className="font-semibold text-action hover:underline underline-offset-4">
+                          View PDF<span className="sr-only"> (opens in a new tab)</span>
+                        </a>
+                      </>
                     )}
-                  </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Added {formatDate(resume.createdAt)}</p>
-                  {resume.fileUrl && (
-                    <a
-                      href={resume.fileUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs text-primary-600 hover:underline mt-1"
-                    >
-                      <i className="ti ti-file-type-pdf text-xs" aria-hidden="true" />
-                      View PDF
-                    </a>
-                  )}
+                  </p>
                 </div>
-
-                <div className="flex items-center gap-2 shrink-0">
-                  {!isActive && (
-                    <button
-                      onClick={() => handleSetActive(resume.id)}
-                      className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 px-3 py-1.5 rounded-xl transition-colors"
-                    >
-                      Set active
-                    </button>
-                  )}
-
-                  {confirmingDelete ? (
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs text-gray-500 dark:text-gray-400">Delete?</span>
-                      <button
-                        onClick={() => handleDelete(resume.id)}
-                        className="text-xs font-medium text-red-600 hover:text-red-700 transition-colors"
-                      >
-                        Yes
-                      </button>
-                      <button
-                        onClick={() => setDeleteConfirm(null)}
-                        className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                      >
-                        No
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => setDeleteConfirm(resume.id)}
-                      className="text-gray-500 dark:text-gray-400 hover:text-red-400 transition-colors"
-                      aria-label="Delete resume"
-                    >
-                      <i className="ti ti-trash text-sm" aria-hidden="true" />
-                    </button>
-                  )}
-                </div>
-              </div>
+                {!isActive && (
+                  <Button size="sm" onClick={() => handleSetActive(resume.id)}>
+                    Make main
+                  </Button>
+                )}
+                <Menu
+                  label={`More actions for ${resume.label}`}
+                  items={[{ label: "Delete resume", icon: "ti-trash", danger: true, onSelect: () => setDeleteConfirm(resume.id) }]}
+                />
+              </li>
             );
           })}
-        </div>
+        </ul>
+      )}
+
+      {confirming && (
+        <Dialog
+          title={`Delete “${confirming.label}”?`}
+          description="Letters you already wrote from it stay. This can't be undone."
+          onRequestClose={() => setDeleteConfirm(null)}
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setDeleteConfirm(null)}>
+                Keep it
+              </Button>
+              <Button variant="danger-solid" onClick={() => handleDelete(confirming.id)}>
+                Delete resume
+              </Button>
+            </>
+          }
+        />
       )}
 
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/40" onClick={closeModal} aria-hidden="true" />
-          <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-lg flex flex-col max-h-[90vh]">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800">
-              <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-50">Add resume</h2>
-              <button onClick={closeModal} className="text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" aria-label="Close">
-                <i className="ti ti-x text-base" aria-hidden="true" />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
-              <div>
-                <label htmlFor="resume-label" className="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1.5">Label</label>
-                <input
-                  id="resume-label"
-                  type="text"
-                  value={label}
-                  onChange={(e) => setLabel(e.target.value)}
-                  placeholder="e.g. Software Engineer – May 2026"
-                  className={inputClass}
-                />
-              </div>
-
-              <div>
-                <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-xl p-1 mb-4">
-                  {(["paste", "pdf"] as Tab[]).map((t) => (
-                    <button
-                      key={t}
-                      onClick={() => setTab(t)}
-                      className={`flex-1 flex items-center justify-center gap-1.5 text-xs font-medium py-1.5 rounded-md transition-colors ${
-                        tab === t
-                          ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm"
-                          : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-                      }`}
-                    >
-                      <i className={`ti ${t === "paste" ? "ti-align-left" : "ti-file-type-pdf"} text-sm`} aria-hidden="true" />
-                      {t === "paste" ? "Paste text" : "Upload PDF"}
-                    </button>
-                  ))}
-                </div>
-
-                {tab === "paste" ? (
-                  <textarea
-                    aria-label="Resume text"
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    placeholder="Paste your resume text here…"
-                    rows={12}
-                    className={`${inputClass} resize-none font-mono`}
-                  />
-                ) : (
-                  <div className="space-y-3">
-                    <div
-                      onClick={() => fileInputRef.current?.click()}
-                      className="border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl p-6 text-center cursor-pointer hover:border-primary-300 hover:bg-primary-50/30 dark:hover:bg-primary-950/30 transition-colors"
-                    >
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="application/pdf"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) handlePdfSelect(file);
-                        }}
-                      />
-                      <i className="ti ti-upload text-2xl text-gray-400 dark:text-gray-500 mb-2 block" aria-hidden="true" />
-                      {pdfFile ? (
-                        <p className="text-sm text-gray-700 dark:text-gray-200 font-medium">{pdfFile.name}</p>
-                      ) : (
-                        <>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">Click to select a PDF</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">PDF files only</p>
-                        </>
-                      )}
-                    </div>
-
-                    {parsing && (
-                      <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                        <i className="ti ti-loader-2 animate-spin text-base" aria-hidden="true" />
-                        Extracting text…
-                      </div>
-                    )}
-                    {parseError && <p role="alert" className="text-xs text-red-700 dark:text-red-300">{parseError}</p>}
-
-                    {pdfText && !parsing && (
-                      <div>
-                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
-                          Extracted text — review and edit if needed
-                        </p>
-                        <textarea
-                          aria-label="Text from your PDF"
-                          value={pdfText}
-                          onChange={(e) => setPdfText(e.target.value)}
-                          rows={10}
-                          className={`${inputClass} resize-none font-mono`}
-                        />
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-gray-100 dark:border-gray-800 flex-wrap">
-              {saveError && <p role="alert" className="text-xs text-red-700 dark:text-red-300 w-full text-right">{saveError}</p>}
-              <button onClick={closeModal} className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 px-4 py-2 rounded-xl transition-colors">
+        <Dialog
+          title="Add a resume"
+          onRequestClose={closeModal}
+          footer={
+            <>
+              <Button variant="secondary" onClick={closeModal}>
                 Cancel
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={!canSave || saving}
-                className="flex items-center gap-2 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {saving ? (
-                  <>
-                    <i className="ti ti-loader-2 animate-spin text-sm" aria-hidden="true" />
-                    Saving…
-                  </>
-                ) : (
-                  "Add resume"
-                )}
-              </button>
+              </Button>
+              <Button variant="primary" onClick={handleSave} disabled={!canSave} loading={saving} loadingLabel="Saving…">
+                Save resume
+              </Button>
+            </>
+          }
+        >
+          <div className="space-y-5">
+            <Field id="resume-label" label="Name it" help="Something you'll recognize, like “Product design” or “Research roles”.">
+              <Input id="resume-label" value={label} onChange={(e) => setLabel(e.target.value)} placeholder="e.g. Product design" autoFocus />
+            </Field>
+
+            <div>
+              <div role="tablist" aria-label="How to add it" className="flex gap-6 border-b border-rule mb-4">
+                {(["paste", "pdf"] as Tab[]).map((t) => (
+                  <button
+                    key={t}
+                    role="tab"
+                    aria-selected={tab === t}
+                    onClick={() => setTab(t)}
+                    className={`relative h-10 text-ui font-semibold transition-colors duration-100 ${tab === t ? "text-ink" : "text-ink-soft hover:text-ink"}`}
+                  >
+                    {t === "paste" ? "Paste text" : "Upload a PDF"}
+                    {tab === t && <span className="absolute left-0 right-0 -bottom-px h-0.5 rounded-full bg-ink" aria-hidden="true" />}
+                  </button>
+                ))}
+              </div>
+
+              {tab === "paste" ? (
+                <TextArea aria-label="Resume text" value={content} onChange={(e) => setContent(e.target.value)} placeholder="Paste your resume text here…" rows={12} />
+              ) : (
+                <div className="space-y-4">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="application/pdf"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handlePdfSelect(file);
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full rounded-field border-[1.5px] border-dashed border-control p-6 text-center hover:bg-well transition-colors duration-100"
+                  >
+                    <i className="ti ti-upload text-2xl text-ink-soft block mb-2" aria-hidden="true" />
+                    {pdfFile ? (
+                      <span className="block font-semibold text-ink">{pdfFile.name}</span>
+                    ) : (
+                      <>
+                        <span className="block font-semibold text-ink">Choose a PDF</span>
+                        <span className="block mt-0.5 text-meta text-ink-soft">Up to 5 MB</span>
+                      </>
+                    )}
+                  </button>
+                  {parsing && (
+                    <p role="status" className="flex items-center gap-2 text-ink-soft">
+                      <i className="ti ti-loader-2 animate-spin" aria-hidden="true" />
+                      Reading the text…
+                    </p>
+                  )}
+                  {parseError && (
+                    <InlineMessage tone="caution" role="alert">
+                      {parseError}
+                    </InlineMessage>
+                  )}
+                  {pdfText && !parsing && (
+                    <Field id="resume-pdf-text" label="The text we found" help="Fix anything that came through wrong.">
+                      <TextArea id="resume-pdf-text" value={pdfText} onChange={(e) => setPdfText(e.target.value)} rows={10} />
+                    </Field>
+                  )}
+                </div>
+              )}
             </div>
+            {saveError && (
+              <InlineMessage tone="danger" role="alert">
+                {saveError}
+              </InlineMessage>
+            )}
           </div>
-        </div>
+        </Dialog>
       )}
-    </div>
+    </PageFrame>
   );
 }
