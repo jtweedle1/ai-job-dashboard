@@ -37,7 +37,7 @@ export default function SearchTrail({ stations, closed }: { stations: TrailStati
           Your trail
         </h2>
         {closed > 0 && (
-          <Link href="/applications?stage=closed" className="text-meta text-action hover:underline underline-offset-4">
+          <Link href="/applications?stage=closed" className="hit text-meta text-action hover:underline underline-offset-4">
             {closed} closed
           </Link>
         )}

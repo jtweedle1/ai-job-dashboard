@@ -149,7 +149,7 @@ export default function CompanyProfilePage({
   }
 
   const back = (
-    <Link href="/companies" className="inline-flex items-center gap-1 text-meta font-semibold text-ink-soft hover:text-ink">
+    <Link href="/companies" className="hit inline-flex items-center gap-1 text-meta font-semibold text-ink-soft hover:text-ink">
       <i className="ti ti-arrow-left" aria-hidden="true" />
       Companies
     </Link>

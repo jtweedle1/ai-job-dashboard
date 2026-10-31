@@ -227,6 +227,16 @@ body {
 }
 
 /* The soft sunrise behind every page. Fixed so it stays put while content scrolls. */
+/* A small text link keeps its look but gets a finger-sized target (44px tall) around it. */
+@utility hit {
+  position: relative;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: max(-12px, calc((100% - 44px) / 2)) -6px;
+  }
+}
+
 @utility app-backdrop {
   background-color: #fbf9fe;
   background-image:

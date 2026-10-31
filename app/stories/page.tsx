@@ -124,7 +124,7 @@ export default function StoriesPage() {
                       {item.text || <span className="text-ink-muted">No answer yet</span>}
                     </span>
                   </button>
-                  <Link href={item.href} className="shrink-0 text-meta font-semibold text-action hover:underline underline-offset-4">
+                  <Link href={item.href} className="hit shrink-0 text-meta font-semibold text-action hover:underline underline-offset-4">
                     Open
                   </Link>
                 </div>

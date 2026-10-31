@@ -374,7 +374,7 @@ export default function AnswerBankPage() {
                       {(entry.tags.length > 0 || (entry.jobId && jobTitle(entry.jobId))) && (
                         <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-meta text-ink-muted">
                           {entry.tags.map((tag) => (
-                            <button key={tag} onClick={() => setActiveTag(activeTag === tag ? "" : tag)} className="hover:text-ink hover:underline underline-offset-4">
+                            <button key={tag} onClick={() => setActiveTag(activeTag === tag ? "" : tag)} className="hit hover:text-ink hover:underline underline-offset-4">
                               #{tag}
                             </button>
                           ))}

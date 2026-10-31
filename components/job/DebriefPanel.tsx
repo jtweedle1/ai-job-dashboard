@@ -157,7 +157,7 @@ export default function DebriefPanel({
                 <i className={`ti ti-chevron-down text-ink-soft transition-transform duration-200 ${open ? "rotate-180" : ""}`} aria-hidden="true" />
               </button>
               {!job && dj && (
-                <Link href={`/applications/${dj.id}?step=debrief`} className="text-meta font-semibold text-action hover:underline underline-offset-4 shrink-0">
+                <Link href={`/applications/${dj.id}?step=debrief`} className="hit text-meta font-semibold text-action hover:underline underline-offset-4 shrink-0">
                   Open job
                 </Link>
               )}

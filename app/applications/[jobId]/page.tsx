@@ -311,7 +311,7 @@ function JobWorkspace({ jobId }: { jobId: string }) {
   }
 
   const back = (
-    <Link href="/applications" className="inline-flex items-center gap-1 text-meta font-semibold text-ink-soft hover:text-ink">
+    <Link href="/applications" className="hit inline-flex items-center gap-1 text-meta font-semibold text-ink-soft hover:text-ink">
       <i className="ti ti-arrow-left" aria-hidden="true" />
       All jobs
     </Link>
