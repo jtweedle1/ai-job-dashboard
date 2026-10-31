@@ -12,25 +12,18 @@ const MARKS = {
   unbacked: "rounded-sm bg-caution-wash text-ink underline decoration-caution decoration-wavy decoration-1 underline-offset-4",
   text: "text-reading text-ink whitespace-pre-wrap",
 };
-// The landing page never switches to dark mode, so it gets fixed light colors.
-const LIGHT_MARKS = {
-  backed: "rounded-sm bg-primary-50 underline decoration-primary-500 decoration-1 underline-offset-4",
-  unbacked: "rounded-sm bg-amber-50 text-amber-900 underline decoration-amber-500 decoration-wavy decoration-1 underline-offset-4",
-  text: "text-sm text-gray-700 whitespace-pre-wrap leading-relaxed",
-};
-
 // The letter text, with each traced claim marked: underlined if backed by the user's material,
-// highlighted with a wavy line if not. lightOnly is for pages that never switch to dark mode.
+// highlighted with a wavy line if not. `compact` sets it at UI size, for excerpts on the landing page.
 export function HighlightedLetter({
   content,
   claims,
-  lightOnly = false,
+  compact = false,
 }: {
   content: string;
   claims: LetterClaim[] | null;
-  lightOnly?: boolean;
+  compact?: boolean;
 }) {
-  const m = lightOnly ? LIGHT_MARKS : MARKS;
+  const m = compact ? { ...MARKS, text: "text-ui leading-relaxed text-ink whitespace-pre-wrap" } : MARKS;
   if (!claims || claims.length === 0) return <p className={m.text}>{content}</p>;
   return (
     <p className={m.text}>
