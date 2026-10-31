@@ -142,7 +142,7 @@ export default function DebriefPanel({
           <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
             <h2 className="section-label">How did it go?</h2>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-              Jot it down while it&apos;s fresh. Every debrief lands in Me → Stories, so the next letter and the
+              Jot it down while it&apos;s fresh. Every debrief lands in Me → Library, so the next letter and the
               next interview can use it.
             </p>
           </div>
