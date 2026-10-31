@@ -60,7 +60,7 @@ export default function QuickActions({
           value={date}
           autoFocus
           onChange={(e) => setDate(e.target.value)}
-          className={`${inputClasses} h-10 w-auto`}
+          className={`${inputClasses} h-10 max-w-[13rem]`}
         />
         <button type="submit" className={buttonClasses({ variant: "primary", size: variant === "hero" ? "md" : "sm", className: "pointer-coarse:min-h-11" })}>
           Save

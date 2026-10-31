@@ -123,7 +123,7 @@ export default function Select<T extends string>({
 
   const trigger =
     look === "pill"
-      ? "h-10 pl-4 pr-3 rounded-full border border-control text-control font-semibold text-ink hover:bg-well"
+      ? "h-10 pl-4 pr-3 rounded-full border border-control text-ui font-semibold text-ink hover:bg-well"
       : "w-full h-11 pl-3.5 pr-3 rounded-field border border-control bg-sheet text-base text-ink";
 
   return (

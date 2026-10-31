@@ -171,8 +171,9 @@
   --text-note: 0.875rem;
   --text-note--line-height: 1.4;
   /* Buttons, tabs and the nav rail. */
-  --text-control: 0.9375rem;
-  --text-control--line-height: 1.4;
+  /* Controls (buttons, tabs, selects). Not "control": that name is the border color. */
+  --text-ui: 0.9375rem;
+  --text-ui--line-height: 1.4;
 
   --radius-mark: 4px;
   --radius-stamp: 8px;

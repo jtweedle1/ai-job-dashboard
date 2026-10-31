@@ -17,7 +17,7 @@ export default function Dialog({
   title: React.ReactNode;
   description?: React.ReactNode;
   onRequestClose: () => void;
-  children: React.ReactNode;
+  children?: React.ReactNode;
   footer?: React.ReactNode;
   wide?: boolean;
 }) {
@@ -63,9 +63,10 @@ export default function Dialog({
           </div>
           <IconButton icon="ti-x" label="Close" onClick={onRequestClose} className="-mr-2 -mt-1" />
         </div>
-        <div className="flex-1 overflow-y-auto px-5 sm:px-8 pb-6">{children}</div>
+        {children && <div className="flex-1 overflow-y-auto px-5 sm:px-8 pb-6">{children}</div>}
+        {/* A confirmation has no body, so its buttons sit right under the question without a rule. */}
         {footer && (
-          <div className="shrink-0 px-5 sm:px-8 py-4 border-t border-rule flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 sm:gap-3 max-sm:[&>button]:w-full">
+          <div className={`shrink-0 px-5 sm:px-8 ${children ? "py-4 border-t border-rule" : "pt-2 pb-6"} flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 sm:gap-3 max-sm:[&>button]:w-full`}>
             {footer}
           </div>
         )}

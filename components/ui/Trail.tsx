@@ -88,7 +88,7 @@ export default function Trail({
               <TrailNode state={s.state} />
             </span>
             <span
-              className={`mt-2 font-semibold leading-tight transition-colors duration-100 ${size === "sm" ? "text-meta" : "text-meta sm:text-control"} ${
+              className={`mt-2 font-semibold leading-tight transition-colors duration-100 ${size === "sm" ? "text-meta" : "text-meta sm:text-ui"} ${
                 s.state === "current" ? "text-ink" : "text-ink-soft group-hover:text-ink"
               }`}
             >

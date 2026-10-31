@@ -80,10 +80,18 @@ export function StageIndicator({ stage, className = "" }: { stage: JobStage; cla
   );
 }
 
-// A company's initial, stamped. Replaces the generic building icon.
-export function Monogram({ name, size = "md" }: { name: string; size?: "sm" | "md" | "lg" }) {
+// A company's initial, stamped. Replaces the generic building icon. Shows the company's own logo
+// when one has been uploaded.
+export function Monogram({ name, logoUrl, size = "md" }: { name: string; logoUrl?: string | null; size?: "sm" | "md" | "lg" }) {
   const letter = name.trim().charAt(0).toUpperCase() || "?";
   const box = size === "sm" ? "w-8 h-8 text-sm" : size === "lg" ? "w-12 h-12 text-xl" : "w-9 h-9 text-base";
+  if (logoUrl)
+    return (
+      <span className={`${box} shrink-0 rounded-stamp bg-sheet overflow-hidden inline-flex`} aria-hidden="true">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={logoUrl} alt="" className="w-full h-full object-contain" />
+      </span>
+    );
   return (
     <span
       className={`${box} shrink-0 rounded-stamp bg-well text-ink font-serif font-semibold inline-flex items-center justify-center`}
@@ -170,7 +178,7 @@ export function LoadingBlocks({ rows = 3, label = "Loading" }: { rows?: number; 
 }
 
 // 18px checkbox with the action color when checked.
-export function Checkbox(props: React.InputHTMLAttributes<HTMLInputElement>) {
+export function Checkbox(props: React.InputHTMLAttributes<HTMLInputElement> & { ref?: React.Ref<HTMLInputElement> }) {
   return (
     <input
       type="checkbox"

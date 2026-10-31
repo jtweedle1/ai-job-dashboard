@@ -26,7 +26,7 @@ export default function WeekCard({ week }: { week: WeekSummary }) {
         </ul>
       )}
       {week.reviewed ? (
-        <Link href="/weekly-review" className="mt-4 inline-flex items-center gap-1.5 text-control text-ink-soft hover:text-ink">
+        <Link href="/weekly-review" className="mt-4 inline-flex items-center gap-1.5 text-ui text-ink-soft hover:text-ink">
           <i className="ti ti-check text-moss" aria-hidden="true" />
           Reviewed this week
         </Link>
@@ -35,8 +35,8 @@ export default function WeekCard({ week }: { week: WeekSummary }) {
           href="/weekly-review"
           className={
             week.reviewDue
-              ? "mt-4 inline-flex items-center gap-1.5 h-10 px-4 rounded-full border border-control text-control font-semibold text-ink hover:bg-well transition-colors duration-100"
-              : "mt-4 inline-flex items-center gap-1.5 text-control font-semibold text-action hover:underline underline-offset-4"
+              ? "mt-4 inline-flex items-center gap-1.5 h-10 px-4 rounded-full border border-control text-ui font-semibold text-ink hover:bg-well transition-colors duration-100"
+              : "mt-4 inline-flex items-center gap-1.5 text-ui font-semibold text-action hover:underline underline-offset-4"
           }
         >
           {week.reviewDue ? "Time for your weekly review" : "Weekly review"}

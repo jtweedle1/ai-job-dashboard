@@ -88,7 +88,7 @@ export default function Menu({
         className={
           trigger === "icon"
             ? "w-9 h-9 rounded-full inline-flex items-center justify-center text-ink-soft hover:bg-well hover:text-ink transition-colors duration-100"
-            : "h-9 px-3 rounded-full inline-flex items-center gap-1.5 text-control font-semibold text-action hover:bg-well transition-colors duration-100"
+            : "h-9 px-3 rounded-full inline-flex items-center gap-1.5 text-ui font-semibold text-action hover:bg-well transition-colors duration-100"
         }
       >
         {trigger === "icon" ? (

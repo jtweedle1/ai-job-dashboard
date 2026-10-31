@@ -66,7 +66,7 @@ const ActionQueue = forwardRef<HTMLHeadingElement, { actions: NextAction[]; jobs
           <button
             onClick={() => setShowAll((v) => !v)}
             aria-expanded={showAll}
-            className="mt-4 text-control font-semibold text-action hover:underline underline-offset-4"
+            className="mt-4 text-ui font-semibold text-action hover:underline underline-offset-4"
           >
             {showAll ? "Show fewer" : `Show all ${actions.length}`}
           </button>

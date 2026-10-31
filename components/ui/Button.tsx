@@ -10,13 +10,13 @@ const BASE =
 
 const SIZES: Record<ButtonSize, string> = {
   sm: "h-8 px-3.5 text-sm",
-  md: "h-10 px-5 text-control",
+  md: "h-10 px-5 text-ui",
   lg: "h-12 px-6 text-base",
 };
 
 const QUIET_SIZES: Record<ButtonSize, string> = {
   sm: "h-8 px-2.5 text-sm",
-  md: "h-9 px-3 text-control",
+  md: "h-9 px-3 text-ui",
   lg: "h-11 px-4 text-base",
 };
 

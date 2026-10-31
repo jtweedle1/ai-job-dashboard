@@ -30,7 +30,7 @@ export default function SectionTabs() {
                 ref={active ? activeRef : undefined}
                 href={t.href}
                 aria-current={active ? "page" : undefined}
-                className={`relative inline-flex items-center h-10 text-control font-semibold whitespace-nowrap transition-colors duration-100 ${
+                className={`relative inline-flex items-center h-10 text-ui font-semibold whitespace-nowrap transition-colors duration-100 ${
                   active ? "text-ink" : "text-ink-soft hover:text-ink"
                 }`}
               >
