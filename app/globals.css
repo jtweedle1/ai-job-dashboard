@@ -47,6 +47,145 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/*
+ * Trailhead (DESIGN.md): paper and ink, one action color, one sun. These are semantic tokens: each
+ * one switches with the .dark class, so `text-ink` or `bg-sheet` never needs a `dark:` twin.
+ * Every text token passes WCAG AA on the backgrounds it's allowed on (lib/design-tokens.test.ts).
+ */
+:root {
+  --canvas: #f6f0e6;
+  --sheet: #fffbf5;
+  --well: #efe7da;
+  --ink: #2b2645;
+  --ink-soft: #57516b;
+  --ink-muted: #67616f;
+  --rule: #e4dacb;
+  --control: #8c8173;
+  --action: #5f57d2;
+  --action-hover: #4d45b5;
+  --action-wash: #eceafb;
+  --on-action: #ffffff;
+  --sun: #e8772e;
+  --sun-ink: #a24a15;
+  --sun-wash: #fce3cf;
+  --sky: #3a6696;
+  --sky-wash: #e3ecf6;
+  --moss: #3f7350;
+  --moss-wash: #e2eee3;
+  --stone: #6f655e;
+  --stone-wash: #ece6de;
+  --caution: #8a5a0a;
+  --caution-wash: #f8ebcf;
+  --danger: #a63a2e;
+  --danger-wash: #f7e1dd;
+  --raised: #fffbf5;
+  --scrim: rgb(43 38 69 / 0.4);
+  --sheet-shadow: 0 1px 0 rgb(43 38 69 / 0.04), 0 12px 32px -20px rgb(43 38 69 / 0.25);
+  --overlay-shadow: 0 24px 48px -16px rgb(22 19 42 / 0.35);
+  color-scheme: light;
+}
+
+.dark {
+  --canvas: #16132a;
+  --sheet: #221f38;
+  --well: #1c1932;
+  --ink: #f3eee6;
+  --ink-soft: #c9c2d6;
+  --ink-muted: #a39cb4;
+  --rule: #37324f;
+  --control: #7a7394;
+  --action: #a7a1f5;
+  --action-hover: #c3befa;
+  --action-wash: rgb(167 161 245 / 0.16);
+  --on-action: #16132a;
+  --sun: #f59a52;
+  --sun-ink: #f59a52;
+  --sun-wash: rgb(245 154 82 / 0.16);
+  --sky: #8db6e6;
+  --sky-wash: rgb(141 182 230 / 0.16);
+  --moss: #7fbf8e;
+  --moss-wash: rgb(127 191 142 / 0.16);
+  --stone: #b3a9a0;
+  --stone-wash: rgb(179 169 160 / 0.16);
+  --caution: #e8b45a;
+  --caution-wash: rgb(232 180 90 / 0.16);
+  --danger: #f08a7e;
+  --danger-wash: rgb(240 138 126 / 0.16);
+  --raised: #2c2846;
+  --scrim: rgb(0 0 0 / 0.6);
+  --sheet-shadow: 0 0 0 1px #37324f;
+  --overlay-shadow: 0 0 0 1px #37324f, 0 24px 48px -16px rgb(0 0 0 / 0.6);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-sheet: var(--sheet);
+  --color-well: var(--well);
+  --color-raised: var(--raised);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-muted: var(--ink-muted);
+  --color-rule: var(--rule);
+  --color-control: var(--control);
+  --color-action: var(--action);
+  --color-action-hover: var(--action-hover);
+  --color-action-wash: var(--action-wash);
+  --color-on-action: var(--on-action);
+  --color-sun: var(--sun);
+  --color-sun-ink: var(--sun-ink);
+  --color-sun-wash: var(--sun-wash);
+  --color-sky: var(--sky);
+  --color-sky-wash: var(--sky-wash);
+  --color-moss: var(--moss);
+  --color-moss-wash: var(--moss-wash);
+  --color-stone: var(--stone);
+  --color-stone-wash: var(--stone-wash);
+  --color-caution: var(--caution);
+  --color-caution-wash: var(--caution-wash);
+  --color-danger: var(--danger);
+  --color-danger-wash: var(--danger-wash);
+  --color-scrim: var(--scrim);
+
+  --font-serif: var(--font-fraunces), ui-serif, Georgia, serif;
+
+  --shadow-sheet: var(--sheet-shadow);
+  --shadow-overlay: var(--overlay-shadow);
+}
+
+@theme {
+  --text-display-xl: 3.5rem;
+  --text-display-xl--line-height: 1.07;
+  --text-display: 2.5rem;
+  --text-display--line-height: 1.1;
+  --text-title: 1.875rem;
+  --text-title--line-height: 1.2;
+  --text-heading: 1.375rem;
+  --text-heading--line-height: 1.3;
+  --text-reading: 1.0625rem;
+  --text-reading--line-height: 1.65;
+  --text-label: 0.8125rem;
+  --text-label--line-height: 1.4;
+  --text-meta: 0.8125rem;
+  --text-meta--line-height: 1.4;
+  --text-note: 0.875rem;
+  --text-note--line-height: 1.4;
+
+  --radius-mark: 4px;
+  --radius-stamp: 8px;
+  --radius-field: 12px;
+  --radius-sheet: 20px;
+  --radius-dialog: 24px;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* Fraunces with its soft axis turned up: friendly, not literary. Inherited by everything inside. */
+.font-serif {
+  font-variation-settings: "SOFT" 100;
+}
+
 body {
   background: #fbf9fe;
   color: var(--color-gray-900);
