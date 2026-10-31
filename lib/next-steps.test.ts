@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { nextActions, stepsDone, suggestedStep, type JobActivity } from "./next-steps";
+import { nextActions, stepsDone, suggestedStep, timeAgo, type JobActivity } from "./next-steps";
+import { fitWord } from "@/types/job";
 import type { Job } from "@/types/job";
 
 const NOW = new Date("2026-10-27T12:00:00Z");
@@ -110,5 +111,31 @@ describe("nextActions", () => {
 
   it("skips closed jobs", () => {
     expect(nextActions([job({ stage: "rejected" }), job({ stage: "withdrawn" })], () => NONE, NOW)).toEqual([]);
+  });
+});
+
+describe("timeAgo", () => {
+  const now = new Date(2026, 9, 31, 15);
+  it("says today, yesterday and days ago within the week", () => {
+    expect(timeAgo(new Date(2026, 9, 31, 1), now)).toBe("Today");
+    expect(timeAgo(new Date(2026, 9, 30, 23), now)).toBe("Yesterday");
+    expect(timeAgo(new Date(2026, 9, 28), now)).toBe("3 days ago");
+  });
+  it("falls back to a date, with the year only when it differs", () => {
+    expect(timeAgo(new Date(2026, 9, 20), now)).toBe("Oct 20");
+    expect(timeAgo(new Date(2025, 11, 2), now)).toBe("Dec 2, 2025");
+  });
+  it("treats a future date as today", () => {
+    expect(timeAgo(new Date(2026, 10, 2), now)).toBe("Today");
+  });
+});
+
+describe("fitWord", () => {
+  it("uses the design thresholds", () => {
+    expect(fitWord(86).word).toBe("Strong");
+    expect(fitWord(75).word).toBe("Strong");
+    expect(fitWord(74).word).toBe("Possible");
+    expect(fitWord(55).word).toBe("Possible");
+    expect(fitWord(54).word).toBe("Long shot");
   });
 });

@@ -1,6 +1,7 @@
 "use client";
 
 import { use, useState, useEffect, useCallback, useRef } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { authedFetch, noKeyMessage } from "@/lib/api-client";
@@ -12,6 +13,14 @@ import type { Company } from "@/types/company";
 import type { Job } from "@/types/job";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "@/lib/firebase";
+import { timeAgo } from "@/lib/next-steps";
+import { useToast } from "@/lib/use-toast";
+import Toast from "@/components/Toast";
+import PageFrame from "@/components/ui/PageFrame";
+import Button, { buttonClasses } from "@/components/ui/Button";
+import Menu from "@/components/ui/Menu";
+import Dialog from "@/components/ui/Dialog";
+import { EmptyState, InlineMessage, LoadingBlocks, Monogram, Section } from "@/components/ui/bits";
 
 const PROFILE_FIELDS: { key: keyof Company; label: string; placeholder: string }[] = [
   { key: "whatTheyDo",       label: "What they do",       placeholder: "Describe what this company does…" },
@@ -22,10 +31,6 @@ const PROFILE_FIELDS: { key: keyof Company; label: string; placeholder: string }
   { key: "competitors",      label: "Competitors",        placeholder: "Main competitors in their space…" },
   { key: "whyInterested",    label: "Why interested",     placeholder: "Why does this company appeal to you?…" },
 ];
-
-function formatDate(d: Date) {
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-}
 
 export default function CompanyProfilePage({
   params,
@@ -44,7 +49,7 @@ export default function CompanyProfilePage({
   const [deleting, setDeleting] = useState(false);
   const [filling, setFilling] = useState(false);
   const [fillError, setFillError] = useState("");
-  const [toast, setToast] = useState<{ msg: string; error?: boolean } | null>(null);
+  const { show, toastProps } = useToast();
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
@@ -71,8 +76,7 @@ export default function CompanyProfilePage({
   );
 
   function showToast(msg: string, error = false) {
-    setToast({ msg, error });
-    setTimeout(() => setToast(null), 2500);
+    show(msg, error ? { tone: "error" } : {});
   }
 
   async function handleAutoFill() {
@@ -106,7 +110,7 @@ export default function CompanyProfilePage({
             }
           : prev
       );
-      showToast("Fields filled — review and edit as needed");
+      showToast("Filled in. Check each one and fix anything that's off.");
     } catch {
       setFillError("Something went wrong. Try again.");
     } finally {
@@ -118,7 +122,7 @@ export default function CompanyProfilePage({
     const file = e.target.files?.[0];
     if (!file || !user) return;
     if (!file.type.startsWith("image/")) {
-      showToast("Please select an image file", true);
+      showToast("That isn't an image. Choose a PNG, JPG or SVG.", true);
       return;
     }
     setUploadingLogo(true);
@@ -130,7 +134,7 @@ export default function CompanyProfilePage({
       showToast("Logo uploaded");
     } catch (err) {
       console.error("Logo upload error:", err);
-      showToast("Upload failed — try again", true);
+      showToast("The logo didn't upload. Try again.", true);
     } finally {
       setUploadingLogo(false);
       if (logoInputRef.current) logoInputRef.current.value = "";
@@ -144,195 +148,157 @@ export default function CompanyProfilePage({
     router.push("/companies");
   }
 
+  const back = (
+    <Link href="/companies" className="inline-flex items-center gap-1 text-meta font-semibold text-ink-soft hover:text-ink">
+      <i className="ti ti-arrow-left" aria-hidden="true" />
+      Companies
+    </Link>
+  );
+
   if (loading) {
     return (
-      <div className="p-6 max-w-3xl mx-auto animate-pulse space-y-4">
-        <div className="h-7 bg-gray-100 dark:bg-gray-800 rounded w-48" />
-        <div className="h-32 bg-gray-100 dark:bg-gray-800 rounded-2xl" />
-        <div className="h-32 bg-gray-100 dark:bg-gray-800 rounded-2xl" />
-      </div>
+      <PageFrame>
+        <LoadingBlocks rows={3} label="Loading company" />
+      </PageFrame>
     );
   }
 
   if (notFound || !company) {
     return (
-      <div className="p-6 max-w-3xl mx-auto text-center pt-20">
-        <p className="text-sm text-gray-500 mb-4">Company not found.</p>
-        <button
-          onClick={() => router.push("/companies")}
-          className="text-sm text-primary-600 hover:underline"
+      <PageFrame>
+        <EmptyState
+          title="We couldn't find that company"
+          action={
+            <Link href="/companies" className={buttonClasses({ variant: "secondary" })}>
+              Back to companies
+            </Link>
+          }
         >
-          Back to companies
-        </button>
-      </div>
+          It may have been deleted.
+        </EmptyState>
+      </PageFrame>
     );
   }
 
+  const ago = timeAgo(company.updatedAt, new Date());
+  const updated = ago === "Today" || ago === "Yesterday" ? ago.toLowerCase() : ago;
+
   return (
-    <div className="p-6 max-w-3xl mx-auto">
-      {/* Toast */}
-      {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-full shadow-lg shadow-gray-900/20">
-          {toast.error ? (
-            <i className="ti ti-alert-circle text-red-600 text-base" aria-hidden="true" />
-          ) : (
-            <i className="ti ti-circle-check text-primary-400 text-base" aria-hidden="true" />
-          )}
-          {toast.msg}
-        </div>
-      )}
+    <PageFrame>
+      <Toast {...toastProps} />
+      <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
 
-      {/* Back */}
-      <button
-        onClick={() => router.push("/companies")}
-        className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors mb-5"
-      >
-        <i className="ti ti-arrow-left text-sm" aria-hidden="true" />
-        Companies
-      </button>
-
-      {/* Header */}
-      <input
-        ref={logoInputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={handleLogoUpload}
-      />
-      <div className="flex items-start justify-between gap-4 mb-2">
-        <div className="flex items-center gap-3 flex-1 min-w-0">
+      <header className="pt-2 mb-10">
+        <div className="mb-3">{back}</div>
+        <div className="flex items-start gap-4">
           <button
+            type="button"
             onClick={() => logoInputRef.current?.click()}
             disabled={uploadingLogo}
-            title="Upload logo"
-            className="relative w-11 h-11 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden group border border-gray-200 dark:border-gray-700 hover:border-primary-400 transition-colors"
+            aria-label={company.logoUrl ? "Change logo" : "Upload a logo"}
+            className="relative shrink-0 mt-1 rounded-stamp group"
           >
-            {uploadingLogo ? (
-              <i className="ti ti-loader-2 animate-spin text-gray-400 text-sm" aria-hidden="true" />
-            ) : company.logoUrl ? (
-              <>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={company.logoUrl} alt={company.name} className="w-full h-full object-contain" />
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <i className="ti ti-upload text-white text-xs" aria-hidden="true" />
-                </div>
-              </>
-            ) : (
-              <>
-                <i className="ti ti-building text-gray-400 text-sm group-hover:opacity-0 transition-opacity" aria-hidden="true" />
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <i className="ti ti-upload text-gray-500 dark:text-gray-400 text-sm" aria-hidden="true" />
-                </div>
-              </>
-            )}
+            <Monogram name={company.name} logoUrl={company.logoUrl} size="lg" />
+            <span className="absolute inset-0 rounded-stamp bg-ink/50 text-canvas opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity duration-100 flex items-center justify-center">
+              <i className={`ti ${uploadingLogo ? "ti-loader-2 animate-spin" : "ti-upload"}`} aria-hidden="true" />
+            </span>
           </button>
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 -ml-3">
+            <h1 className="sr-only">{company.name}</h1>
             <EditableField
               value={company.name}
               label="Company name"
-              onSave={(v) => { if (v.trim()) { save({ name: v.trim() }); showToast("Name updated"); } }}
+              onSave={(v) => {
+                if (v.trim()) {
+                  save({ name: v.trim() });
+                  showToast("Name updated");
+                }
+              }}
               placeholder="Company name"
-              className="text-xl font-semibold text-gray-900 px-0 hover:bg-transparent"
+              className="font-serif text-title font-semibold"
             />
+            <p className="mt-1 pl-3 text-meta text-ink-muted">Updated {updated}</p>
           </div>
+          <Menu
+            items={[
+              { label: company.logoUrl ? "Change logo" : "Upload a logo", icon: "ti-photo", onSelect: () => logoInputRef.current?.click() },
+              { label: "Delete company", icon: "ti-trash", danger: true, onSelect: () => setDeleteConfirm(true) },
+            ]}
+          />
         </div>
-        <div className="flex items-center gap-2 shrink-0 pt-1">
-          <button
-            onClick={handleAutoFill}
-            disabled={filling}
-            className="flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 px-3 py-1.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {filling ? (
-              <i className="ti ti-loader-2 animate-spin text-xs" aria-hidden="true" />
-            ) : (
-              <i className="ti ti-wand text-xs" aria-hidden="true" />
-            )}
-            {filling ? "Filling…" : "Auto-fill with AI"}
-          </button>
-
-          {deleteConfirm ? (
-            <>
-              <span className="text-xs text-gray-500 dark:text-gray-400">Delete?</span>
-              <button
-                onClick={handleDelete}
-                disabled={deleting}
-                className="text-xs font-medium text-red-600 hover:text-red-700 transition-colors"
-              >
-                {deleting ? "Deleting…" : "Yes"}
-              </button>
-              <button
-                onClick={() => setDeleteConfirm(false)}
-                className="text-xs text-gray-500 hover:text-gray-600 transition-colors"
-              >
-                No
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={() => setDeleteConfirm(true)}
-              className="text-gray-500 hover:text-red-400 transition-colors"
-              aria-label="Delete company"
-            >
-              <i className="ti ti-trash text-sm" aria-hidden="true" />
-            </button>
-          )}
+        <div className="mt-6 flex items-center gap-3 flex-wrap">
+          <Button variant="secondary" icon="ti-wand" loading={filling} loadingLabel="Filling in…" onClick={handleAutoFill}>
+            Fill in with AI
+          </Button>
+          <span className="text-meta text-ink-soft">Drafts the research notes from what&apos;s public. You can edit every line.</span>
         </div>
-      </div>
-      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 px-3">Updated {formatDate(company.updatedAt)}</p>
-      {fillError && (
-        <p role="alert" className="text-xs text-amber-800 dark:text-amber-300 mb-5 px-3">{fillError}</p>
-      )}
-      {!fillError && <div className="mb-6" />}
-
-      {/* Linked job */}
-      <div className="surface mb-4">
-        <div className="px-4 py-3 border-b border-gray-50 dark:border-gray-800">
-          <h2 className="section-label">Linked role</h2>
-        </div>
-        {linkedJob ? (
-          <div className="px-4 py-3 flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-900 dark:text-gray-50">{linkedJob.title}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">{linkedJob.company}</p>
-            </div>
-            <button
-              onClick={() => router.push(`/applications/${linkedJob.id}`)}
-              className="text-xs text-primary-600 hover:underline shrink-0 ml-4"
-            >
-              View job
-            </button>
-          </div>
-        ) : (
-          <div className="px-4 py-3">
-            <p className="text-sm text-gray-500 dark:text-gray-400">No role linked to this company.</p>
-          </div>
+        {fillError && (
+          <InlineMessage tone="caution" role="alert" className="mt-4">
+            {fillError}
+          </InlineMessage>
         )}
+      </header>
+
+      <div className="space-y-12">
+        <Section title="Linked role" serif id="linked">
+          {linkedJob ? (
+            <Link
+              href={`/applications/${linkedJob.id}`}
+              className="group flex items-center gap-3 py-3 px-3 -mx-3 rounded-field hover:bg-well transition-colors duration-100"
+            >
+              <span className="flex-1 min-w-0">
+                <span className="block font-semibold text-ink">{linkedJob.title}</span>
+                <span className="block text-meta text-ink-soft">{linkedJob.company}</span>
+              </span>
+              <span className="text-ui font-semibold text-action">Open job</span>
+              <i className="ti ti-arrow-right text-action" aria-hidden="true" />
+            </Link>
+          ) : (
+            <p className="text-ink-soft">No role is linked to this company.</p>
+          )}
+        </Section>
+
+        <Section title="Research notes" serif id="notes">
+          <dl className="space-y-6">
+            {PROFILE_FIELDS.map(({ key, label, placeholder }) => (
+              <div key={key}>
+                <dt className="mb-1 text-label font-semibold text-ink-soft">{label}</dt>
+                <dd className="-mx-3">
+                  <EditableField
+                    value={company[key] as string | null}
+                    label={label}
+                    placeholder={placeholder}
+                    multiline
+                    rows={3}
+                    onSave={(v) => {
+                      save({ [key]: v.trim() || null });
+                      showToast("Saved");
+                    }}
+                  />
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </Section>
       </div>
 
-      {/* Profile fields */}
-      <div className="surface mb-4">
-        <div className="px-4 py-3 border-b border-gray-50 dark:border-gray-800">
-          <h2 className="section-label">Research notes</h2>
-        </div>
-        <div className="divide-y divide-gray-50 dark:divide-gray-800">
-          {PROFILE_FIELDS.map(({ key, label, placeholder }) => (
-            <div key={key} className="px-4 py-3">
-              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{label}</p>
-              <EditableField
-                value={company[key] as string | null}
-                label={label}
-                placeholder={placeholder}
-                multiline
-                rows={3}
-                onSave={(v) => {
-                  save({ [key]: v.trim() || null });
-                  showToast("Saved");
-                }}
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
+      {deleteConfirm && (
+        <Dialog
+          title={`Delete ${company.name}?`}
+          description="Its research notes go too. Any jobs stay where they are. This can't be undone."
+          onRequestClose={() => setDeleteConfirm(false)}
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setDeleteConfirm(false)}>
+                Cancel
+              </Button>
+              <Button variant="danger-solid" loading={deleting} loadingLabel="Deleting…" onClick={handleDelete}>
+                Delete company
+              </Button>
+            </>
+          }
+        />
+      )}
+    </PageFrame>
   );
 }

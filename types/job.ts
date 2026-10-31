@@ -104,3 +104,11 @@ export function matchesStageFilter(stage: JobStage, filter: StageFilter): boolea
     ? (STAGE_GROUPS[filter as StageGroup].stages as readonly JobStage[]).includes(stage)
     : stage === filter;
 }
+
+// A fit score in words (DESIGN.md: job listings). Display only; the score itself is unchanged.
+export type FitWord = { word: "Strong" | "Possible" | "Long shot"; tone: "moss" | "ink-soft" | "stone" };
+export function fitWord(score: number): FitWord {
+  if (score >= 75) return { word: "Strong", tone: "moss" };
+  if (score >= 55) return { word: "Possible", tone: "ink-soft" };
+  return { word: "Long shot", tone: "stone" };
+}
