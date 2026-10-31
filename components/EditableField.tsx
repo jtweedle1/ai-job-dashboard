@@ -36,7 +36,7 @@ export default function EditableField({
   }
 
   const inputClass =
-    "w-full border border-primary-300 dark:border-primary-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-800";
+    "w-full rounded-field bg-sheet border border-action px-3 py-2 text-base text-ink focus:outline-2 focus:outline-offset-2 focus:outline-action";
 
   if (editing) {
     return multiline ? (
@@ -73,16 +73,16 @@ export default function EditableField({
         setDraft(value ?? "");
         setEditing(true);
       }}
-      className={`w-full text-left px-3 py-2 rounded-xl text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group ${className}`}
+      className={`w-full text-left px-3 py-2 rounded-field text-base hover:bg-well transition-colors duration-100 group ${className}`}
     >
       {label && <span className="sr-only">Edit {label}: </span>}
       {value ? (
-        <span className="text-gray-900 dark:text-gray-100 whitespace-pre-wrap">{value}</span>
+        <span className="text-ink whitespace-pre-wrap">{value}</span>
       ) : (
-        <span className="text-gray-500 dark:text-gray-400">{placeholder}</span>
+        <span className="text-ink-muted">{placeholder}</span>
       )}
       <i
-        className="ti ti-pencil text-gray-400 dark:text-gray-500 text-xs ml-2 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 pointer-coarse:opacity-100 transition-opacity"
+        className="ti ti-pencil text-ink-muted text-sm ml-2 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 pointer-coarse:opacity-100 transition-opacity"
         aria-hidden="true"
       />
     </button>
