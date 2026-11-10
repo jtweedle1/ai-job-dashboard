@@ -61,7 +61,7 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps) {
   const name = user?.isAnonymous ? "Demo visitor" : user?.displayName ?? user?.email ?? "Account";
 
   const sidebar = (
-    <aside className="w-[232px] h-full flex flex-col bg-canvas border-r border-rule">
+    <aside className="w-[232px] h-full flex flex-col bg-rail border-r border-rule">
       <div className="px-6 pt-7 pb-9">
         <Logo />
       </div>

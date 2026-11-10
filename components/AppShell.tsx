@@ -49,7 +49,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         {/* Phone top bar */}
-        <header className="flex md:hidden items-center gap-1 px-2 h-14 bg-canvas border-b border-rule shrink-0">
+        <header className="flex md:hidden items-center gap-1 px-2 h-14 bg-rail border-b border-rule shrink-0">
           <button
             ref={menuButton}
             onClick={() => setSidebarOpen(true)}

@@ -50,6 +50,8 @@
   --danger: #a3301f;
   --danger-wash: #ffdcd3;
   --raised: #fffbf0;
+  /* The sidebar: a warm off-white by day, near-black by night, so the canvas reads as the page. */
+  --rail: #fffdf7;
   --scrim: rgb(58 31 61 / 0.4);
   /* Color fields, not cards: a sheet is set apart by its color, never a shadow. */
   --sheet-shadow: none;
@@ -92,6 +94,7 @@
   --danger: #ff9d8a;
   --danger-wash: rgb(255 157 138 / 0.16);
   --raised: #3d2c52;
+  --rail: #120d16;
   --scrim: rgb(10 5 15 / 0.6);
   --sheet-shadow: none;
   --overlay-shadow: 0 0 0 1px #4a3757, 0 24px 48px -16px rgb(0 0 0 / 0.6);
@@ -103,6 +106,7 @@
   --color-sheet: var(--sheet);
   --color-well: var(--well);
   --color-raised: var(--raised);
+  --color-rail: var(--rail);
   --color-ink: var(--ink);
   --color-ink-soft: var(--ink-soft);
   --color-ink-muted: var(--ink-muted);

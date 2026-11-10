@@ -28,8 +28,8 @@ function contrast(a: string, b: string): number {
 const TEXT = ["ink", "ink-soft", "ink-muted", "action", "sky", "moss", "stone", "caution", "danger", "sun-ink"];
 
 describe.each([
-  ["light", block(":root"), ["canvas", "sheet", "well"]],
-  ["dark", block(".dark"), ["canvas", "sheet", "well", "raised"]],
+  ["light", block(":root"), ["canvas", "sheet", "well", "rail"]],
+  ["dark", block(".dark"), ["canvas", "sheet", "well", "raised", "rail"]],
 ] as const)("%s theme", (_, tokens, surfaces) => {
   it.each(TEXT)("%s text passes AA on every surface", (text) => {
     for (const surface of surfaces) {
