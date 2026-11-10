@@ -51,7 +51,7 @@
   --danger-wash: #ffdcd3;
   --raised: #fffbf0;
   /* The sidebar: a warm off-white by day, near-black by night, so the canvas reads as the page. */
-  --rail: #fffdf7;
+  --rail: #fbfaf8;
   --scrim: rgb(58 31 61 / 0.4);
   /* Color fields, not cards: a sheet is set apart by its color, never a shadow. */
   --sheet-shadow: none;
@@ -77,7 +77,8 @@
   --on-hero: #fff3da;
   --hill-far: #8e4a62;
   --hill-near: #6b3a5e;
-  --warm: #ff8a65;
+  /* At night the week's field is moon yellow. */
+  --warm: #ffe29a;
   --on-warm: #2a1630;
   /* After sunset the sun is a moon. */
   --sun: #ffe29a;

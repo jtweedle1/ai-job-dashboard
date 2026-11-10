@@ -6,7 +6,7 @@ colors:
   sheet: "#FFEEB8"
   well: "#FFE49C"
   raised: "#FFFBF0"
-  rail: "#FFFDF7"
+  rail: "#FBFAF8"
   hero: "#FFC83D"
   on-hero: "#3A1F3D"
   warm: "#FF8A65"
@@ -155,9 +155,9 @@ Butter, sunflower and coral by day; plum, moon and cream by night. Status hues s
 | Field | `sheet` | #FFEEB8 | #2E2040 | Color fields that group content: Up next, job lists, the current step, forms. |
 | Sunken | `well` | #FFE49C | #3D2C52 | Hover, selected row, monogram fill, filter pills. |
 | Raised | `raised` | #FFFBF0 | #3D2C52 | Inputs, dialogs, menus, toasts. |
-| Sidebar | `rail` | #FFFDF7 | #120D16 | The sidebar and the phone header: off-white by day, near-black by night. |
+| Sidebar | `rail` | #FBFAF8 | #120D16 | The sidebar and the phone header: off-white by day, near-black by night. |
 | Hero | `hero` / `on-hero` | #FFC83D / #3A1F3D | #3A2550 / #FFF3DA | The one hero field on Today. |
-| Second field | `warm` / `on-warm` | #FF8A65 / #3A1F3D | #FF8A65 / #2A1630 | The week's progress on Today. |
+| Second field | `warm` / `on-warm` | #FF8A65 / #3A1F3D (coral) | #FFE29A / #2A1630 (moon yellow) | The week's progress on Today. |
 | Hills | `hill-far`, `hill-near` | #FFD978, #FFB347 | #8E4A62, #6B3A5E | The hero illustration only. |
 | Text | `ink` | #3A1F3D | #FFF3DA | Headings and body. |
 | Text, secondary | `ink-soft` | #5C4459 | #E3D0DF | Supporting lines, inactive nav and tabs. |
