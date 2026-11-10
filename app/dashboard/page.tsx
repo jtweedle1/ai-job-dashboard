@@ -247,7 +247,7 @@ export default function TodayPage() {
           <p className="text-meta font-semibold text-ink-soft">
             {now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
           </p>
-          <h1 className="mt-1 font-serif text-title sm:text-display font-semibold text-ink text-balance">
+          <h1 className="mt-1 font-display text-title sm:text-display font-semibold text-ink text-balance">
             {greeting(now)}
             {firstName ? `, ${firstName}` : ""}
           </h1>
@@ -273,7 +273,7 @@ export default function TodayPage() {
         <>
           <div className="mt-12 grid grid-cols-1 lg:grid-cols-12 gap-x-12 gap-y-10 items-start">
             {rest.length > 0 && (
-              <div className="lg:col-span-8">
+              <div className="lg:col-span-8 bg-sheet rounded-sheet p-5 sm:p-7">
                 <ActionQueue ref={queueHeading} actions={rest} jobs={jobsById} onAct={act} now={now} />
               </div>
             )}

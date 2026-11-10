@@ -149,7 +149,7 @@ export default function BackgroundPage() {
     <>
       {editingId !== null && (
         <Sheet as="section" aria-labelledby="bg-form-heading" className="mb-12">
-          <h2 id="bg-form-heading" className="font-serif text-heading font-semibold text-ink">
+          <h2 id="bg-form-heading" className="font-display text-heading font-semibold text-ink">
             {editingId === "new" ? "A new position" : "Edit this position"}
           </h2>
           <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-5">
@@ -184,7 +184,7 @@ export default function BackgroundPage() {
       {backgrounds.length > 0 ? (
         <section aria-labelledby="positions-heading">
           <div className="flex items-baseline justify-between gap-4 mb-2">
-            <h2 id="positions-heading" className="font-serif text-heading font-semibold text-ink">
+            <h2 id="positions-heading" className="font-display text-heading font-semibold text-ink">
               Positions
             </h2>
             <p className="text-meta text-ink-soft">

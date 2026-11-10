@@ -114,7 +114,7 @@ export default function LandingPage() {
         {/* Hero: the claim on the left, the proof on the right */}
         <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-10 sm:pt-16 pb-16 grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-12 items-center">
           <div className="text-center lg:text-left">
-            <h1 className="font-serif text-[2.5rem] leading-[1.1] sm:text-display-xl font-semibold text-ink text-balance">
+            <h1 className="font-display text-[2.5rem] leading-[1.1] sm:text-display-xl font-semibold text-ink text-balance">
               Applications that sound like you, not like AI
             </h1>
             <p className="mt-5 mb-8 text-reading text-ink-soft max-w-xl mx-auto lg:mx-0 text-pretty">
@@ -147,7 +147,7 @@ export default function LandingPage() {
         {/* Closing: try it, plus how to get AI features */}
         <section aria-labelledby="closing-heading" className="max-w-2xl mx-auto px-4 sm:px-6 pt-16 pb-20 text-center">
           <ContourMap width={120} className="mx-auto mb-6 text-ink-soft" />
-          <h2 id="closing-heading" className="font-serif text-title font-semibold text-ink">
+          <h2 id="closing-heading" className="font-display text-title font-semibold text-ink">
             Look around Riley&apos;s job search
           </h2>
           <p className="mt-2 mb-8 text-ink-soft max-w-lg mx-auto text-pretty">

@@ -56,7 +56,7 @@ const ActionQueue = forwardRef<HTMLHeadingElement, { actions: NextAction[]; jobs
     return (
       <section aria-labelledby="up-next">
         <div className="flex items-baseline justify-between gap-3 mb-2">
-          <h2 id="up-next" ref={headingRef} tabIndex={-1} className="font-serif text-heading font-semibold text-ink outline-offset-4">
+          <h2 id="up-next" ref={headingRef} tabIndex={-1} className="font-display text-heading font-semibold text-ink outline-offset-4">
             Up next
           </h2>
           <span className="text-meta text-ink-muted">{actions.length} more</span>

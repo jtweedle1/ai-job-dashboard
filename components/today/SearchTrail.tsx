@@ -33,7 +33,7 @@ export default function SearchTrail({ stations, closed }: { stations: TrailStati
   return (
     <section aria-labelledby="your-trail">
       <div className="flex items-baseline justify-between gap-3 mb-4">
-        <h2 id="your-trail" className="font-serif text-heading font-semibold text-ink">
+        <h2 id="your-trail" className="font-display text-heading font-semibold text-ink">
           Your trail
         </h2>
         {closed > 0 && (

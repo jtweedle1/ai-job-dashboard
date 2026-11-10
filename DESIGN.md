@@ -1,81 +1,80 @@
 ---
 name: Wayfinder
-description: Trailhead. A warm field journal for a job search. Paper and ink, one sun that marks where you are, and a drawn trail that connects every step.
+description: Golden hour. A job search that feels like a deep breath on a warm afternoon. A butter canvas, soft yellow fields, a sunflower hero with a coral sun, plum ink, and a night mode where the sun becomes a moon.
 colors:
-  canvas: "#F6F0E6"
-  sheet: "#FFFBF5"
-  well: "#EFE7DA"
-  ink: "#2B2645"
-  ink-soft: "#57516B"
-  ink-muted: "#67616F"
-  rule: "#E4DACB"
-  control: "#8C8173"
-  action: "#5F57D2"
-  action-hover: "#4D45B5"
-  action-wash: "#ECEAFB"
-  sun: "#E8772E"
-  sun-ink: "#A24A15"
-  sun-wash: "#FCE3CF"
-  sky: "#3A6696"
-  sky-wash: "#E3ECF6"
-  moss: "#3F7350"
-  moss-wash: "#E2EEE3"
-  stone: "#6F655E"
-  stone-wash: "#ECE6DE"
-  caution: "#8A5A0A"
-  caution-wash: "#F8EBCF"
-  danger: "#A63A2E"
-  danger-wash: "#F7E1DD"
+  canvas: "#FFF8E1"
+  sheet: "#FFEEB8"
+  well: "#FFE49C"
+  raised: "#FFFBF0"
+  hero: "#FFC83D"
+  on-hero: "#3A1F3D"
+  warm: "#FF8A65"
+  on-warm: "#3A1F3D"
+  hill-far: "#FFD978"
+  hill-near: "#FFB347"
+  ink: "#3A1F3D"
+  ink-soft: "#5C4459"
+  ink-muted: "#6B5266"
+  rule: "#F1D98F"
+  control: "#9A7A66"
+  action: "#7A2E57"
+  action-hover: "#5E2143"
+  action-wash: "#F9DFD2"
+  sun: "#FF8A65"
+  sun-ink: "#A8401C"
+  sun-wash: "#FFDCCD"
+  sky: "#285F8F"
+  sky-wash: "#DCEBF6"
+  moss: "#2F6B3F"
+  moss-wash: "#E1EFD9"
+  stone: "#6B5A52"
+  stone-wash: "#F3E6CF"
+  caution: "#7A4F00"
+  caution-wash: "#FFE7A8"
+  danger: "#A3301F"
+  danger-wash: "#FFDCD3"
 typography:
   display:
-    fontFamily: "Fraunces, ui-serif, Georgia, serif"
+    fontFamily: "'Baloo 2', ui-rounded, ui-sans-serif, system-ui, sans-serif"
     fontSize: "2.5rem"
     fontWeight: 600
     lineHeight: 1.1
-    letterSpacing: "-0.015em"
   title:
-    fontFamily: "Fraunces, ui-serif, Georgia, serif"
+    fontFamily: "'Baloo 2', ui-rounded, ui-sans-serif, system-ui, sans-serif"
     fontSize: "1.875rem"
     fontWeight: 600
     lineHeight: 1.2
-    letterSpacing: "-0.01em"
   heading:
-    fontFamily: "Fraunces, ui-serif, Georgia, serif"
+    fontFamily: "'Baloo 2', ui-rounded, ui-sans-serif, system-ui, sans-serif"
     fontSize: "1.375rem"
     fontWeight: 600
     lineHeight: 1.3
   reading:
-    fontFamily: "Figtree, ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "'Nunito Sans', ui-sans-serif, system-ui, sans-serif"
     fontSize: "1.0625rem"
     fontWeight: 400
     lineHeight: 1.65
   body:
-    fontFamily: "Figtree, ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "'Nunito Sans', ui-sans-serif, system-ui, sans-serif"
     fontSize: "1rem"
     fontWeight: 400
     lineHeight: 1.5
   label:
-    fontFamily: "Figtree, ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "'Nunito Sans', ui-sans-serif, system-ui, sans-serif"
     fontSize: "0.8125rem"
     fontWeight: 600
     lineHeight: 1.4
   meta:
-    fontFamily: "Figtree, ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "'Nunito Sans', ui-sans-serif, system-ui, sans-serif"
     fontSize: "0.8125rem"
     fontWeight: 400
     lineHeight: 1.4
-  note:
-    fontFamily: "Fraunces, ui-serif, Georgia, serif"
-    fontSize: "0.875rem"
-    fontWeight: 400
-    fontStyle: italic
-    lineHeight: 1.4
 rounded:
-  mark: "4px"
-  stamp: "8px"
-  field: "12px"
-  sheet: "20px"
-  dialog: "24px"
+  mark: "6px"
+  stamp: "12px"
+  field: "16px"
+  sheet: "28px"
+  dialog: "32px"
   full: "9999px"
 spacing:
   1: "4px"
@@ -89,12 +88,10 @@ spacing:
 components:
   button-primary:
     backgroundColor: "{colors.action}"
-    textColor: "#FFFFFF"
+    textColor: "{colors.canvas}"
     rounded: "{rounded.full}"
     height: "40px"
     padding: "0 20px"
-  button-primary-hover:
-    backgroundColor: "{colors.action-hover}"
   button-secondary:
     backgroundColor: "transparent"
     textColor: "{colors.ink}"
@@ -102,158 +99,131 @@ components:
     rounded: "{rounded.full}"
     height: "40px"
     padding: "0 18px"
-  button-quiet:
-    textColor: "{colors.action}"
-    rounded: "{rounded.full}"
-    height: "36px"
-    padding: "0 12px"
   input:
-    backgroundColor: "{colors.sheet}"
+    backgroundColor: "{colors.raised}"
     textColor: "{colors.ink}"
     borderColor: "{colors.control}"
     rounded: "{rounded.field}"
     height: "44px"
-    padding: "0 14px"
   sheet:
     backgroundColor: "{colors.sheet}"
     rounded: "{rounded.sheet}"
     padding: "32px"
-  dialog:
-    backgroundColor: "{colors.sheet}"
-    rounded: "{rounded.dialog}"
-    padding: "32px"
-  monogram:
-    backgroundColor: "{colors.well}"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.stamp}"
-    size: "36px"
-  toast:
-    backgroundColor: "{colors.ink}"
-    textColor: "{colors.sheet}"
-    rounded: "{rounded.field}"
+  hero:
+    backgroundColor: "{colors.hero}"
+    textColor: "{colors.on-hero}"
+    rounded: "{rounded.sheet}"
+    padding: "36px"
 ---
 
-# Design System: Wayfinder (Trailhead)
+# Design System: Wayfinder (Golden hour)
 
-This document is the approved visual system for Wayfinder. It replaces the earlier "Calm Morning" system (frosted cards on a sunrise gradient). The code has not been migrated yet. Until it is, `app/globals.css` still holds the Calm Morning tokens, and the [migration plan](#13-how-this-fits-the-current-code) below explains how the two coexist.
+This is the approved visual system for Wayfinder. It replaces Trailhead (paper, ink and a drawn trail), which Jazmin reviewed in the app and turned down. Golden hour keeps Trailhead's structure (components, layout, spacing, the trail, motion and content rules) and changes the look: color, type, shape, depth and illustration.
 
-The tokens in the front matter are the light-mode values. Dark-mode values are in [Color](#2-color).
+The tokens in the front matter are the day (light) values. Night (dark) values are in [Color](#2-color). Dark mode **is** the night palette. The theme never changes by time of day; it follows the device setting or the toggle in the sidebar.
 
 ## 1. The idea
 
-**Creative north star: Trailhead.** Wayfinder is a well-made field journal for a job search. It is warm paper and deep ink, and a calm guide who has walked this route before. One sun marks where you are, and a drawn trail connects every step.
-
-The personality is **warm, playful but mature, encouraging without cheese, calm without emptiness**. The playfulness comes from wit, a soft serif, small drawn details and moments that are earned. It does not come from a high volume of color or effects.
+**Creative north star: Golden hour.** Applying for jobs is stressful, so Wayfinder should feel like the opposite: warm, round, unhurried and a little bit joyful, like late-afternoon sun. At night it is the same place after sunset: a plum sky, cream text and a moon.
 
 ### Five rules everything else follows
 
-1. **One loud thing per screen.** Each screen has at most one raised sheet, one primary button and one illustration. Everything else sits on the page.
-2. **Color has a job.** Each color means one thing. Decoration never borrows a status color.
-3. **Delight is earned.** Personality appears at moments (a step done, an application sent, an offer), never as permanent decoration.
-4. **Dense where you work, airy where you feel.** Pipeline and the letter editor are information-rich. Today, milestones and the weekly review get room to breathe.
+1. **The sun leads.** One big flat sun (a moon at night) lives in the hero on Today. It is the brand.
+2. **Color fields, not cards.** Groups sit on soft yellow `sheet` fields that are set apart by color alone. No shadows, no hairline boxes around content.
+3. **Round everything.** Pills for things you press, generous radii for fields. No sharp corners.
+4. **One hero per screen.** The sunflower `hero` field (plum at night) is reserved for the single most important thing, and coral `warm` for the week's progress.
 5. **Never punish.** No streaks to break, no bold zeros, no red for being turned down.
 
 ### What this system is not
 
 | It is not | So we don't use |
 |---|---|
-| A startup landing template | Mesh gradients, glass, blurred orbs, sparkle eyebrow pills |
-| A SaaS admin panel | Cards inside cards, checkbox columns, a sort arrow on every header |
-| A meditation app | Full-screen color fields, mascots with faces, breathing animations |
+| A startup landing template | Gradients, glass, blurred orbs, sparkle eyebrow pills |
+| A SaaS admin panel | Cards inside cards, white boxes with shadows, a sort arrow on every header |
 | A game | Streaks, points, confetti, badges for logging in |
 
 ## 2. Color
 
-The palette is paper, ink, one action color and one sun. Status hues are earthy and quiet.
+Butter, sunflower and coral by day; plum, moon and cream by night. Status hues stay quiet and earthy.
 
 ### Roles
 
-| Role | Token | Light | Dark | Use |
+| Role | Token | Day | Night | Use |
 |---|---|---|---|---|
-| Background | `canvas` | #F6F0E6 | #16132A | The page. Everything sits on this by default. |
-| Surface | `sheet` | #FFFBF5 | #221F38 | The one raised sheet per screen, dialogs, menus, inputs. |
-| Sunken | `well` | #EFE7DA | #1C1932 | Row hover, selected row, monogram fill, quoted text. |
-| Text | `ink` | #2B2645 | #F3EEE6 | Headings and body. |
-| Text, secondary | `ink-soft` | #57516B | #C9C2D6 | Supporting lines, inactive nav and tabs. |
-| Text, meta | `ink-muted` | #67616F | #A39CB4 | Dates, sources, help text. The lightest text allowed. |
-| Border, decorative | `rule` | #E4DACB | #37324F | Hairlines between rows and sections. Never the only boundary of a control. |
-| Border, control | `control` | #8C8173 | #7A7394 | Input, select, checkbox and secondary button outlines (at least 3:1). |
-| Primary | `action` | #5F57D2 | #A7A1F5 | Primary buttons, links, focus ring, checked controls. |
-| Primary, hover | `action-hover` | #4D45B5 | #C3BEFA | Hover and pressed states of `action`. |
-| Primary, tint | `action-wash` | #ECEAFB | `action` at 16% | Selected menu item, selected chip. |
-| Accent | `sun` | #E8772E | #F59A52 | Where you are and progress: current step, trail position, milestones, the logo. A fill only, never text on light. |
-| Accent text | `sun-ink` | #A24A15 | #F59A52 | The rare time sun-colored text is needed (a milestone line). |
-| Accent, tint | `sun-wash` | #FCE3CF | `sun` at 16% | The Today next-step sheet's edge, milestone background. |
+| Background | `canvas` | #FFF8E1 | #1E1428 | The page. |
+| Field | `sheet` | #FFEEB8 | #2E2040 | Color fields that group content: Up next, job lists, the current step, forms. |
+| Sunken | `well` | #FFE49C | #3D2C52 | Hover, selected row, monogram fill, filter pills. |
+| Raised | `raised` | #FFFBF0 | #3D2C52 | Inputs, dialogs, menus, toasts. |
+| Hero | `hero` / `on-hero` | #FFC83D / #3A1F3D | #3A2550 / #FFF3DA | The one hero field on Today. |
+| Second field | `warm` / `on-warm` | #FF8A65 / #3A1F3D | #FF8A65 / #2A1630 | The week's progress on Today. |
+| Hills | `hill-far`, `hill-near` | #FFD978, #FFB347 | #8E4A62, #6B3A5E | The hero illustration only. |
+| Text | `ink` | #3A1F3D | #FFF3DA | Headings and body. |
+| Text, secondary | `ink-soft` | #5C4459 | #E3D0DF | Supporting lines, inactive nav and tabs. |
+| Text, meta | `ink-muted` | #6B5266 | #C4ADC2 | Dates, sources, help text. The lightest text allowed. |
+| Border, decorative | `rule` | #F1D98F | #4A3757 | Hairlines between rows. |
+| Border, control | `control` | #9A7A66 | #9A80A8 | Input, select, checkbox and secondary button outlines (at least 3:1). |
+| Primary | `action` / `on-action` | #7A2E57 / #FFF8E1 | #FFC83D / #2A1630 | Primary buttons, links, focus ring. Berry by day, sunflower by night. |
+| Primary, hover | `action-hover` | #5E2143 | #FFD466 | |
+| Primary, tint | `action-wash` | #F9DFD2 | sunflower at 16% | Selected menu item, selected chip. |
+| Sun | `sun` | #FF8A65 (coral sun) | #FFE29A (moon) | The logo, current step, trail position. A fill only. |
+| Sun text | `sun-ink` | #A8401C | #FFC83D | The rare time sun-colored text is needed. |
+| Sun tint | `sun-wash` | #FFDCCD | moon at 16% | The demo banner, milestone backgrounds. |
+| Chart marks | `chart` | #C45A3A | #FF8A65 | Bars and lines on Progress. |
 
-The secondary color is ink itself. Wayfinder has no second brand hue: anything that isn't an action, a position or a status is ink on paper.
+Inside the hero and coral fields, the field's own ink replaces `ink`, `ink-soft`, `control` and `action` (set as CSS variable overrides on the field), so everything on it passes contrast.
 
 ### Status and stage colors
 
-Each hue has a strong value (text, dots, icons) and a wash (backgrounds). In dark mode the wash is the strong value at 16% opacity.
-
-| Token | Light | Dark | Means |
+| Token | Day | Night | Means |
 |---|---|---|---|
-| `sky` / `sky-wash` | #3A6696 / #E3ECF6 | #8DB6E6 | Information. Stage: **Applied**. |
-| `moss` / `moss-wash` | #3F7350 / #E2EEE3 | #7FBF8E | Good, done, strong fit. Stage: **Offer**. |
-| `stone` / `stone-wash` | #6F655E / #ECE6DE | #B3A9A0 | Neutral, closed. Stages: **Saved** (hollow dot), **Not this time**, **Stepped away**. |
-| `caution` / `caution-wash` | #8A5A0A / #F8EBCF | #E8B45A | Check this: an unbacked claim, a missing field. |
-| `danger` / `danger-wash` | #A63A2E / #F7E1DD | #F08A7E | Something broke or is destructive: errors, delete. Never a job outcome. |
+| `sky` / `sky-wash` | #285F8F / #DCEBF6 | #9CC4EE | Information. Stage: **Applied**. |
+| `moss` / `moss-wash` | #2F6B3F / #E1EFD9 | #9FD6A6 | Good, done, strong fit. Stage: **Offer**. |
+| `stone` / `stone-wash` | #6B5A52 / #F3E6CF | #CBBCB4 | Neutral, closed. Stages: **Saved** (hollow dot), **Not this time**, **Stepped away**. |
+| `caution` / `caution-wash` | #7A4F00 / #FFE7A8 | #FFD27A | Check this: an unbacked claim, a missing field. |
+| `danger` / `danger-wash` | #A3301F / #FFDCD3 | #FF9D8A | Errors and destructive actions. Never a job outcome. |
 
-The **Phone screen** and **Interview** stages use `sun`, because "talking to them" is where the trail is moving.
+At night each wash is its strong value at 16% opacity. **Phone screen** and **Interview** use `sun`.
 
 ### Contrast (WCAG 2.2)
 
-Every text token is checked against the backgrounds it is allowed on.
-
-| Text | on canvas | on sheet | on well |
-|---|---|---|---|
-| `ink` | 12.6:1 | 13.9:1 | 11.7:1 |
-| `ink-soft` | 6.6:1 | 7.3:1 | 6.1:1 |
-| `ink-muted` | 5.3:1 | 5.8:1 | 4.9:1 |
-| `action` | 4.9:1 | 5.4:1 | 4.5:1 |
-| `sky`, `moss`, `stone`, `caution`, `danger`, `sun-ink` | 4.9 to 5.7:1 | 5.4 to 6.2:1 | 4.5 to 5.2:1 |
-| White on `action` button | 5.6:1 | | |
-| Each strong hue on its own wash | 4.6 to 5.1:1 | | |
-
-In dark mode, every text token is at least 5.3:1 on `canvas`, `sheet` and the raised dialog surface (#2C2846). `control` is at least 3:1 against its surface in both modes. `sun` on light backgrounds is 2.6:1, which is why it is a fill and never text.
+`lib/design-tokens.test.ts` checks every text token against `canvas`, `sheet` and `well` (and `raised` at night) for 4.5:1, control borders for 3:1, button text on `action`, and text on the hero and coral fields. By day the lowest text pair is `sun-ink` on `well` at 4.9:1; at night every text token is above 6:1.
 
 ### Background treatment
 
-- The background is flat `canvas`. No gradients, no blur, no fixed washes.
-- One optional paper grain (an inline SVG noise at 2 to 3% opacity) may be applied to `canvas` only. If it shows up in screenshots as dirt, remove it.
-- Dark mode is the **night trail**: deep ink, with `sun` as the warmest and brightest point on the screen.
+- Flat color only. No gradients, no blur, no grain.
+- The theme does not follow the clock. Night is dark mode.
 
 ## 3. Typography
 
 | Family | Role | Why |
 |---|---|---|
-| **Fraunces** (variable, `SOFT` 100, `opsz` auto) | Display, titles, headings, numbers, notes | A soft, slightly quirky serif. Friendly and mature, and it doesn't look like a template. |
-| **Figtree** | Everything you read, click or type | Clear, warm geometric sans that stays legible at small sizes. Already in the app. |
-| **Geist Mono** | API keys and technical values only | Already in the app. |
+| **Baloo 2** (600, 700) | Display, titles, headings, numbers | Chunky and soft: friendly without being childish. |
+| **Nunito Sans** | Everything you read, click or type | Rounded terminals that match Baloo, and clear at small sizes. |
+| **Geist Mono** | API keys and technical values only | |
+
+Tailwind: `font-display` for Baloo 2, the default `font-sans` for Nunito Sans.
 
 ### Scale
 
 | Token | Family | Size / line height | Weight | Use |
 |---|---|---|---|---|
-| `display-xl` | Fraunces | 56 / 60 (40 / 44 on phones) | 600 | Landing hero only. |
-| `display` | Fraunces | 40 / 44 (32 / 38 on phones) | 600 | Today greeting, milestone line. One per screen at most. |
-| `title` | Fraunces | 30 / 36 | 600 | Page titles, the role on a job page. |
-| `heading` | Fraunces | 22 / 28 | 600 | Section headings on reading pages, dialog titles. |
-| `reading` | Figtree | 17 / 28 | 400 | Letters, job descriptions, interview notes. |
-| `body` | Figtree | 16 / 24 | 400; 600 for emphasis | Default UI text, row titles (600). |
-| `label` | Figtree | 13 / 18 | 600 | Section labels, form labels. Sentence case. |
-| `meta` | Figtree | 13 / 18 | 400 | Dates, sources, help text. |
-| `note` | Fraunces italic | 14 / 20 | 400 | Human asides: "3 days ago", "from your resume". |
-| `numeral` | Fraunces, tabular figures | 28 / 32 or 40 / 44 | 600 | Counts on Today and Progress. |
+| `display-xl` | Baloo 2 | 56 / 60 (40 / 44 on phones) | 600 | Landing hero only. |
+| `display` | Baloo 2 | 40 / 44 (32 / 38 on phones) | 600 | Today greeting. |
+| `title` | Baloo 2 | 30 / 36 | 600 | Page titles, the role on a job page, the hero's next step. |
+| `heading` | Baloo 2 | 22 / 28 | 600 | Section and field headings, dialog titles. |
+| `reading` | Nunito Sans | 17 / 28 | 400 | Letters, job descriptions, interview notes. |
+| `body` | Nunito Sans | 16 / 24 | 400; 600 for emphasis | Default UI text, row titles (600). |
+| `label` | Nunito Sans | 13 / 18 | 600 | Form labels, small section labels. Sentence case. |
+| `meta` | Nunito Sans | 13 / 18 | 400 | Dates, sources, help text. |
 
 ### Rules
 
-- **The floor is 13px.** Nothing in the product is smaller. `text-xs` (12px) and arbitrary `text-[10px]` are retired.
-- **Serif names things, sans does the work.** Fraunces is for titles, headings, numbers and short notes. Paragraphs, inputs, buttons and table data are always Figtree.
-- **Hierarchy by size and weight before color.** Secondary text steps down to `ink-soft`, never lighter than `ink-muted`.
-- **Sentence case everywhere.** No uppercase eyebrows, no letter-spaced labels.
-- **Line length** is 50 to 75 characters for `reading` and `body` paragraphs.
-- **Numbers** use tabular figures (`font-variant-numeric: tabular-nums`) wherever they line up.
+- **The floor is 13px.** `text-xs` and arbitrary tiny sizes are retired.
+- **Baloo names things, Nunito Sans does the work.** Paragraphs, inputs, buttons and table data are always Nunito Sans.
+- **Hierarchy by size and weight before color.** Never lighter than `ink-muted`.
+- **Sentence case everywhere.** No uppercase eyebrows.
+- **Line length** is 50 to 75 characters for paragraphs.
+- **Numbers** use tabular figures wherever they line up.
 
 ## 4. Spacing
 
@@ -305,7 +275,7 @@ Every page uses the same header:
 
 ```
 [ tabs, if the section has more than one page ]   space 6
-[ title (Fraunces) ]          [ one primary action ]
+[ title (Baloo 2) ]          [ one primary action ]
 [ one line of context, ink-soft ]
                                                    space 8
 [ content ]
@@ -325,33 +295,29 @@ Between sections: 48px. A section is a `label` or `heading`, then its content. I
 
 ## 6. Shape
 
-Radius says what kind of thing something is. Things that are the same kind share a radius.
+Radius says what kind of thing something is. Golden hour rounds everything generously.
 
 | Token | Radius | Kind | Examples |
 |---|---|---|---|
-| — | 0 | Lines and flat lists | Rules, table rows, the trail |
-| `mark` | 4px | Inline marks | Text highlights, keyboard keys, inline code |
-| `stamp` | 8px | Small objects | Company monograms, tooltips, menu items, the "Sent" stamp |
-| `field` | 12px | Things you type into or choose from | Inputs, textareas, selects, menus, toasts, inline messages |
-| `sheet` | 20px | The one raised surface | The Today next step, the letter, the job's current step |
-| `dialog` | 24px | Things that sit above the page | Dialogs, the bottom sheet on phones |
-| `full` | 9999px | Things you press, and dots | Buttons, chips, toggles, stage dots, avatar, the sun |
-
-Checkboxes use 5px. Nothing else gets a one-off radius.
+| — | 0 | Lines | Rules, the trail |
+| `mark` | 6px | Inline marks | Text highlights, inline code |
+| `stamp` | 12px | Small objects | Monograms, tooltips, menu items, the "Sent" stamp |
+| `field` | 16px | Things you type into or choose from | Inputs, textareas, menus, toasts, rows inside a field |
+| `sheet` | 28px | Color fields | The hero, Up next, job groups, the current step |
+| `dialog` | 32px | Things above the page | Dialogs, the bottom sheet on phones |
+| `full` | 9999px | Things you press, and dots | Buttons, chips, toggles, stage dots, the sun |
 
 ## 7. Depth
 
-There are exactly two shadows.
+Golden hour is flat. Fields are set apart by color, never by shadow.
 
-| Token | Value (light) | Use |
-|---|---|---|
-| `shadow-sheet` | `0 1px 0 rgb(43 38 69 / 0.04), 0 12px 32px -20px rgb(43 38 69 / 0.25)` | The one sheet per screen |
-| `shadow-overlay` | `0 24px 48px -16px rgb(22 19 42 / 0.35)` | Dialogs, menus, toasts |
+| Token | Use |
+|---|---|
+| `shadow-sheet` | `none` in both modes. Kept as a token so components don't change. |
+| `shadow-overlay` | Dialogs, menus, toasts: a soft plum shadow by day, a `rule` ring plus shadow at night. |
 
-- In light mode the sheet has no border: the paper-on-oat difference plus the shadow is enough.
-- In dark mode, shadows are barely visible, so the sheet gets a 1px `rule` border instead and the overlay keeps its shadow.
-- Nothing else casts a shadow. Buttons, rows, chips, tabs and the rail are flat.
-- No `backdrop-filter` anywhere. Dialog scrims are `ink` at 40% (`#000` at 60% in dark), without blur.
+- Nothing else casts a shadow.
+- No `backdrop-filter`. Scrims are plum at 40% by day and near-black at 60% at night.
 
 ## 8. Components
 
@@ -361,7 +327,7 @@ The components below are the full vocabulary. If a design needs something that i
 
 | Variant | Look | Use |
 |---|---|---|
-| **Primary** | `action` fill, white Figtree 600 15px, pill | The one main action on a screen. Never more than one visible at a time. |
+| **Primary** | `action` fill, `on-action` Nunito Sans 600 15px, pill | The one main action on a screen. Never more than one visible at a time. |
 | **Secondary** | Transparent, 1px `control` border, `ink` text, pill | Alternatives: "Change date", "Cancel" in dialogs. |
 | **Quiet** | Text only, `action` color, pill-shaped hover in `well` | Low-weight actions in rows and toolbars: "Not now", "Edit". |
 | **Danger** | Quiet style in `danger` text; a filled `danger` button only inside a delete confirmation | Delete, remove. Lives in a "More" menu, never next to the title. |
@@ -379,7 +345,7 @@ States: hover changes color only (no lift or glow). Pressed scales to 0.98. Disa
 
 ### Inputs and textareas
 
-- 44px height, `sheet` fill, 1px `control` border, `field` radius, 16px Figtree, `ink` text, `ink-muted` placeholder.
+- 44px height, `raised` fill, 1px `control` border, `field` radius, 16px Nunito Sans, `ink` text, `ink-muted` placeholder.
 - The label sits above in `label` style with 8px between them. Help text sits below in `meta`. Labels are always visible; a placeholder is never the label.
 - Focus: the border turns `action` and a 2px `action` ring appears at 2px offset.
 - Error: the border turns `danger`, and a `meta` line in `danger` with an alert icon explains the fix ("Add the company name so you can find this later"). It is linked with `aria-describedby`.
@@ -394,15 +360,15 @@ States: hover changes color only (no lift or glow). Pressed scales to 0.98. Disa
 
 ### Tabs (section tabs)
 
-- Plain Figtree 600 15px text in `ink-soft`, 40px high, 24px apart, sitting on `canvas` with no track or pill.
+- Plain Nunito Sans 600 15px text in `ink-soft`, 40px high, 24px apart, sitting on `canvas` with no track or pill.
 - Active tab: `ink` text and a 2px `ink` line under the label, with rounded ends. This is the "trail stroke".
 - Hover: `ink` text. Tabs are links (`aria-current="page"`) because each is its own page.
 - On phones the row scrolls sideways and the active tab scrolls into view.
 
 ### Navigation rail
 
-- Wordmark at the top: a flat `sun` disc (20px) and "Wayfinder" in Fraunces 600 20px.
-- Four items (Today, Jobs, Me, Settings): Figtree 600 16px, 40px rows, `ink-soft`. The current item is `ink` with an 8px `sun` dot to its left. That dot is the "you are here" mark. The current link has `aria-current="page"`.
+- Wordmark at the top: a flat `sun` disc (20px) and "Wayfinder" in Baloo 2 600 20px.
+- Four items (Today, Jobs, Me, Settings): Nunito Sans 600 16px, 40px rows, `ink-soft`. The current item is `ink` with an 8px `sun` dot to its left. That dot is the "you are here" mark. The current link has `aria-current="page"`.
 - Hover is a `well` pill. No icons and no taglines in the rail.
 - The account, theme toggle and sign-out live at the bottom as quiet icon buttons.
 
@@ -426,7 +392,7 @@ Row anatomy (64px, no card, a `rule` below, `well` on hover, the whole row is on
             Fieldnote · Remote                                                                  3 days ago
 ```
 
-- **Monogram:** 36px, `stamp` radius, `well` fill, the company's first letter in Fraunces 600 16px. It replaces every generic building icon.
+- **Monogram:** 36px, `stamp` radius, `well` fill, the company's first letter in Baloo 2 600 16px. It replaces every generic building icon.
 - **Line one:** the role in `body` 600. **Line two:** the company and location in `meta`.
 - **Next step:** in `body` `ink` with an arrow. If there isn't one, show nothing; don't show a dash.
 - **Stage:** the stage indicator (below), right-aligned. **Time:** relative, in `note` style.
@@ -448,7 +414,7 @@ The connective line of the product. It appears on the job page (five steps, hori
 
 - The line is 2px with round caps. Finished segments are `ink-soft`; upcoming segments are `rule`, dashed 4/6.
 - **Nodes:** done is a 12px `ink-soft` circle with a white check; current is a 16px `sun` disc; upcoming is a 12px hollow `control` ring.
-- **Labels:** Figtree 600 15px under or beside each node. The current one is `ink` and the rest are `ink-soft`.
+- **Labels:** Nunito Sans 600 15px under or beside each node. The current one is `ink` and the rest are `ink-soft`.
 - On the job page every node is a button that opens that step (`aria-current="step"` on the current one).
 
 ### The sheet
@@ -466,7 +432,7 @@ The one raised surface per screen: `sheet` fill, `sheet` radius, `shadow-sheet`,
 ### Dialogs
 
 - `sheet` fill, `dialog` radius, `shadow-overlay`, 32px padding, 560px wide (720px for the letter review). A plain `ink` scrim at 40%.
-- The title is a `heading` in Fraunces, with an icon close button top right. Footer actions are right-aligned with the primary last; on phones they stack full width, primary on top.
+- The title is a `heading` in Baloo 2, with an icon close button top right. Footer actions are right-aligned with the primary last; on phones they stack full width, primary on top.
 - On phones the dialog is a bottom sheet with `dialog` radius on the top corners only.
 - Focus moves into the dialog on open, is trapped while it is open, and returns to the trigger on close. Escape and the close button both close it. Dialogs with unsaved typing ask before discarding.
 - **Add job** opens with one field: "Paste a link or the job description." The details fill in afterwards and stay editable.
@@ -498,13 +464,10 @@ These appear once each, at four moments: the first saved role, the first applica
 
 ### Illustration style
 
-- **Line plus one fill.** 2px strokes in `ink` (light) or `ink-soft` (dark), with round caps and joins. The only fill is flat `sun`. No gradients, shading or textures.
-- **Vocabulary:** the trail (a path that curves gently), the sun (a disc), low hills (two or three curved lines), contour lines (1.5px `rule`), and small objects drawn in the same line (a notebook, an envelope, a signpost).
-- **No people, no faces, no hands.** The sun has states, not expressions: low (just starting), rising (in motion), up (offer).
-- **Size and placement:** 96 to 160px, only in empty states, milestones, the weekly review header and the landing page. At most one per screen.
-- **Build:** inline SVG React components in `components/illustrations/`, using `currentColor` for strokes and `var(--color-sun)` for the fill so they switch with dark mode. No raster images.
-
-The first set has eight pieces: empty Pipeline (a trailhead signpost), all clear on Today (the sun over hills), empty Library (contour map), Weekly review (an open notebook with a trail), and four milestone suns.
+- **The hero scene (`Horizon`):** a flat `sun` disc over two rounded hills (`hill-far`, `hill-near`), drawn in the hero's colors and bleeding off its bottom-right edge. "Low" when there is work to do, "up" when you are all caught up. At night a `hero`-colored disc bites into the sun to make a crescent moon, and four small stars appear. Hidden on phones.
+- **Empty states:** small line drawings (2px round strokes in `currentColor`) with one flat `sun` fill: the signpost, the contour map, the notebook.
+- **No people, no faces, no hands.** No gradients or shading.
+- At most one illustration per screen. Inline SVG components in `components/illustrations/`, using CSS variables so they switch with night mode.
 
 ### Icons
 
@@ -616,7 +579,7 @@ The target is WCAG 2.2 AA in both themes.
 | Framework | Next.js 16 App Router, client pages wrapped in `<AppShell>` | Unchanged |
 | Styling | Tailwind v4, CSS-first tokens in `app/globals.css` (`@theme`), `.dark` class variant | Same mechanism, new tokens (below) |
 | Theme switch | `lib/theme-context.tsx` toggles `.dark` on `<html>` | Unchanged; tokens switch through CSS variables |
-| Fonts | `next/font/google`: Figtree, Nunito, Geist Mono in `app/layout.tsx` | Add Fraunces; remove Nunito when migration ends |
+| Fonts | `next/font/google`: Nunito Sans, Nunito, Geist Mono in `app/layout.tsx` | Add Baloo 2; remove Nunito when migration ends |
 | Icons | Tabler webfont subset by `scripts/build-icons.mjs` | Unchanged; fewer icons means a smaller font automatically |
 | Charts | Recharts on `/analytics` | Colors read from the tokens; one chart color story |
 | Shared pieces | `components/` (AppShell, Sidebar, SectionTabs, Toast, Toggle, AddJobModal, EditableField) and utilities `surface`, `page-title`, `section-label`, `glow-gradient`, `sun-orb`, `app-backdrop`, `sunrise` | New primitives in `components/ui/`; the old utilities are deleted at the end |
@@ -670,7 +633,7 @@ Semantic tokens are plain CSS variables that change under `.dark`, and are expos
   --color-sun-wash: var(--sun-wash);
   /* …sky, moss, stone, caution, danger and their washes the same way */
 
-  --font-serif: var(--font-fraunces);
+  --font-display: var(--font-baloo);
   --font-sans: var(--font-figtree);
   --font-mono: var(--font-geist-mono);
 }
@@ -697,23 +660,11 @@ Semantic tokens are plain CSS variables that change under `.dark`, and are expos
 }
 ```
 
-This gives utilities such as `bg-canvas`, `text-ink-soft`, `border-control`, `text-title`, `font-serif`, `rounded-sheet`, `shadow-sheet` and `ease-out`. The new names don't collide with the current `gray-*` and `primary-*` scales, so both systems can live side by side while screens move over.
+This gives utilities such as `bg-canvas`, `text-ink-soft`, `border-control`, `text-title`, `font-display`, `rounded-sheet`, `shadow-sheet` and `ease-out`. The new names don't collide with the current `gray-*` and `primary-*` scales, so both systems can live side by side while screens move over.
 
 ### Fonts
 
-```ts
-// app/layout.tsx
-import { Fraunces } from "next/font/google";
-
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
-  subsets: ["latin"],
-  axes: ["SOFT", "opsz"],
-  style: ["normal", "italic"],
-});
-```
-
-Add `font-variation-settings: "SOFT" 100` to `.font-serif`. Nunito is removed from `layout.tsx` once no page uses `font-display`.
+`app/layout.tsx` loads Baloo 2 (`--font-baloo`, weights 600 and 700) and Nunito Sans (`--font-nunito-sans`) through `next/font/google`. `globals.css` maps them to `font-display` and `font-sans`.
 
 ### Shared components to build
 
@@ -738,7 +689,7 @@ Each one is small and replaces repeated class strings in the pages.
 
 Each step is its own PR and leaves the app working.
 
-1. **Foundations.** Add the tokens, Fraunces and the `components/ui` primitives. No screen changes yet.
+1. **Foundations.** Add the tokens, Baloo 2 and the `components/ui` primitives. No screen changes yet.
 2. **Frame.** Move `AppShell`, `Sidebar` and `SectionTabs` to the new frame and `PageFrame`, and switch the page background to `canvas`. Every page gets the new frame, header and widths at once.
 3. **Today and the job page,** including the trail, the sheet and the letter as paper.
 4. **Pipeline and Companies:** the trail map, rows, monograms and the table view.
@@ -778,5 +729,5 @@ After step 8, a small check in `npm run lint` (a script like `scripts/build-icon
 | Celebrate routine actions with confetti or exclamation marks | Cheese, and it wears out within a week | A quiet "Saved" note; milestones only, once each |
 | Animate on page load, loop, bounce or shimmer | Noise for focus-sensitive users | Motion only to explain a change or reward a step |
 | Add a new color, radius, shadow or text size for one screen | Drift; the system stops being a system | Use a token, or add one to this document first |
-| Put body text in Fraunces, or headings in Figtree 700 | Muddles the two voices | Serif names things; sans does the work |
+| Put body text in Baloo 2, or headings in Nunito Sans 700 | Muddles the two voices | Baloo names things; Nunito Sans does the work |
 | Use 12px or `ink-muted` for anything people need to read | Fails contrast and readability | 13px floor; `ink-soft` for secondary text |

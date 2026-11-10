@@ -209,7 +209,7 @@ export default function AnswerBankPage() {
   return frame(
     <>
       <Sheet as="section" aria-labelledby="ab-add-heading">
-        <h2 id="ab-add-heading" className="font-serif text-heading font-semibold text-ink">
+        <h2 id="ab-add-heading" className="font-display text-heading font-semibold text-ink">
           Add an answer
         </h2>
         <div className="mt-5 space-y-5">
@@ -250,7 +250,7 @@ export default function AnswerBankPage() {
       </Sheet>
 
       <section aria-labelledby="ab-list-heading" className="mt-12">
-        <h2 id="ab-list-heading" className="mb-4 font-serif text-heading font-semibold text-ink">
+        <h2 id="ab-list-heading" className="mb-4 font-display text-heading font-semibold text-ink">
           Your answers <span className="font-sans text-meta font-normal text-ink-muted">· {answers.length}</span>
         </h2>
 

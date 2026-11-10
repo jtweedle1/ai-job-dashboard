@@ -189,7 +189,7 @@ export default function DebriefPanel({
 
       {job && (
         <Sheet as="section" aria-labelledby="debrief-heading">
-          <h2 id="debrief-heading" className="font-serif text-heading font-semibold text-ink">
+          <h2 id="debrief-heading" className="font-display text-heading font-semibold text-ink">
             How did it go?
           </h2>
           <p className="mt-1 text-meta text-ink-soft">

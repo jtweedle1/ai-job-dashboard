@@ -1,4 +1,4 @@
-// Trailhead illustrations (DESIGN.md §9): line drawings in ink with one flat sun. Strokes use
+// Golden hour illustrations (DESIGN.md §9): a flat sun scene for heroes, and small line drawings in ink with one flat sun for empty states. Strokes use
 // currentColor and the sun uses the sun token, so both themes work. Decorative: hidden from screen
 // readers, because the sentence next to each one carries the meaning. At most one per screen.
 
@@ -21,29 +21,31 @@ function Art({ width, viewBox, className = "", children }: { width: number; view
   );
 }
 
-// Hills with the sun coming up behind them and a trail running in. `height` is how far the sun has
-// risen: "low" when you're just starting, "up" when there's nothing left to do today. The hills are
-// filled with the surface behind them (pass `ground`) so the sun sits behind the ridge.
-export function Horizon({
-  width = 160,
-  sun = "low",
-  ground = "var(--canvas)",
-  className,
-}: {
-  width?: number;
-  sun?: "low" | "up";
-  ground?: string;
-  className?: string;
-}) {
-  const cy = sun === "up" ? 30 : 52;
+// Golden hour's scene: a flat sun over two rounded hills, in the hero's own colors. `sun` is how far
+// it has risen: "low" when you're just starting, "up" when there's nothing left to do today. In night
+// mode the sun turns into a crescent moon (a hero-colored disc bites into it) and a few stars come out.
+// Sized by its parent: it fills it, anchored bottom right.
+export function Horizon({ sun = "low", className = "" }: { sun?: "low" | "up"; className?: string }) {
+  const cy = sun === "up" ? 96 : 118;
   return (
-    <Art width={width} viewBox="0 0 160 100" className={className}>
-      <circle cx="104" cy={cy} r="17" fill="var(--sun)" />
-      <path d="M6 72 C 30 54, 58 50, 84 62 S 132 76, 154 60 L154 100 L6 100 Z" fill={ground} />
-      <path d="M6 72 C 30 54, 58 50, 84 62 S 132 76, 154 60" {...STROKE} />
-      <path d="M2 88 C 32 78, 64 78, 94 86 S 138 94, 158 84" {...STROKE} />
-      <path d="M58 99 C 64 92, 80 90, 86 82 S 92 72, 100 68" {...DASH} />
-    </Art>
+    <svg
+      viewBox="0 0 320 200"
+      preserveAspectRatio="xMaxYMax slice"
+      className={`pointer-events-none ${className}`}
+      aria-hidden="true"
+      focusable="false"
+    >
+      <circle cx="214" cy={cy} r="44" fill="var(--sun)" />
+      <circle cx="236" cy={cy - 16} r="38" fill="var(--hero)" className="hidden dark:inline" />
+      <g fill="var(--sun)" className="hidden dark:inline">
+        <circle cx="96" cy="40" r="2.5" />
+        <circle cx="140" cy="86" r="2" />
+        <circle cx="296" cy="112" r="2.5" />
+        <circle cx="62" cy="96" r="2" />
+      </g>
+      <ellipse cx="300" cy="236" rx="200" ry="104" fill="var(--hill-near)" />
+      <ellipse cx="120" cy="250" rx="180" ry="100" fill="var(--hill-far)" />
+    </svg>
   );
 }
 

@@ -1,8 +1,8 @@
 import Link from "next/link";
 import type { WeekSummary } from "@/lib/today";
 
-// This week's real activity, and a way into the weekly review. No praise, no glow: just the facts,
-// and only the ones that happened.
+// This week's real activity, and a way into the weekly review, on Today's coral field. No praise:
+// just the facts, and only the ones that happened. Inside the field every ink is the field's own.
 export default function WeekCard({ week }: { week: WeekSummary }) {
   const stats = [
     { n: week.applied, one: "application sent", many: "applications sent" },
@@ -11,15 +11,18 @@ export default function WeekCard({ week }: { week: WeekSummary }) {
   ].filter((s) => s.n > 0);
 
   return (
-    <section aria-labelledby="this-week">
-      <h2 id="this-week" className="mb-2 text-label font-semibold text-ink-soft">This week</h2>
+    <section
+      aria-labelledby="this-week"
+      className="bg-warm text-on-warm rounded-sheet p-6 [--ink:var(--on-warm)] [--ink-soft:var(--on-warm)] [--action:var(--on-warm)] [--control:var(--on-warm)] [--moss:var(--on-warm)] [--well:rgb(255_255_255/0.25)]"
+    >
+      <h2 id="this-week" className="mb-3 font-display text-heading font-semibold">This week</h2>
       {stats.length === 0 ? (
         <p className="text-ink-soft">A quiet week so far.</p>
       ) : (
         <ul className="space-y-1">
           {stats.map((s) => (
             <li key={s.one} className="flex items-baseline gap-2.5 text-ink-soft">
-              <span className="min-w-6 text-right font-serif font-semibold text-heading text-ink tabular-nums">{s.n}</span>
+              <span className="min-w-8 text-right font-display font-semibold text-title text-ink tabular-nums">{s.n}</span>
               {s.n === 1 ? s.one : s.many}
             </li>
           ))}

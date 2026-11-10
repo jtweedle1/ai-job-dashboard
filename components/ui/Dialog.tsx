@@ -52,7 +52,7 @@ export default function Dialog({
       <div className="bg-sheet text-ink rounded-t-dialog sm:rounded-dialog shadow-overlay flex flex-col max-h-[92dvh] sm:max-h-[90dvh] animate-[sheet-up_240ms_var(--ease-out)]">
         <div className="flex items-start gap-4 px-5 sm:px-8 pt-6 sm:pt-7 pb-4 shrink-0">
           <div className="flex-1 min-w-0">
-            <h2 id={titleId} className="font-serif text-heading font-semibold">
+            <h2 id={titleId} className="font-display text-heading font-semibold">
               {title}
             </h2>
             {description && (

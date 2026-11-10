@@ -1,20 +1,19 @@
 import type { Metadata } from "next";
-import { Figtree, Fraunces, Geist_Mono } from "next/font/google";
+import { Baloo_2, Nunito_Sans, Geist_Mono } from "next/font/google";
 import "@/styles/icons/tabler-icons.css";
 import "./globals.css";
 import Providers from "./providers";
 
-const figtree = Figtree({
-  variable: "--font-figtree",
+const nunitoSans = Nunito_Sans({
+  variable: "--font-nunito-sans",
   subsets: ["latin"],
 });
 
-// Trailhead's display face. SOFT rounds the serifs; opsz lets large and small sizes each look right.
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
+// Golden hour's display face: chunky and soft, for headings only.
+const baloo = Baloo_2({
+  variable: "--font-baloo",
   subsets: ["latin"],
-  style: ["normal", "italic"],
-  axes: ["SOFT", "opsz"],
+  weight: ["600", "700"],
 });
 
 const geistMono = Geist_Mono({
@@ -36,7 +35,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${figtree.variable} ${fraunces.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${nunitoSans.variable} ${baloo.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <Providers>{children}</Providers>

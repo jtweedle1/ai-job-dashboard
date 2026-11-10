@@ -41,7 +41,7 @@ export function Section({
         <div className="flex items-center gap-3 mb-3 min-h-9">
           <h2
             id={headingId}
-            className={`flex-1 min-w-0 ${serif ? "font-serif text-heading font-semibold text-ink" : "text-label font-semibold text-ink-soft"}`}
+            className={`flex-1 min-w-0 ${serif ? "font-display text-heading font-semibold text-ink" : "text-label font-semibold text-ink-soft"}`}
           >
             {title}
           </h2>
@@ -94,7 +94,7 @@ export function Monogram({ name, logoUrl, size = "md" }: { name: string; logoUrl
     );
   return (
     <span
-      className={`${box} shrink-0 rounded-stamp bg-well text-ink font-serif font-semibold inline-flex items-center justify-center`}
+      className={`${box} shrink-0 rounded-stamp bg-well text-ink font-display font-semibold inline-flex items-center justify-center`}
       aria-hidden="true"
     >
       {letter}
@@ -149,7 +149,7 @@ export function EmptyState({
   return (
     <div className={`flex flex-col items-center text-center py-12 px-4 ${className}`}>
       {art && <div className="mb-5 text-ink">{art}</div>}
-      {title && <p className="font-serif text-heading font-semibold text-ink mb-1.5">{title}</p>}
+      {title && <p className="font-display text-heading font-semibold text-ink mb-1.5">{title}</p>}
       {children && <div className="text-ink-soft max-w-sm">{children}</div>}
       {action && <div className="mt-5">{action}</div>}
     </div>

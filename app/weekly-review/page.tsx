@@ -315,7 +315,7 @@ export default function WeeklyReviewPage() {
       {editing && (
         <Sheet as="section" aria-labelledby="wr-heading">
           <div className="flex items-start justify-between gap-4">
-            <h2 id="wr-heading" className="font-serif text-heading font-semibold text-ink">
+            <h2 id="wr-heading" className="font-display text-heading font-semibold text-ink">
               Week of {formatWeek(activeId ? activeReview!.weekOf : thisWeekStart)}
             </h2>
             {activeId && <IconButton icon="ti-trash" label="Delete review" onClick={() => handleDelete(activeId)} />}
@@ -336,7 +336,7 @@ export default function WeeklyReviewPage() {
                   min={0}
                   value={fields[key] as number}
                   onChange={(e) => setField(key, Math.max(0, parseInt(e.target.value) || 0))}
-                  className="font-serif text-heading tabular-nums"
+                  className="font-display text-heading tabular-nums"
                 />
               </Field>
             ))}

@@ -32,13 +32,13 @@ Per-user Anthropic keys (bring-your-own) — no shared key pool; rate-limit per-
 - One `lib/<entity>.ts` CRUD module + one `types/<entity>.ts` per domain entity.
 - API route shape: `requireAuth → checkRateLimit → callAI`.
 - Changing an API route signature? Update both the route and its client caller.
-- **Design system:** `DESIGN.md` (Trailhead): paper and ink, one action color, one sun. Use the
+- **Design system:** `DESIGN.md` (Golden hour): butter canvas, soft yellow color fields, a sunflower hero and plum ink by day; plum night with cream ink and a moon in dark mode (dark mode = night, never time-based). Use the
   semantic tokens in `app/globals.css` (`canvas`/`sheet`/`well` surfaces, `ink`/`ink-soft`/`ink-muted`
-  text, `rule`, `control`, `action`, `sun`, and `sky`/`moss`/`stone`/`caution`/`danger` with `-wash`
+  text, `rule`, `control`, `action`, `sun`, `hero`/`warm` fields, and `sky`/`moss`/`stone`/`caution`/`danger` with `-wash`
   pairs); they switch with `.dark`, so no `dark:` twins. Type scale `text-display|title|heading|reading|ui|meta|note|label`.
-  Fraunces (`font-serif`) for headings, Figtree body. Build screens from `components/ui/*`
+  Baloo 2 (`font-display`) for headings, Nunito Sans body. Fields are set apart by color, not shadow. Build screens from `components/ui/*`
   (`PageFrame`, `Section`, `Sheet`, `Button`, `Field`, `Select`, `Menu`, `Dialog`, `Trail`); at most one
-  `Sheet` level, sections are not boxes. `npm run lint` runs `scripts/check-design.mjs`, which bans
+  `Sheet` level (a field inside a field is a bug). `npm run lint` runs `scripts/check-design.mjs`, which bans
   retired patterns (gradients, blur, stock hue/gray scales, `text-xs`, large shadows, uppercase).
 - Navigation lives in `components/navigation.ts`: Today, Jobs, Me, Settings, each with tabs
   rendered by `SectionTabs` in `<PageFrame>`. Letter, prep and debrief live inside a job

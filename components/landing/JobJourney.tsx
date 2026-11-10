@@ -9,7 +9,7 @@ export default function JobJourney() {
     <section aria-labelledby="journey-heading" className="max-w-5xl mx-auto px-4 sm:px-6 py-16">
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.15fr] gap-10 lg:gap-12 items-center">
         <div>
-          <h2 id="journey-heading" className="font-serif text-title font-semibold text-ink">
+          <h2 id="journey-heading" className="font-display text-title font-semibold text-ink">
             One job, one place
           </h2>
           <p className="mt-2 text-ink-soft text-pretty">
@@ -28,7 +28,7 @@ export default function JobJourney() {
           <div className="flex items-center gap-3 min-w-0">
             <Monogram name={SHOWCASE_JOB.company} />
             <div className="min-w-0 flex-1">
-              <p className="font-serif text-lg font-semibold text-ink">{SHOWCASE_JOB.title}</p>
+              <p className="font-display text-lg font-semibold text-ink">{SHOWCASE_JOB.title}</p>
               <p className="text-meta text-ink-soft">{SHOWCASE_JOB.company}</p>
             </div>
             <StageIndicator stage="interview" />

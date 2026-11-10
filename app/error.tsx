@@ -20,7 +20,7 @@ export default function GlobalError({
     <main className="min-h-dvh bg-canvas text-ink flex items-center justify-center px-6">
       <div className="text-center max-w-sm">
         <Signpost className="mx-auto mb-6 text-ink" />
-        <h1 className="font-serif text-title font-semibold">Something went wrong</h1>
+        <h1 className="font-display text-title font-semibold">Something went wrong</h1>
         <p className="mt-2 text-ink-soft">Your work is saved. Try again, or head back to Today.</p>
         <div className="mt-6 flex items-center justify-center gap-2 flex-wrap">
           <Button variant="primary" icon="ti-refresh" onClick={reset}>

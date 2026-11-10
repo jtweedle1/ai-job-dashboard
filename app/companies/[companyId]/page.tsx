@@ -215,7 +215,7 @@ export default function CompanyProfilePage({
                 }
               }}
               placeholder="Company name"
-              className="font-serif text-title font-semibold"
+              className="font-display text-title font-semibold"
             />
             <p className="mt-1 pl-3 text-meta text-ink-muted">Updated {updated}</p>
           </div>

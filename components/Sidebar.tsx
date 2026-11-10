@@ -13,13 +13,13 @@ interface SidebarProps {
   onClose?: () => void;
 }
 
-// The wordmark: a flat sun and "Wayfinder" in Fraunces. The sun is the same one that marks where you
+// The wordmark: a flat sun and "Wayfinder" in Baloo 2. The sun is the same one that marks where you
 // are on every trail.
 export function Logo({ small }: { small?: boolean }) {
   return (
     <span className="inline-flex items-center gap-2.5">
       <span className={`${small ? "w-[18px] h-[18px]" : "w-5 h-5"} rounded-full bg-sun`} aria-hidden="true" />
-      <span className={`font-serif font-semibold text-ink ${small ? "text-lg" : "text-xl"}`}>Wayfinder</span>
+      <span className={`font-display font-semibold text-ink ${small ? "text-lg" : "text-xl"}`}>Wayfinder</span>
     </span>
   );
 }

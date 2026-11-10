@@ -177,7 +177,7 @@ export default function InterviewPrepPanel({
         <Sheet as="section" aria-labelledby="prep-heading">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <h2 id="prep-heading" className="font-serif text-heading font-semibold text-ink">
+              <h2 id="prep-heading" className="font-display text-heading font-semibold text-ink">
                 Your prep
               </h2>
               <p className="mt-0.5 text-meta text-ink-muted">{formatDate(viewingPrep.createdAt)}</p>
@@ -186,13 +186,13 @@ export default function InterviewPrepPanel({
           </div>
 
           <h3 className="mt-6 text-label font-semibold text-ink-soft">The process</h3>
-          <p className="mt-1 font-serif italic text-reading text-ink">{viewingPrep.interviewProcess}</p>
+          <p className="mt-1 font-display italic text-reading text-ink">{viewingPrep.interviewProcess}</p>
 
           <h3 className="mt-8 text-label font-semibold text-ink-soft">Practice questions</h3>
           <ol className="mt-2">
             {viewingPrep.mockQuestions.map((q, i) => (
               <li key={i} className="flex gap-4 py-3 border-b border-rule last:border-b-0 group">
-                <span className="w-6 shrink-0 pt-0.5 font-serif font-semibold text-ink-soft tabular-nums text-right">{i + 1}</span>
+                <span className="w-6 shrink-0 pt-0.5 font-display font-semibold text-ink-soft tabular-nums text-right">{i + 1}</span>
                 <p className="flex-1 text-reading text-ink">{q}</p>
                 <IconButton
                   icon={savingQuestionIndex === i ? "ti-loader-2 animate-spin" : "ti-bookmarks"}
@@ -225,7 +225,7 @@ export default function InterviewPrepPanel({
         </Sheet>
       ) : (
         <Sheet as="section" aria-labelledby="prep-form-heading">
-          <h2 id="prep-form-heading" className="font-serif text-heading font-semibold text-ink">
+          <h2 id="prep-form-heading" className="font-display text-heading font-semibold text-ink">
             Prep for the interview
           </h2>
           <p className="mt-1 mb-5 text-meta text-ink-soft">{formIntro}</p>

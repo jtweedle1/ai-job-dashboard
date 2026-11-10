@@ -368,7 +368,7 @@ export default function CoverLetterPanel({
           <section aria-labelledby="letter-heading">
             <div className="flex items-end justify-between gap-3 mb-3 flex-wrap">
               <div className="min-w-0">
-                <h2 id="letter-heading" className="font-serif text-heading font-semibold text-ink">
+                <h2 id="letter-heading" className="font-display text-heading font-semibold text-ink">
                   Your letter
                 </h2>
                 <p className="mt-0.5 text-meta text-ink-muted">
@@ -451,7 +451,7 @@ export default function CoverLetterPanel({
         </>
       ) : (
         <Sheet as="section" aria-labelledby="letter-form-heading">
-          <h2 id="letter-form-heading" className="font-serif text-heading font-semibold text-ink">
+          <h2 id="letter-form-heading" className="font-display text-heading font-semibold text-ink">
             Write your letter
           </h2>
           <p className="mt-1 mb-6 text-meta text-ink-soft">{generatorIntro}</p>

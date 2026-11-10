@@ -48,7 +48,7 @@ export default function LetterCompare() {
     <div className="bg-sheet rounded-sheet shadow-sheet text-left">
       <div className="px-5 sm:px-8 pt-6 pb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="font-serif text-heading font-semibold text-ink">Same job, two letters</h2>
+          <h2 className="font-display text-heading font-semibold text-ink">Same job, two letters</h2>
           <p className="text-meta text-ink-soft">
             {SHOWCASE_JOB.title} at {SHOWCASE_JOB.company}
           </p>

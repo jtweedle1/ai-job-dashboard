@@ -81,7 +81,7 @@ function Chart({
   return (
     <section aria-labelledby={`${id}-title`} className="min-w-0">
       <div className="flex items-baseline justify-between gap-3">
-        <h2 id={`${id}-title`} className="font-serif text-heading font-semibold text-ink">
+        <h2 id={`${id}-title`} className="font-display text-heading font-semibold text-ink">
           {title}
         </h2>
         {!empty && (

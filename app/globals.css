@@ -2,81 +2,99 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-  --font-sans: var(--font-figtree);
+  --font-sans: var(--font-nunito-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 /*
- * Trailhead (DESIGN.md): paper and ink, one action color, one sun. These are semantic tokens: each
- * one switches with the .dark class, so `text-ink` or `bg-sheet` never needs a `dark:` twin.
- * Every text token passes WCAG AA on the backgrounds it's allowed on (lib/design-tokens.test.ts).
+ * Golden hour (DESIGN.md): a warm butter canvas, soft yellow fields, a sunflower hero and plum ink.
+ * Night mode is the same theme after sunset: plum sky, cream ink, a moon for the sun. These are
+ * semantic tokens: each one switches with the .dark class, so `text-ink` or `bg-sheet` never needs
+ * a `dark:` twin. Every text token passes WCAG AA on the backgrounds it's allowed on
+ * (lib/design-tokens.test.ts).
  */
 :root {
-  --canvas: #f6f0e6;
-  --sheet: #fffbf5;
-  --well: #efe7da;
-  --ink: #2b2645;
-  --ink-soft: #57516b;
-  --ink-muted: #67616f;
-  --rule: #e4dacb;
-  --control: #8c8173;
-  --action: #5f57d2;
-  --action-hover: #4d45b5;
-  --action-wash: #eceafb;
-  /* Chart marks: the action hue, stepped per theme so it sits in the readable lightness band. */
-  --chart: #5f57d2;
-  --on-action: #ffffff;
-  --sun: #e8772e;
-  --sun-ink: #a24a15;
-  --sun-wash: #fce3cf;
-  --sky: #3a6696;
-  --sky-wash: #e3ecf6;
-  --moss: #3f7350;
-  --moss-wash: #e2eee3;
-  --stone: #6f655e;
-  --stone-wash: #ece6de;
-  --caution: #8a5a0a;
-  --caution-wash: #f8ebcf;
-  --danger: #a63a2e;
-  --danger-wash: #f7e1dd;
-  --raised: #fffbf5;
-  --scrim: rgb(43 38 69 / 0.4);
-  --sheet-shadow: 0 1px 0 rgb(43 38 69 / 0.04), 0 12px 32px -20px rgb(43 38 69 / 0.25);
-  --overlay-shadow: 0 24px 48px -16px rgb(22 19 42 / 0.35);
+  --canvas: #fff8e1;
+  --sheet: #ffeeb8;
+  --well: #ffe49c;
+  --ink: #3a1f3d;
+  --ink-soft: #5c4459;
+  --ink-muted: #6b5266;
+  --rule: #f1d98f;
+  --control: #9a7a66;
+  --action: #7a2e57;
+  --action-hover: #5e2143;
+  --action-wash: #f9dfd2;
+  /* Chart marks: a deep coral that holds its own on the butter canvas. */
+  --chart: #c45a3a;
+  --on-action: #fff8e1;
+  /* The hero field and its illustration: sunflower sky, a coral sun, amber hills. */
+  --hero: #ffc83d;
+  --on-hero: #3a1f3d;
+  --hill-far: #ffd978;
+  --hill-near: #ffb347;
+  /* The second field color: coral, for the week's progress. */
+  --warm: #ff8a65;
+  --on-warm: #3a1f3d;
+  --sun: #ff8a65;
+  --sun-ink: #a8401c;
+  --sun-wash: #ffdccd;
+  --sky: #285f8f;
+  --sky-wash: #dcebf6;
+  --moss: #2f6b3f;
+  --moss-wash: #e1efd9;
+  --stone: #6b5a52;
+  --stone-wash: #f3e6cf;
+  --caution: #7a4f00;
+  --caution-wash: #ffe7a8;
+  --danger: #a3301f;
+  --danger-wash: #ffdcd3;
+  --raised: #fffbf0;
+  --scrim: rgb(58 31 61 / 0.4);
+  /* Color fields, not cards: a sheet is set apart by its color, never a shadow. */
+  --sheet-shadow: none;
+  --overlay-shadow: 0 24px 48px -16px rgb(58 31 61 / 0.35);
   color-scheme: light;
 }
 
 .dark {
-  --canvas: #16132a;
-  --sheet: #221f38;
-  --well: #1c1932;
-  --ink: #f3eee6;
-  --ink-soft: #c9c2d6;
-  --ink-muted: #a39cb4;
-  --rule: #37324f;
-  --control: #7a7394;
-  --action: #a7a1f5;
-  --action-hover: #c3befa;
-  --action-wash: rgb(167 161 245 / 0.16);
-  --chart: #8a83ec;
-  --on-action: #16132a;
-  --sun: #f59a52;
-  --sun-ink: #f59a52;
-  --sun-wash: rgb(245 154 82 / 0.16);
-  --sky: #8db6e6;
-  --sky-wash: rgb(141 182 230 / 0.16);
-  --moss: #7fbf8e;
-  --moss-wash: rgb(127 191 142 / 0.16);
-  --stone: #b3a9a0;
-  --stone-wash: rgb(179 169 160 / 0.16);
-  --caution: #e8b45a;
-  --caution-wash: rgb(232 180 90 / 0.16);
-  --danger: #f08a7e;
-  --danger-wash: rgb(240 138 126 / 0.16);
-  --raised: #2c2846;
-  --scrim: rgb(0 0 0 / 0.6);
-  --sheet-shadow: 0 0 0 1px #37324f;
-  --overlay-shadow: 0 0 0 1px #37324f, 0 24px 48px -16px rgb(0 0 0 / 0.6);
+  --canvas: #1e1428;
+  --sheet: #2e2040;
+  --well: #3d2c52;
+  --ink: #fff3da;
+  --ink-soft: #e3d0df;
+  --ink-muted: #c4adc2;
+  --rule: #4a3757;
+  --control: #9a80a8;
+  --action: #ffc83d;
+  --action-hover: #ffd466;
+  --action-wash: rgb(255 200 61 / 0.16);
+  --chart: #ff8a65;
+  --on-action: #2a1630;
+  --hero: #3a2550;
+  --on-hero: #fff3da;
+  --hill-far: #8e4a62;
+  --hill-near: #6b3a5e;
+  --warm: #ff8a65;
+  --on-warm: #2a1630;
+  /* After sunset the sun is a moon. */
+  --sun: #ffe29a;
+  --sun-ink: #ffc83d;
+  --sun-wash: rgb(255 226 154 / 0.16);
+  --sky: #9cc4ee;
+  --sky-wash: rgb(156 196 238 / 0.16);
+  --moss: #9fd6a6;
+  --moss-wash: rgb(159 214 166 / 0.16);
+  --stone: #cbbcb4;
+  --stone-wash: rgb(203 188 180 / 0.16);
+  --caution: #ffd27a;
+  --caution-wash: rgb(255 210 122 / 0.16);
+  --danger: #ff9d8a;
+  --danger-wash: rgb(255 157 138 / 0.16);
+  --raised: #3d2c52;
+  --scrim: rgb(10 5 15 / 0.6);
+  --sheet-shadow: none;
+  --overlay-shadow: 0 0 0 1px #4a3757, 0 24px 48px -16px rgb(0 0 0 / 0.6);
   color-scheme: dark;
 }
 
@@ -109,8 +127,14 @@
   --color-danger: var(--danger);
   --color-danger-wash: var(--danger-wash);
   --color-scrim: var(--scrim);
+  --color-hero: var(--hero);
+  --color-on-hero: var(--on-hero);
+  --color-hill-far: var(--hill-far);
+  --color-hill-near: var(--hill-near);
+  --color-warm: var(--warm);
+  --color-on-warm: var(--on-warm);
 
-  --font-serif: var(--font-fraunces), ui-serif, Georgia, serif;
+  --font-display: var(--font-baloo), ui-rounded, ui-sans-serif, system-ui, sans-serif;
 
   --shadow-sheet: var(--sheet-shadow);
   --shadow-overlay: var(--overlay-shadow);
@@ -138,25 +162,20 @@
   --text-ui: 0.9375rem;
   --text-ui--line-height: 1.4;
 
-  --radius-mark: 4px;
-  --radius-stamp: 8px;
-  --radius-field: 12px;
-  --radius-sheet: 20px;
-  --radius-dialog: 24px;
+  --radius-mark: 6px;
+  --radius-stamp: 12px;
+  --radius-field: 16px;
+  --radius-sheet: 28px;
+  --radius-dialog: 32px;
 
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 }
 
-/* Fraunces with its soft axis turned up: friendly, not literary. Inherited by everything inside. */
-.font-serif {
-  font-variation-settings: "SOFT" 100;
-}
-
 body {
   background: var(--canvas);
   color: var(--ink);
-  font-family: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-nunito-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
 /*
@@ -191,7 +210,7 @@ body {
 }
 
 /*
- * Trailhead motion (DESIGN.md §10). Motion explains a change or rewards a step; nothing loops.
+ * Motion (DESIGN.md §10). Motion explains a change or rewards a step; nothing loops.
  * Every animation's end state is the element's natural state, so the reduced-motion rule above
  * (which collapses durations) always leaves things fully drawn and in place.
  */

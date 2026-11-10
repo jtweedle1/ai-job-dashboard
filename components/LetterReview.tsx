@@ -60,7 +60,7 @@ export default function LetterReview({ claims, checks, checking, checkError, onC
   return (
     <div className="space-y-10">
       <section aria-labelledby="checks-heading">
-        <h3 id="checks-heading" className="mb-3 font-serif text-heading font-semibold text-ink">
+        <h3 id="checks-heading" className="mb-3 font-display text-heading font-semibold text-ink">
           Before you send
         </h3>
         <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
@@ -81,7 +81,7 @@ export default function LetterReview({ claims, checks, checking, checkError, onC
 
       <section aria-labelledby="claims-heading">
         <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
-          <h3 id="claims-heading" className="font-serif text-heading font-semibold text-ink">
+          <h3 id="claims-heading" className="font-display text-heading font-semibold text-ink">
             Where each claim came from
           </h3>
           <div className="flex items-center gap-1">
@@ -126,7 +126,7 @@ export default function LetterReview({ claims, checks, checking, checkError, onC
               <ul className="mt-4">
                 {claims.map((c, i) => (
                   <li key={i} className="py-3 border-b border-rule last:border-b-0">
-                    <p className="font-serif italic text-ink">&ldquo;{c.quote}&rdquo;</p>
+                    <p className="font-display italic text-ink">&ldquo;{c.quote}&rdquo;</p>
                     {c.source ? (
                       <p className="mt-1 text-meta text-ink-soft">
                         <span className="font-semibold text-sky">From {c.source}:</span> &ldquo;{c.evidence}&rdquo;

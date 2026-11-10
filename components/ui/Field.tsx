@@ -4,7 +4,7 @@ import { forwardRef } from "react";
 // visible label above. Placeholders are examples, never the label.
 
 const CONTROL =
-  "w-full rounded-field bg-sheet border border-control text-base text-ink placeholder:text-ink-muted transition-colors duration-100 focus:outline-2 focus:outline-offset-2 focus:outline-action focus:border-action disabled:opacity-60 disabled:cursor-not-allowed aria-[invalid=true]:border-danger";
+  "w-full rounded-field bg-raised border border-control text-base text-ink placeholder:text-ink-muted transition-colors duration-100 focus:outline-2 focus:outline-offset-2 focus:outline-action focus:border-action disabled:opacity-60 disabled:cursor-not-allowed aria-[invalid=true]:border-danger";
 
 export const inputClasses = `${CONTROL} h-11 px-3.5`;
 export const textareaClasses = `${CONTROL} px-3.5 py-2.5 leading-relaxed resize-y min-h-[5.5rem]`;

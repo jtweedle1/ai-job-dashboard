@@ -27,24 +27,21 @@ export interface SetupStep {
   onClick?: () => void;
 }
 
-// The one sheet on Today (DESIGN.md §8). It holds whatever matters most right now, with the sun
-// coming up in its corner.
+// The hero field on Today (DESIGN.md §8): sunflower by day, plum sky at night. It holds whatever
+// matters most right now, with the sun (or the moon) over the hills in its corner.
 function Frame({ label, art = "low", children }: { label: string; art?: "low" | "up"; children: React.ReactNode }) {
   return (
-    <section aria-labelledby="today-hero" className="relative overflow-hidden bg-sheet rounded-sheet shadow-sheet p-6 sm:p-8">
-      <Horizon sun={art} ground="var(--sheet)" width={176} className="hidden md:block absolute right-8 bottom-6 text-ink-soft" />
-      <div className="relative md:pr-48">
-        <p className="flex items-center gap-2 text-label font-semibold text-sun-ink">
-          <span className="w-2 h-2 rounded-full bg-sun" aria-hidden="true" />
-          {label}
-        </p>
+    <section aria-labelledby="today-hero" className="relative overflow-hidden bg-hero text-on-hero rounded-sheet p-6 sm:p-9 [--control:var(--on-hero)] [--ink-muted:var(--ink-soft)]">
+      <Horizon sun={art} className="hidden md:block absolute right-0 bottom-0 h-full w-[55%]" />
+      <div className="relative md:pr-56">
+        <p className="text-label font-semibold">{label}</p>
         {children}
       </div>
     </section>
   );
 }
 
-const title = "mt-3 outline-offset-4 font-serif text-title font-semibold text-ink text-balance";
+const title = "mt-3 outline-offset-4 font-display text-title font-semibold text-ink text-balance";
 
 export function NextStepHero({ action, job, onAct, now }: { action: NextAction; job: Job; onAct: Act; now: Date }) {
   return (
@@ -109,7 +106,7 @@ export function SetupHero({ steps }: { steps: SetupStep[] }) {
           const body = (
             <>
               <span
-                className={`w-7 h-7 rounded-full flex items-center justify-center text-meta font-semibold shrink-0 font-serif ${
+                className={`w-7 h-7 rounded-full flex items-center justify-center text-meta font-semibold shrink-0 font-display ${
                   s.done ? "bg-ink-soft text-canvas" : "border-[1.5px] border-control text-ink"
                 }`}
               >

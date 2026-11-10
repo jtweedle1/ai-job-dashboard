@@ -27,7 +27,7 @@ function Stop({ title, body, last, children }: { title: string; body: string; la
       />
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.25fr] gap-6 lg:gap-12 items-start">
         <div>
-          <h3 className="font-serif text-heading font-semibold text-ink">{title}</h3>
+          <h3 className="font-display text-heading font-semibold text-ink">{title}</h3>
           <p className="mt-2 text-ink-soft text-pretty max-w-md">{body}</p>
         </div>
         <div className="bg-sheet rounded-sheet shadow-sheet p-5 sm:p-6">{children}</div>
@@ -41,7 +41,7 @@ const caption = "text-label font-semibold text-ink-soft mb-3";
 export default function HowItWorks() {
   return (
     <section aria-labelledby="how-heading" className="max-w-5xl mx-auto px-4 sm:px-6 py-16">
-      <h2 id="how-heading" className="font-serif text-title font-semibold text-ink">
+      <h2 id="how-heading" className="font-display text-title font-semibold text-ink">
         How it gets there
       </h2>
       <p className="mt-2 mb-12 text-ink-soft max-w-lg text-pretty">

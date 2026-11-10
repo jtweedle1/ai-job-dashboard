@@ -41,7 +41,7 @@ export default function GoalsPage() {
   return (
     <PageFrame title="Goals" intro="What you're looking for. Fit scores on each job are measured against this.">
       <Toast {...toastProps} />
-      <label htmlFor="goals" className="block font-serif text-heading font-semibold text-ink">
+      <label htmlFor="goals" className="block font-display text-heading font-semibold text-ink">
         What would make the next role a yes?
       </label>
       <p id="goals-help" className="mt-1 mb-4 text-ink-soft">

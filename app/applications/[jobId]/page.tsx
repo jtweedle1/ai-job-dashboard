@@ -150,7 +150,7 @@ function downloadInterview(job: Job) {
 function NotesCard({ notes, onSave }: { notes: string | null; onSave: (v: string) => void }) {
   return (
     <details open={!!notes} className="mt-12 group">
-      <summary className="cursor-pointer list-none inline-flex items-center gap-2 rounded-stamp font-serif text-heading font-semibold text-ink">
+      <summary className="cursor-pointer list-none inline-flex items-center gap-2 rounded-stamp font-display text-heading font-semibold text-ink">
         <h2>Notes</h2>
         <i className="ti ti-chevron-down text-base text-ink-soft transition-transform duration-200 group-open:rotate-180" aria-hidden="true" />
       </summary>
@@ -355,7 +355,7 @@ function JobWorkspace({ jobId }: { jobId: string }) {
         <div className="mb-3">{back}</div>
         <div className="flex items-start gap-4">
           <div className="flex-1 min-w-0">
-            <h1 className="font-serif text-title font-semibold text-ink text-balance">{job.title}</h1>
+            <h1 className="font-display text-title font-semibold text-ink text-balance">{job.title}</h1>
             <p className="mt-1 text-ink-soft">
               <span className="font-semibold text-ink">{job.company}</span>
               {job.location ? ` · ${job.location}` : ""}
@@ -375,7 +375,7 @@ function JobWorkspace({ jobId }: { jobId: string }) {
           {sentStamp > 0 && job.stage === "applied" && (
             <span
               key={sentStamp}
-              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-stamp border-2 border-sky text-sky font-serif font-semibold -rotate-3 animate-[stamp_160ms_var(--ease-out)]"
+              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-stamp border-2 border-sky text-sky font-display font-semibold -rotate-3 animate-[stamp_160ms_var(--ease-out)]"
             >
               <i className="ti ti-send" aria-hidden="true" />
               Sent
@@ -393,7 +393,7 @@ function JobWorkspace({ jobId }: { jobId: string }) {
           <Sheet as="section" aria-labelledby="fit-heading">
             <div className="flex items-start justify-between gap-4 flex-wrap">
               <div className="min-w-0">
-                <h2 id="fit-heading" className="font-serif text-heading font-semibold text-ink">
+                <h2 id="fit-heading" className="font-display text-heading font-semibold text-ink">
                   Is it a fit?
                 </h2>
                 <p className="mt-1 text-meta text-ink-soft">Measured against your resume and your goals in Me.</p>
@@ -404,7 +404,7 @@ function JobWorkspace({ jobId }: { jobId: string }) {
             </div>
             {job.fitScore != null && fit ? (
               <div className="mt-6 flex items-start gap-5">
-                <span className={`font-serif text-display font-semibold leading-none tabular-nums ${FIT_TONE[fit.tone]}`}>{job.fitScore}</span>
+                <span className={`font-display text-display font-semibold leading-none tabular-nums ${FIT_TONE[fit.tone]}`}>{job.fitScore}</span>
                 <div className="min-w-0">
                   <p className={`font-semibold ${FIT_TONE[fit.tone]}`}>{fit.word} fit</p>
                   {job.fitReasoning && <p className="mt-1 text-reading text-ink-soft">{job.fitReasoning}</p>}
@@ -557,7 +557,7 @@ function JobWorkspace({ jobId }: { jobId: string }) {
           )}
           {interviewing && (
             <section aria-labelledby="when-heading" className="mb-10">
-              <h2 id="when-heading" className="font-serif text-heading font-semibold text-ink">
+              <h2 id="when-heading" className="font-display text-heading font-semibold text-ink">
                 When is it?
               </h2>
               <p className="mt-1 mb-4 text-meta text-ink-soft">Today will remind you to prep beforehand and ask how it went afterwards.</p>
@@ -592,7 +592,7 @@ function JobWorkspace({ jobId }: { jobId: string }) {
       {step === "outcome" && (
         <>
           <Sheet as="section" aria-labelledby="outcome-heading">
-            <h2 id="outcome-heading" className="font-serif text-heading font-semibold text-ink">
+            <h2 id="outcome-heading" className="font-display text-heading font-semibold text-ink">
               How did it end?
             </h2>
             <p className="mt-1 text-meta text-ink-soft">Closing the loop keeps Today focused on what&apos;s still open.</p>

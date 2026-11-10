@@ -29,7 +29,7 @@ export default function PageFrame({
           <header className="flex items-end gap-x-6 gap-y-4 flex-wrap mb-8 sm:mb-10 pt-2">
             <div className="flex-1 min-w-[min(100%,16rem)]">
               {above && <div className="mb-2">{above}</div>}
-              <h1 className="font-serif text-title font-semibold text-ink text-balance">{title}</h1>
+              <h1 className="font-display text-title font-semibold text-ink text-balance">{title}</h1>
               {intro && <p className="mt-2 text-ink-soft text-pretty">{intro}</p>}
             </div>
             {action && <div className="shrink-0">{action}</div>}

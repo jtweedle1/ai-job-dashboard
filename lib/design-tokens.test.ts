@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 // Reads the Trailhead tokens straight out of globals.css, so a color tweak that breaks contrast
-// fails here instead of shipping. Pairs come from DESIGN.md §2 and §12.
+// fails here instead of shipping. Pairs come from DESIGN.md §2 and §12 (Golden hour, day and night).
 
 const css = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
 
@@ -45,5 +45,12 @@ describe.each([
 
   it("button text passes AA on the action color", () => {
     expect(contrast(tokens["on-action"], tokens.action)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("text on the hero and coral fields passes AA", () => {
+    expect(contrast(tokens["on-hero"], tokens.hero), "on-hero").toBeGreaterThanOrEqual(4.5);
+    expect(contrast(tokens["ink-soft"], tokens.hero), "ink-soft on hero").toBeGreaterThanOrEqual(4.5);
+    expect(contrast(tokens.action, tokens.hero), "action on hero").toBeGreaterThanOrEqual(3);
+    expect(contrast(tokens["on-warm"], tokens.warm), "on-warm").toBeGreaterThanOrEqual(4.5);
   });
 });

@@ -373,14 +373,14 @@ function ApplicationsList() {
                 <li key={g.id} className="relative pl-8 pb-8 last:pb-0">
                   {/* The trail runs down the left edge, from this group's node to the next. */}
                   {i < shown.length - 1 && <span className="absolute left-[7px] top-4 bottom-0 w-0.5 rounded-full bg-rule" aria-hidden="true" />}
-                  <span className={`absolute left-0.5 top-[5px] w-3 h-3 rounded-full ${GROUP_NODE[g.id]}`} aria-hidden="true" />
+                  <span className={`absolute left-0.5 top-[3px] w-3 h-3 rounded-full ${GROUP_NODE[g.id]}`} aria-hidden="true" />
                   <section aria-labelledby={`group-${g.id}`}>
-                    <h2 id={`group-${g.id}`} className="text-label font-semibold text-ink">
+                    <h2 id={`group-${g.id}`} className="font-display text-heading font-semibold text-ink leading-none">
                       {g.label}
-                      <span className="font-normal text-ink-muted"> · {g.jobs.length}</span>
+                      <span className="font-sans text-ui font-normal text-ink-muted"> · {g.jobs.length}</span>
                     </h2>
                     {g.jobs.length > 0 && (
-                      <ul className="mt-1">
+                      <ul className="mt-2 bg-sheet rounded-sheet px-5 py-1">
                         {g.jobs.map((job) => (
                           <JobRow
                             key={job.id}
